@@ -3,7 +3,6 @@
 namespace App\Providers\Filament;
 
 use App\Http\Middleware\SetFilamentAdminLocale;
-use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -12,7 +11,9 @@ use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
 use Filament\Support\Colors\Color;
+use Filament\View\PanelsRenderHook;
 use Filament\Widgets\AccountWidget;
+use Illuminate\Contracts\View\View;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
 use Illuminate\Cookie\Middleware\EncryptCookies;
 use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
@@ -41,7 +42,11 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
             ])
-            ->userMenuItems($this->filamentLocaleMenuActions())
+            ->renderHook(
+                PanelsRenderHook::TOPBAR_END,
+                fn (): View => view('filament.hooks.admin-locale-switcher'),
+                scopes: $panel->getId(),
+            )
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
@@ -57,23 +62,5 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
-    }
-
-    /**
-     * @return array<int, Action>
-     */
-    protected function filamentLocaleMenuActions(): array
-    {
-        $actions = [];
-        $sort = 36;
-
-        foreach (config('creator.filament_locales', []) as $code => $meta) {
-            $actions[] = Action::make('set-filament-locale-'.$code)
-                ->label($meta['native'] ?? $code)
-                ->url('/set-filament-locale/'.$code)
-                ->sort($sort++);
-        }
-
-        return $actions;
     }
 }
