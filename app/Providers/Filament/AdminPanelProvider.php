@@ -45,7 +45,6 @@ class AdminPanelProvider extends PanelProvider
             ->renderHook(
                 PanelsRenderHook::TOPBAR_END,
                 fn (): View => view('filament.hooks.admin-locale-switcher'),
-                scopes: $panel->getId(),
             )
             ->middleware([
                 EncryptCookies::class,

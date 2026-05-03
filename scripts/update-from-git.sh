@@ -58,9 +58,17 @@ info "git fetch …"
 git fetch origin
 
 BRANCH="$(git rev-parse --abbrev-ref HEAD)"
+COMMIT_BEFORE="$(git rev-parse --short HEAD)"
+info "Aktueller Stand: $COMMIT_BEFORE ($BRANCH)"
 info "git pull --ff-only (Branch: $BRANCH) …"
 if ! git pull --ff-only origin "$BRANCH"; then
   die "Fast-Forward nicht möglich (abweichende Historie oder Konflikte). Bitte manuell: git status, git pull/rebase/merge."
+fi
+COMMIT_AFTER="$(git rev-parse --short HEAD)"
+if [[ "$COMMIT_BEFORE" == "$COMMIT_AFTER" ]]; then
+  warn "Git meldet: Branch ist bereits auf dem neuesten Stand (kein neuer Commit von origin/$BRANCH). Wenn du trotzdem alte Oberfläche siehst: Browser-Cache leeren, PHP-FPM/Webserver neu laden (Opcache), oder prüfen ob du auf dem richtigen Server/Branch bist."
+else
+  info "Neuer Stand: $COMMIT_AFTER (vorher: $COMMIT_BEFORE)"
 fi
 
 if [[ "${EUID:-0}" -eq 0 ]]; then
