@@ -1,11 +1,11 @@
 #!/usr/bin/env bash
 #
-# Creator Link Hub — interaktive Server-Installation (Debian, Nginx, PHP-FPM, PostgreSQL oder MariaDB)
+# Creator Link Hub — interaktive Server-Installation (Debian/Ubuntu, Nginx, PHP-FPM, PostgreSQL oder MariaDB)
 #
 # Ausführung nur als root:
 #   sudo bash scripts/install-debian-server.sh
 #
-# Voraussetzung: Internet. Debian 12+ empfohlen.
+# Voraussetzung: Internet. Debian 12+ oder Ubuntu 22.04/24.04 LTS — nur PHP-Pakete aus den offiziellen Repos (kein PPA).
 # Repository: https://github.com/Sebastian-1892/creator-link-hub.git
 #
 set -euo pipefail
@@ -58,7 +58,12 @@ echo "  Creator Link Hub — Server-Installation"
 echo "=========================================="
 echo ""
 echo "Interaktives Setup: Pakete, Datenbank, Webserver, Anwendung."
-echo "Zielsystem: Debian (Bookworm oder neuer empfohlen)."
+echo "Zielsystem: Debian 12+ oder Ubuntu 22.04/24.04 LTS (PHP nur aus den Distributions-Repositories)."
+if [[ -f /etc/os-release ]]; then
+  # shellcheck source=/dev/null
+  . /etc/os-release
+  echo "Erkannt: ${PRETTY_NAME:-$NAME}"
+fi
 echo ""
 
 if ! frage_ja "Installation starten?" "j"; then
@@ -75,14 +80,20 @@ info "Installiere Basis-Pakete …"
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl git unzip acl ca-certificates lsb-release gnupg python3
 
 apt-get update -qq
-PHP_VER=""
-for v in 8.3 8.2; do
-  if apt-cache show "php${v}-fpm" &>/dev/null; then
-    PHP_VER="$v"
-    break
-  fi
-done
-[[ -n "$PHP_VER" ]] || die "Kein php8.3-fpm oder php8.2-fpm in apt. Bitte Sury-PHP oder neueres Debian nutzen."
+
+php_version_aus_apt_waehlen() {
+  PHP_VER=""
+  for v in 8.4 8.3 8.2; do
+    if apt-cache show "php${v}-fpm" &>/dev/null; then
+      PHP_VER="$v"
+      break
+    fi
+  done
+}
+
+php_version_aus_apt_waehlen
+
+[[ -n "$PHP_VER" ]] || die "Kein php8.2–8.4-fpm in den offiziellen apt-Repositories. Bitte neuere Distribution nutzen oder PHP-Pakete manuell installieren (ohne zusätzliche Repos nutzt dieses Skript nur die Standard-Quellen)."
 
 info "Verwende PHP ${PHP_VER} …"
 DEBIAN_FRONTEND=noninteractive apt-get install -y -qq \
@@ -380,6 +391,7 @@ PY
 fi
 
 info "Composer install …"
+export COMPOSER_ALLOW_SUPERUSER=1
 composer install --no-dev --no-interaction --optimize-autoloader
 
 info "APP_KEY erzeugen …"
