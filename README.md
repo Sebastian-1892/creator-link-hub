@@ -42,11 +42,47 @@ php artisan test
 ./vendor/bin/phpstan analyse
 ```
 
-## Produktion / Debian- oder Ubuntu-Server
+## Server-Installation (Debian / Ubuntu)
 
-Interaktives Setup-Skript (fragt u. a. **Admin-E-Mail/Passwort** für Filament `/admin` ab; Themes, Pakete, Nginx, DB, optional Redis/Certbot; **PHP nur aus den Distributions-Repos**, kein PPA): [`scripts/install-debian-server.sh`](scripts/install-debian-server.sh) — als root im geklonten Repo: `sudo bash scripts/install-debian-server.sh`. Repository: [creator-link-hub auf GitHub](https://github.com/Sebastian-1892/creator-link-hub.git). Kurz-Runbook: [`docs/deployment.md`](docs/deployment.md).
+Ziel: einmaliges Setup mit **Nginx**, **PHP-FPM** (8.2–8.4 aus den **offiziellen Paketquellen**, kein PPA), **PostgreSQL oder MariaDB**, optional **Redis**, **Composer**, **Node/npm** (Vite-Build), Laravel-Migrationen und optional **SSL (Certbot)**.
 
-**Updates nach Code-Änderungen auf GitHub** (Git pull, Composer, npm-Build, Migrationen, Caches; **kein** Löschen von DB/User/.env): [`scripts/update-from-git.sh`](scripts/update-from-git.sh) — im Projektordner z. B. `bash scripts/update-from-git.sh` (Standard: `composer install --no-dev`). Optionen: `--dev`, `--yes` (bei lokalem „dirty“ Git), siehe `bash scripts/update-from-git.sh --help`.
+Repository klonen:
+
+```bash
+git clone https://github.com/Sebastian-1892/creator-link-hub.git
+cd creator-link-hub
+```
+
+Install-Skript **als root** aus dem **Projektroot** starten (nicht aus dem Unterordner `scripts/` mit `scripts/scripts/...`):
+
+```bash
+sudo bash scripts/install-debian-server.sh
+```
+
+Das Skript ist **interaktiv** (deutsch) und fragt u. a. ab:
+
+- System-Update (`apt upgrade`)
+- Installationsverzeichnis, Git-URL und Branch
+- Domain / `APP_URL` / `APP_NAME`
+- Datenbank (PostgreSQL oder MariaDB), Benutzer, Passwort, optional Löschen gleichnamiger Test-DB
+- Redis, NodeSource (Node 20) für den Frontend-Build
+- Stripe- und SMTP-Werte (optional, leer lassen möglich)
+- **Administrator** für Filament (`/admin`): E-Mail, Anzeigename, Passwort (min. 8 Zeichen)
+- optional Demo-Nutzer `creator@example.com` (nur für Tests)
+- Nginx-Site, Supervisor (Queue), Cron (Scheduler), Certbot
+
+**Wichtig:** Datenbank-Passwort ohne einfaches `'` und ohne `"`. Nach dem Setup: Kurzüberblick in [`docs/deployment.md`](docs/deployment.md), Go-Live in [`docs/launch-runbook.md`](docs/launch-runbook.md).
+
+### Updates aus Git (bestehende Installation)
+
+Ohne Datenbank oder `.env` zu zerstören — nur Code ziehen, Abhängigkeiten und **ausstehende Migrationen**:
+
+```bash
+cd creator-link-hub   # dein Installationspfad
+bash scripts/update-from-git.sh
+```
+
+Optionen: `bash scripts/update-from-git.sh --help` (u. a. `--dev` für Composer mit Dev-Paketen, `--yes` bei lokalem „dirty“ Git).
 
 ## Umgebungsvariablen
 
