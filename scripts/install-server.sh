@@ -3,7 +3,7 @@
 # Creator Link Hub — interaktive Server-Installation (Debian/Ubuntu, Nginx, PHP-FPM, PostgreSQL oder MariaDB)
 #
 # Ausführung nur als root:
-#   sudo bash scripts/install-debian-server.sh
+#   sudo bash scripts/install-server.sh
 #
 # Voraussetzung: Internet. Debian 12+ oder Ubuntu 22.04/24.04 LTS — nur PHP-Pakete aus den offiziellen Repos (kein PPA).
 # Repository: https://github.com/Sebastian-1892/creator-link-hub.git
@@ -240,6 +240,7 @@ fi
 # .env per Python sicher setzen (Werte können Leerzeichen enthalten)
 export PY_APP_NAME="$APP_NAME"
 export PY_APP_URL="$APP_URL"
+export PY_INSTALL_DIR="$INSTALL_DIR"
 export PY_DB_DRIVER="$DB_DRIVER"
 export PY_DB_NAME="$DB_NAME"
 export PY_DB_USER="$DB_USER"
@@ -266,6 +267,7 @@ updates = {
     "APP_ENV": "production",
     "APP_DEBUG": "false",
     "APP_URL": esc_env_val(os.environ["PY_APP_URL"]),
+    "CLH_APP_ROOT": esc_env_val(os.environ["PY_INSTALL_DIR"]),
     "DB_CONNECTION": os.environ["PY_DB_DRIVER"],
     "DB_HOST": "127.0.0.1",
     "DB_PORT": os.environ["PY_DB_PORT"],
@@ -560,4 +562,9 @@ echo "  - Updates aus Git (ohne Datenverlust): cd $INSTALL_DIR && bash scripts/u
 echo "  - Stripe: Webhook $APP_URL/stripe/webhook und STRIPE_WEBHOOK_SECRET setzen."
 echo "  - Ohne npm-Build: cd $INSTALL_DIR && (test -f package-lock.json && npm ci || npm install) && npm run build"
 echo "  - Logs: $INSTALL_DIR/storage/logs/"
+echo ""
+echo "Wichtig — nur EINE Arbeitskopie auf diesem Server:"
+echo "  - artisan, composer, npm und update-from-git.sh immer unter: $INSTALL_DIR"
+echo "  - Nicht zusätzlich in z. B. /root/... klonen — sonst nutzt die Shell eine andere .env/Datenbank als Nginx/PHP-FPM."
+echo "  - In .env steht CLH_APP_ROOT (wird vom Update-Skript gegen das aktuelle Verzeichnis geprüft)."
 echo ""

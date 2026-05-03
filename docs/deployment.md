@@ -1,7 +1,7 @@
 # Deployment (Kurz-Runbook)
 
-**Interaktive Debian-/Ubuntu-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-debian-server.sh`](../scripts/install-debian-server.sh) — Repository: [https://github.com/Sebastian-1892/creator-link-hub.git](https://github.com/Sebastian-1892/creator-link-hub.git)  
-Ausführung auf dem Server als root: `sudo bash scripts/install-debian-server.sh` (im geklonten Projektordner). PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA). Das Skript legt nach den Migrationen optional einen **Filament-Administrator** an (E-Mail, Anzeigename, Passwort) und lädt zuvor die **Themes** per `ThemeSeeder`.
+**Interaktive Debian-/Ubuntu-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-server.sh`](../scripts/install-server.sh) — Repository: [https://github.com/Sebastian-1892/creator-link-hub.git](https://github.com/Sebastian-1892/creator-link-hub.git)  
+Ausführung auf dem Server als root: `sudo bash scripts/install-server.sh` (im geklonten Projektordner). PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA). Das Skript legt nach den Migrationen optional einen **Filament-Administrator** an (E-Mail, Anzeigename, Passwort) und lädt zuvor die **Themes** per `ThemeSeeder`.
 
 ## Server
 

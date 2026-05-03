@@ -11,6 +11,9 @@
 #   bash scripts/update-from-git.sh --dev          # Composer mit Dev-Abhängigkeiten
 #   bash scripts/update-from-git.sh --yes         # Bei lokalem git status „dirty“ trotzdem fortfahren
 #
+# Server-Installation setzt CLH_APP_ROOT in .env (Projektroot). Weicht das aktuelle Verzeichnis davon ab,
+# bricht das Skript ab — verhindert Updates/artisan in einem zweiten Klon (z. B. /root/...) mit falscher DB.
+#
 set -euo pipefail
 
 die() { echo "Fehler: $*" >&2; exit 1; }
@@ -20,6 +23,34 @@ warn() { echo "[Warnung] $*" >&2; }
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT" || die "Projektroot nicht gefunden: $ROOT"
+
+# Gleiches Verzeichnis wie bei der Server-Installation (siehe install-server.sh → CLH_APP_ROOT in .env).
+if [[ -f .env ]]; then
+  CLH_RAW="$(grep -E '^[[:space:]]*CLH_APP_ROOT=' .env 2>/dev/null | tail -n1 || true)"
+  if [[ -n "$CLH_RAW" ]]; then
+    CLH_VAL="${CLH_RAW#*=}"
+    CLH_VAL="${CLH_VAL//$'\r'/}"
+    CLH_VAL="${CLH_VAL#"${CLH_VAL%%[![:space:]]*}"}"
+    CLH_VAL="${CLH_VAL%"${CLH_VAL##*[![:space:]]}"}"
+    if [[ "$CLH_VAL" == '"'*'"' ]]; then
+      CLH_VAL="${CLH_VAL:1:${#CLH_VAL}-2}"
+    elif [[ "$CLH_VAL" == "'"* ]]; then
+      CLH_VAL="${CLH_VAL#\'}"
+      CLH_VAL="${CLH_VAL%\'}"
+    fi
+    if [[ -n "$CLH_VAL" ]]; then
+      ROOT_RP="$(realpath "$ROOT")"
+      if [[ -d "$CLH_VAL" ]]; then
+        EXPECT_RP="$(realpath "$CLH_VAL")"
+      else
+        EXPECT_RP=""
+      fi
+      if [[ -n "$EXPECT_RP" && "$ROOT_RP" != "$EXPECT_RP" ]]; then
+        die "Abbruch: Du bist in \"${ROOT_RP}\", in .env steht aber CLH_APP_ROOT=\"${CLH_VAL}\" → erwartet \"${EXPECT_RP}\". Nginx/PHP-FPM nutzen die Installation dort. Wechsel: cd \"${EXPECT_RP}\" && bash scripts/update-from-git.sh — keinen zweiten Klon für artisan/Updates nutzen."
+      fi
+    fi
+  fi
+fi
 
 COMPOSER_NO_DEV=(--no-dev)
 FORCE_DIRTY=false
@@ -31,6 +62,7 @@ for arg in "$@"; do
       echo "Nutzen: bash scripts/update-from-git.sh [--dev] [--yes]"
       echo "  --dev   Composer ohne --no-dev (Entwicklung)"
       echo "  --yes   Fortfahren trotz uncommitteter lokaler Änderungen (Vorsicht)"
+      echo "  (Auf dem Server muss CLH_APP_ROOT in .env zum aktuellen Projektroot passen — siehe install-server.sh.)"
       exit 0
       ;;
   esac

@@ -56,7 +56,7 @@ cd creator-link-hub
 Install-Skript **als root** aus dem **Projektroot** starten (nicht aus dem Unterordner `scripts/` mit `scripts/scripts/...`):
 
 ```bash
-sudo bash scripts/install-debian-server.sh
+sudo bash scripts/install-server.sh
 ```
 
 Das Skript ist **interaktiv** (deutsch) und fragt u. a. ab:
