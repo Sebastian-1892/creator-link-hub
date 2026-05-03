@@ -1,7 +1,7 @@
 # Deployment (Kurz-Runbook)
 
 **Interaktive Debian-/Ubuntu-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-debian-server.sh`](../scripts/install-debian-server.sh) — Repository: [https://github.com/Sebastian-1892/creator-link-hub.git](https://github.com/Sebastian-1892/creator-link-hub.git)  
-Ausführung auf dem Server als root: `sudo bash scripts/install-debian-server.sh` (im geklonten Projektordner). PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA).
+Ausführung auf dem Server als root: `sudo bash scripts/install-debian-server.sh` (im geklonten Projektordner). PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA). Das Skript legt nach den Migrationen optional einen **Filament-Administrator** an (E-Mail, Anzeigename, Passwort) und lädt zuvor die **Themes** per `ThemeSeeder`.
 
 ## Server
 
@@ -10,6 +10,17 @@ Ausführung auf dem Server als root: `sudo bash scripts/install-debian-server.sh
 - Nginx → `public/index.php`
 - Supervisor: `php artisan queue:work`
 - Cron: `* * * * * php /path/artisan schedule:run`
+
+## Updates (bestehende Installation)
+
+Skript im Repo: [`scripts/update-from-git.sh`](../scripts/update-from-git.sh) — führt `git pull --ff-only`, `composer install`, `npm ci`/`npm run build`, `php artisan migrate --force`, Caches und optional Supervisor-Neustart aus. **`.env` und Datenbankinhalte** werden nicht angepasst; nur ausstehende **Migrationen** werden angewendet.
+
+```bash
+cd /pfad/zu/creator-link-hub
+bash scripts/update-from-git.sh
+```
+
+Bei lokalen, uncommitteten Änderungen bricht das Skript ab, außer mit `--yes`. Für Entwicklungs-Dependencies: `bash scripts/update-from-git.sh --dev`.
 
 ## Nach dem Deploy
 

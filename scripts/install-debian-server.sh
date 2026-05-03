@@ -413,8 +413,44 @@ fi
 info "Migrationen …"
 php artisan migrate --force
 
-if frage_ja "Demo-Daten (Seeder) laden? NICHT für echte Produktion empfohlen." "n"; then
-  php artisan db:seed --force
+info "Themes laden (Voraussetzung für Workspaces) …"
+php artisan db:seed --class=Database\\Seeders\\ThemeSeeder --force
+
+if frage_ja "Administrator-Konto für Filament (/admin) jetzt anlegen?" "j"; then
+  ADMIN_EMAIL=""
+  while [[ -z "$ADMIN_EMAIL" ]]; do
+    ADMIN_EMAIL="$(frage "E-Mail-Adresse des Administrators" "")"
+    if [[ "$ADMIN_EMAIL" != *"@"* ]] || [[ ${#ADMIN_EMAIL} -lt 5 ]]; then
+      warn "Bitte eine gültige E-Mail-Adresse eingeben."
+      ADMIN_EMAIL=""
+    fi
+  done
+  ADMIN_NAME="$(frage "Anzeigename des Administrators" "Administrator")"
+  while true; do
+    echo -n "Passwort (mindestens 8 Zeichen): "
+    read -rs ADMIN_PW1
+    echo ""
+    echo -n "Passwort wiederholen: "
+    read -rs ADMIN_PW2
+    echo ""
+    if [[ "$ADMIN_PW1" != "$ADMIN_PW2" ]]; then
+      warn "Die Passwörter stimmen nicht überein."
+      continue
+    fi
+    if [[ ${#ADMIN_PW1} -lt 8 ]]; then
+      warn "Das Passwort muss mindestens 8 Zeichen lang sein."
+      continue
+    fi
+    passwort_ok "$ADMIN_PW1"
+    break
+  done
+  info "Lege Administrator an …"
+  CLH_ADMIN_EMAIL="$ADMIN_EMAIL" CLH_ADMIN_PASSWORD="$ADMIN_PW1" CLH_ADMIN_NAME="$ADMIN_NAME" \
+    php artisan db:seed --class=Database\\Seeders\\InstallAdminSeeder --force
+fi
+
+if frage_ja "Zusätzlichen Demo-Nutzer (creator@example.com, Passwort: password) anlegen? Nur für Tests." "n"; then
+  php artisan db:seed --class=Database\\Seeders\\DemoCreatorSeeder --force
 fi
 
 php artisan storage:link --force || true
@@ -519,7 +555,8 @@ echo "Öffentlich:  $APP_URL"
 echo "Nginx root:  $INSTALL_DIR/public"
 echo ""
 echo "Nächste Schritte:"
-echo "  - Admin: Benutzer in der DB mit is_admin=1 versehen (Filament: /admin)."
+echo "  - Filament-Admin: $APP_URL/admin (falls beim Setup angelegt)."
+echo "  - Updates aus Git (ohne Datenverlust): cd $INSTALL_DIR && bash scripts/update-from-git.sh"
 echo "  - Stripe: Webhook $APP_URL/stripe/webhook und STRIPE_WEBHOOK_SECRET setzen."
 echo "  - Ohne npm-Build: cd $INSTALL_DIR && (test -f package-lock.json && npm ci || npm install) && npm run build"
 echo "  - Logs: $INSTALL_DIR/storage/logs/"

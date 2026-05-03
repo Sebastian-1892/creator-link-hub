@@ -44,7 +44,9 @@ php artisan test
 
 ## Produktion / Debian- oder Ubuntu-Server
 
-Interaktives Setup-Skript (fragt Einstellungen ab, installiert Pakete, Nginx, DB, optional Redis/Certbot; **PHP nur aus den Distributions-Repos**, kein PPA): [`scripts/install-debian-server.sh`](scripts/install-debian-server.sh) — als root im geklonten Repo: `sudo bash scripts/install-debian-server.sh`. Repository: [creator-link-hub auf GitHub](https://github.com/Sebastian-1892/creator-link-hub.git). Kurz-Runbook: [`docs/deployment.md`](docs/deployment.md).
+Interaktives Setup-Skript (fragt u. a. **Admin-E-Mail/Passwort** für Filament `/admin` ab; Themes, Pakete, Nginx, DB, optional Redis/Certbot; **PHP nur aus den Distributions-Repos**, kein PPA): [`scripts/install-debian-server.sh`](scripts/install-debian-server.sh) — als root im geklonten Repo: `sudo bash scripts/install-debian-server.sh`. Repository: [creator-link-hub auf GitHub](https://github.com/Sebastian-1892/creator-link-hub.git). Kurz-Runbook: [`docs/deployment.md`](docs/deployment.md).
+
+**Updates nach Code-Änderungen auf GitHub** (Git pull, Composer, npm-Build, Migrationen, Caches; **kein** Löschen von DB/User/.env): [`scripts/update-from-git.sh`](scripts/update-from-git.sh) — im Projektordner z. B. `bash scripts/update-from-git.sh` (Standard: `composer install --no-dev`). Optionen: `--dev`, `--yes` (bei lokalem „dirty“ Git), siehe `bash scripts/update-from-git.sh --help`.
 
 ## Umgebungsvariablen
 
