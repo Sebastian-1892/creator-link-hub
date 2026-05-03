@@ -9,13 +9,28 @@ return [
     'app_root' => filled(env('CLH_APP_ROOT')) ? rtrim((string) env('CLH_APP_ROOT'), '/\\') : null,
 
     /**
+     * Öffentliches Release-Manifest (nur JSON, wie Rechnungsschmiede-update).
+     * Standard: pCloud Public Folder → filedn.eu … /creator-link-hub/update/versions.json
+     */
+    'update_manifest_url' => env(
+        'CLH_UPDATE_MANIFEST_URL',
+        'https://filedn.eu/lFa08iL0cJzHeyFFtNiVfqY/creator-link-hub/update/versions.json',
+    ),
+
+    /**
+     * In dieser Installation ausgelieferte Release-Version (Semver). Bei jedem Release hochsetzen
+     * und mit Eintrag in distribution/creator-link-hub-update/versions.json abgleichen.
+     */
+    'installed_version' => env('CLH_INSTALLED_VERSION', '0.1.0'),
+
+    /**
      * Filament-Admin: verfügbare Oberflächensprachen (Vendor-Übersetzungen in vendor/filament/.../lang).
      */
     'filament_locales' => [
-        'en' => ['native' => 'English'],
-        'de' => ['native' => 'Deutsch'],
-        'fr' => ['native' => 'Français'],
-        'it' => ['native' => 'Italiano'],
+        'en' => ['native' => 'English', 'flag' => '🇬🇧'],
+        'de' => ['native' => 'Deutsch', 'flag' => '🇩🇪'],
+        'fr' => ['native' => 'Français', 'flag' => '🇫🇷'],
+        'it' => ['native' => 'Italiano', 'flag' => '🇮🇹'],
     ],
 
     'free_link_limit' => 10,
