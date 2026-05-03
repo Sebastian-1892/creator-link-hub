@@ -1,4 +1,5 @@
 {
+    "name": "creator-link-hub",
     "private": true,
     "type": "module",
     "scripts": {

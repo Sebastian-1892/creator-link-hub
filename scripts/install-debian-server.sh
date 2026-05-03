@@ -214,7 +214,7 @@ if frage_ja "Node.js 20.x über NodeSource installieren (für npm run build / Vi
 fi
 
 if [[ "$INSTALL_NODE" == "false" ]] && ! command -v npm &>/dev/null; then
-  warn "Kein npm gefunden. Ohne Build schlägt die Oberfläche in Produktion fehl. Bitte später: npm ci && npm run build"
+  warn "Kein npm gefunden. Ohne Build schlägt die Oberfläche in Produktion fehl. Bitte später: npm ci && npm run build (mit package-lock.json) bzw. npm install && npm run build"
 fi
 
 info "Schreibe .env …"
@@ -398,11 +398,16 @@ info "APP_KEY erzeugen …"
 php artisan key:generate --force
 
 if command -v npm &>/dev/null; then
-  info "npm ci && npm run build …"
-  npm ci
+  if [[ -f package-lock.json ]]; then
+    info "npm ci && npm run build …"
+    npm ci --no-fund --no-audit
+  else
+    warn "package-lock.json fehlt — verwende npm install (legt eine Lock-Datei an; im Repo committen empfohlen)."
+    npm install --no-fund --no-audit
+  fi
   npm run build
 else
-  warn "npm nicht verfügbar — Vite-Build übersprungen. Später im Projektordner ausführen: npm ci && npm run build"
+  warn "npm nicht verfügbar — Vite-Build übersprungen. Später im Projektordner: npm ci && npm run build (mit Lock) oder npm install && npm run build"
 fi
 
 info "Migrationen …"
@@ -516,6 +521,6 @@ echo ""
 echo "Nächste Schritte:"
 echo "  - Admin: Benutzer in der DB mit is_admin=1 versehen (Filament: /admin)."
 echo "  - Stripe: Webhook $APP_URL/stripe/webhook und STRIPE_WEBHOOK_SECRET setzen."
-echo "  - Ohne npm-Build: cd $INSTALL_DIR && npm ci && npm run build"
+echo "  - Ohne npm-Build: cd $INSTALL_DIR && (test -f package-lock.json && npm ci || npm install) && npm run build"
 echo "  - Logs: $INSTALL_DIR/storage/logs/"
 echo ""
