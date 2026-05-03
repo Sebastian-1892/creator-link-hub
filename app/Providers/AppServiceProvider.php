@@ -3,7 +3,9 @@
 namespace App\Providers;
 
 use App\Listeners\CreateWorkspaceForNewUser;
+use App\Models\Link;
 use App\Models\Profile;
+use App\Observers\LinkObserver;
 use App\Observers\ProfileObserver;
 use Illuminate\Auth\Events\Registered;
 use Illuminate\Cache\RateLimiting\Limit;
@@ -22,6 +24,7 @@ class AppServiceProvider extends ServiceProvider
     public function boot(): void
     {
         Profile::observe(ProfileObserver::class);
+        Link::observe(LinkObserver::class);
 
         Event::listen(Registered::class, CreateWorkspaceForNewUser::class);
 

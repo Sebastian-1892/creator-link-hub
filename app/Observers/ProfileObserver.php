@@ -9,18 +9,21 @@ class ProfileObserver
 {
     public function saved(Profile $profile): void
     {
-        Cache::forget('pub_profile_v1_'.$profile->slug);
+        Cache::forget(Profile::publicProfileCacheKey($profile->slug));
     }
 
     public function updating(Profile $profile): void
     {
         if ($profile->isDirty('slug')) {
-            Cache::forget('pub_profile_v1_'.$profile->getOriginal('slug'));
+            $old = $profile->getOriginal('slug');
+            if (is_string($old) && $old !== '') {
+                Cache::forget(Profile::publicProfileCacheKey($old));
+            }
         }
     }
 
     public function deleted(Profile $profile): void
     {
-        Cache::forget('pub_profile_v1_'.$profile->slug);
+        Cache::forget(Profile::publicProfileCacheKey($profile->slug));
     }
 }

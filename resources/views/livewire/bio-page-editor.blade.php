@@ -38,13 +38,45 @@
             </div>
 
             <div>
-                <x-input-label for="theme_id" :value="__('Theme')" />
-                <select wire:model.number="theme_id" id="theme_id" class="mt-1 block w-full border-gray-300 rounded-md shadow-sm">
-                    <option value="">{{ __('— Theme wählen —') }}</option>
-                    @foreach ($themes as $theme)
-                        <option value="{{ $theme->id }}">{{ $theme->name }}</option>
-                    @endforeach
-                </select>
+                <x-input-label :value="__('Profil-Vorlage')" />
+                <p class="mt-1 text-xs text-gray-500">{{ __('Wähle eine von :n Farb-Vorlagen für deine öffentliche Seite.', ['n' => $themes->count()]) }}</p>
+                <div class="mt-3 max-h-[26rem] overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-3" role="radiogroup" aria-label="{{ __('Profil-Vorlage') }}">
+                    <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
+                        <label @class([
+                            'flex cursor-pointer flex-col rounded-lg border-2 bg-white p-3 shadow-sm transition',
+                            'border-indigo-600 ring-2 ring-indigo-100' => blank($theme_id),
+                            'border-gray-200 hover:border-gray-300' => filled($theme_id),
+                        ])>
+                            <input type="radio" wire:model.live="theme_id" value="" class="sr-only" />
+                            <span class="text-sm font-medium text-gray-900">{{ __('Standard (Theme wählen)') }}</span>
+                            <span class="mt-1 text-xs text-gray-500">{{ __('Später festlegen oder Farben im Theme bearbeiten.') }}</span>
+                        </label>
+                        @foreach ($themes as $theme)
+                            @php
+                                $v = is_array($theme->variables) ? $theme->variables : [];
+                                $bg = $v['bg'] ?? '#e5e7eb';
+                                $text = $v['text'] ?? '#111827';
+                                $accent = $v['accent'] ?? '#6366f1';
+                                $card = $v['card'] ?? '#f3f4f6';
+                            @endphp
+                            <label @class([
+                                'flex cursor-pointer flex-col rounded-lg border-2 bg-white p-3 shadow-sm transition',
+                                'border-indigo-600 ring-2 ring-indigo-100' => filled($theme_id) && (int) $theme_id === (int) $theme->id,
+                                'border-gray-200 hover:border-gray-300' => blank($theme_id) || (int) $theme_id !== (int) $theme->id,
+                            ])>
+                                <input type="radio" wire:model.live="theme_id" value="{{ $theme->id }}" class="sr-only" />
+                                <span class="text-sm font-medium text-gray-900">{{ $theme->name }}</span>
+                                <div class="mt-2 flex gap-1" title="{{ __('Farben: Hintergrund, Text, Akzent, Karte') }}">
+                                    <span class="h-7 w-7 shrink-0 rounded border border-black/10" style="background-color: {{ $bg }}"></span>
+                                    <span class="h-7 w-7 shrink-0 rounded border border-black/10" style="background-color: {{ $text }}"></span>
+                                    <span class="h-7 w-7 shrink-0 rounded border border-black/10" style="background-color: {{ $accent }}"></span>
+                                    <span class="h-7 w-7 shrink-0 rounded border border-black/10" style="background-color: {{ $card }}"></span>
+                                </div>
+                            </label>
+                        @endforeach
+                    </div>
+                </div>
+                <x-input-error :messages="$errors->get('theme_id')" class="mt-2" />
             </div>
 
             <div class="flex items-center gap-2">

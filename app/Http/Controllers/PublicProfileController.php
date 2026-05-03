@@ -13,7 +13,7 @@ class PublicProfileController extends Controller
     public function show(Request $request, string $slug, PlanService $plans): View
     {
         $profile = Cache::remember(
-            'pub_profile_v1_'.$slug,
+            Profile::publicProfileCacheKey($slug),
             now()->addDay(),
             function () use ($slug) {
                 return Profile::query()

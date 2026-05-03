@@ -45,6 +45,11 @@ class BioPageEditor extends Component
         $this->is_published = $this->profile->is_published;
     }
 
+    public function updatedThemeId(mixed $value): void
+    {
+        $this->theme_id = ($value === '' || $value === null) ? null : (int) $value;
+    }
+
     public function save(SlugService $slugService): void
     {
         $this->validate([

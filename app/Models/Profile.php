@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\Cache;
 
 class Profile extends Model
 {
@@ -64,5 +65,18 @@ class Profile extends Model
     public function cacheTag(): string
     {
         return 'profile:'.$this->slug;
+    }
+
+    public static function publicProfileCacheKey(string $slug): string
+    {
+        return 'pub_profile_v1_'.$slug;
+    }
+
+    public static function forgetPublicProfileCacheForProfileId(int $profileId): void
+    {
+        $slug = static::query()->whereKey($profileId)->value('slug');
+        if (is_string($slug) && $slug !== '') {
+            Cache::forget(static::publicProfileCacheKey($slug));
+        }
     }
 }

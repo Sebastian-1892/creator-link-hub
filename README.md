@@ -7,7 +7,7 @@ Link-in-Bio-SaaS mit **Laravel 11**, **Livewire/Volt**, **Filament Admin**, **Po
 - Registrierung / Login / E-Mail-Verifizierung (Breeze)
 - Workspace + Profil + **öffentliche Seite** unter `/p/{slug}`
 - **Links** mit Tracking-Redirect `/go/{link}`
-- **Themes** (6 Presets) + Profilbild (öffentlicher `storage`-Disk)
+- **Profil-Vorlagen** (30 Farb-Themes) + Profilbild (öffentlicher `storage`-Disk)
 - **Analytics** (Klicks pro Tag, Top-Links)
 - **Pläne & Limits** (Free: max. 10 Links, Plattform-Branding)
 - **Stripe** Checkout & Kundenportal (Price-IDs in `.env`)
