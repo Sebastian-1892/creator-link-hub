@@ -2,6 +2,8 @@
 
 namespace App\Providers\Filament;
 
+use App\Http\Middleware\SetFilamentAdminLocale;
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
@@ -39,10 +41,12 @@ class AdminPanelProvider extends PanelProvider
             ->widgets([
                 AccountWidget::class,
             ])
+            ->userMenuItems($this->filamentLocaleMenuActions())
             ->middleware([
                 EncryptCookies::class,
                 AddQueuedCookiesToResponse::class,
                 StartSession::class,
+                SetFilamentAdminLocale::class,
                 AuthenticateSession::class,
                 ShareErrorsFromSession::class,
                 VerifyCsrfToken::class,
@@ -53,5 +57,23 @@ class AdminPanelProvider extends PanelProvider
             ->authMiddleware([
                 Authenticate::class,
             ]);
+    }
+
+    /**
+     * @return array<int, Action>
+     */
+    protected function filamentLocaleMenuActions(): array
+    {
+        $actions = [];
+        $sort = 36;
+
+        foreach (config('creator.filament_locales', []) as $code => $meta) {
+            $actions[] = Action::make('set-filament-locale-'.$code)
+                ->label($meta['native'] ?? $code)
+                ->url('/set-filament-locale/'.$code)
+                ->sort($sort++);
+        }
+
+        return $actions;
     }
 }

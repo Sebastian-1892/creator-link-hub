@@ -6,6 +6,7 @@ use Database\Factories\UserFactory;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Contracts\Auth\MustVerifyEmail;
+use Illuminate\Contracts\Translation\HasLocalePreference;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
@@ -13,7 +14,7 @@ use Illuminate\Notifications\Notifiable;
 use Laravel\Cashier\Billable;
 use Spatie\Permission\Traits\HasRoles;
 
-class User extends Authenticatable implements FilamentUser, MustVerifyEmail
+class User extends Authenticatable implements FilamentUser, HasLocalePreference, MustVerifyEmail
 {
     use Billable;
 
@@ -28,6 +29,7 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
         'email',
         'password',
         'is_admin',
+        'filament_locale',
         'onboarding_completed_at',
     ];
 
@@ -49,6 +51,18 @@ class User extends Authenticatable implements FilamentUser, MustVerifyEmail
     public function canAccessPanel(Panel $panel): bool
     {
         return (bool) $this->is_admin;
+    }
+
+    public function preferredLocale(): string
+    {
+        $allowed = array_keys(config('creator.filament_locales', []));
+        $locale = $this->filament_locale;
+
+        if (is_string($locale) && in_array($locale, $allowed, true)) {
+            return $locale;
+        }
+
+        return config('app.locale');
     }
 
     /**

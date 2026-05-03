@@ -1,6 +1,16 @@
 <?php
 
 return [
+    /**
+     * Filament-Admin: verfügbare Oberflächensprachen (Vendor-Übersetzungen in vendor/filament/.../lang).
+     */
+    'filament_locales' => [
+        'en' => ['native' => 'English'],
+        'de' => ['native' => 'Deutsch'],
+        'fr' => ['native' => 'Français'],
+        'it' => ['native' => 'Italiano'],
+    ],
+
     'free_link_limit' => 10,
 
     'stripe_prices' => [

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\FilamentLocaleController;
 use App\Http\Controllers\LinkRedirectController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\PublicProfileController;
@@ -45,6 +46,12 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::middleware(['auth', 'verified'])->group(function (): void {
+    Route::get('set-filament-locale/{locale}', FilamentLocaleController::class)
+        ->whereIn('locale', ['en', 'de', 'fr', 'it'])
+        ->name('filament-admin.locale');
+});
 
 Route::get('p/{slug}', [PublicProfileController::class, 'show'])
     ->where('slug', '[a-z0-9](?:[a-z0-9\-]{0,62}[a-z0-9])?')

@@ -11,7 +11,7 @@ Link-in-Bio-SaaS mit **Laravel 11**, **Livewire/Volt**, **Filament Admin**, **Po
 - **Analytics** (Klicks pro Tag, Top-Links)
 - **Pläne & Limits** (Free: max. 10 Links, Plattform-Branding)
 - **Stripe** Checkout & Kundenportal (Price-IDs in `.env`)
-- **Admin** `/admin` (nur `users.is_admin = true`)
+- **Admin** `/admin` (nur `users.is_admin = true`) — Sprachwahl **English, Deutsch, Français, Italiano** im Benutzermenü (Filament-Oberfläche)
 - Marketing: `/`, `/pricing`, `/faq`, Legal-Seiten, Cookie-Banner (Stub)
 
 Detaillierte Ablauf-Schritte: [`plan/steps/00-overview.md`](plan/steps/00-overview.md)
