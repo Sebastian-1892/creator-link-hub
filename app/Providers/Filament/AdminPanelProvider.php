@@ -43,7 +43,7 @@ class AdminPanelProvider extends PanelProvider
                 AccountWidget::class,
             ])
             ->renderHook(
-                PanelsRenderHook::TOPBAR_END,
+                PanelsRenderHook::GLOBAL_SEARCH_BEFORE,
                 fn (): View => view('filament.hooks.admin-locale-switcher'),
             )
             ->middleware([
