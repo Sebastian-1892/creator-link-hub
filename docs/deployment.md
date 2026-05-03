@@ -1,5 +1,8 @@
 # Deployment (Kurz-Runbook)
 
+**Interaktive Debian-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-debian-server.sh`](../scripts/install-debian-server.sh) — Repository: [https://github.com/Sebastian-1892/creator-link-hub.git](https://github.com/Sebastian-1892/creator-link-hub.git)  
+Ausführung auf dem Server als root: `sudo bash scripts/install-debian-server.sh` (im geklonten Projektordner).
+
 ## Server
 
 - PHP 8.3 + Extensions: `pdo_pgsql`, `mbstring`, `openssl`, `curl`, `redis`, `intl`, `bcmath`

@@ -42,6 +42,10 @@ php artisan test
 ./vendor/bin/phpstan analyse
 ```
 
+## Produktion / Debian-Server
+
+Interaktives Setup-Skript (fragt Einstellungen ab, installiert Pakete, Nginx, DB, optional Redis/Certbot): [`scripts/install-debian-server.sh`](scripts/install-debian-server.sh) — als root im geklonten Repo: `sudo bash scripts/install-debian-server.sh`. Repository: [creator-link-hub auf GitHub](https://github.com/Sebastian-1892/creator-link-hub.git). Kurz-Runbook: [`docs/deployment.md`](docs/deployment.md).
+
 ## Umgebungsvariablen
 
 Siehe [`.env.example`](.env.example) — insbesondere `STRIPE_*`, `STRIPE_PRICE_STARTER`, `STRIPE_PRICE_PRO`, Webhook `STRIPE_WEBHOOK_SECRET`.
