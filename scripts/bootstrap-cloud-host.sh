@@ -6,28 +6,58 @@
 #
 set -euo pipefail
 
-die() { echo "Fehler: $*" >&2; exit 1; }
-info() { echo "[bootstrap]" "$*"; }
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+
+# Farben (Abschalten: NO_COLOR=1 oder keine TTY)
+C_R=""
+C_B=""
+C_D=""
+C_CY=""
+C_GR=""
+C_YE=""
+C_RE=""
+if [[ -t 1 ]] && [[ -z "${NO_COLOR:-}${CLH_NO_COLOR:-}" ]]; then
+  C_R=$'\033[0m'
+  C_B=$'\033[1m'
+  C_D=$'\033[90m'
+  C_CY=$'\033[38;5;39m'
+  C_GR=$'\033[38;5;71m'
+  C_YE=$'\033[38;5;178m'
+  C_RE=$'\033[38;9m'
+fi
+
+die() { echo "${C_RE}${C_B}✖ Fehler:${C_R} $*" >&2; exit 1; }
+info() { echo "${C_GR}${C_B}●${C_R} ${C_GR}[bootstrap]${C_R} $*"; }
+
 step() {
   # $1 = laufende Nummer, $2 = von, $3 = Kurztext
   echo ""
-  info "Schritt $1/$2: $3"
+  echo "  ${C_YE}${C_B}▶ Schritt $1 / $2${C_R}"
+  echo "  ${C_D}$3${C_R}"
+  echo ""
+}
+
+banner_line() {
+  echo "${C_CY}${C_B}━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━${C_R}"
 }
 
 [[ "${EUID:-0}" -eq 0 ]] || die "Bitte als root: sudo bash $0"
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-REPO_ROOT="$(cd "${SCRIPT_DIR}/.." && pwd)"
+STEPS=13
 
-STEPS=11
 echo ""
-echo "=========================================="
-echo "  Creator Link Hub — Cloud-Host bootstrap"
-echo "=========================================="
+banner_line
 echo ""
-info "Dieses Skript richtet Nginx, MariaDB, PHP-FPM, den Provisioner-User und"
-info "Systemd ein. Der längste Teil ist oft Schritt 3/11 („apt install“), mehrere"
-info "Minuten — die vielen apt/dpkg-Zeilen dazwischen sind normaler Fortschritt."
+echo "${C_CY}${C_B}       Creator Link Hub — Cloud-Host bootstrap${C_R}"
+echo ""
+banner_line
+echo ""
+info "Dieses Skript installiert Basis-Pakete, UFW (Firewall), Nginx,"
+info "MariaDB, PHP-FPM, den Provisioner und die Tenant-Skripte."
+echo ""
+echo "  ${C_D}Der längste Block ist oft Schritt 3 / ${STEPS} (apt install) — viele apt-Zeilen"
+echo "  sind normal. Port ${C_GR}9100${C_D} läuft nur auf 127.0.0.1 (kein Firewall-Öffnen nötig).${C_R}"
 echo ""
 
 export DEBIAN_FRONTEND=noninteractive
@@ -182,7 +212,24 @@ else
 fi
 info "Geheimnis für HMAC: /etc/clh-provisioner/secret (mit Marketing / provisioner.hmac_secret abgleichen)."
 
-step 11 "$STEPS" "Nginx-Beispielkonfiguration schreiben (noch nicht aktiviert) …"
+step 11 "$STEPS" "Firewall (UFW): eingehend nur SSH · HTTP · HTTPS …"
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq ufw
+UFW_STA="$(ufw status 2>/dev/null || true)"
+if echo "$UFW_STA" | grep -qi 'Status: inactive'; then
+  ufw default deny incoming
+  ufw default allow outgoing
+  info "${C_B}Standard:${C_R} eingehend blockiert, ausgehend erlaubt."
+fi
+# SSH (Port aus OpenSSH; bei eigenem SSH-Port nach dem Lauf manuell: ufw allow …/tcp)
+ufw limit OpenSSH >/dev/null 2>&1 || ufw allow OpenSSH
+ufw allow 80/tcp comment 'HTTP (ACME, Redirects)'
+ufw allow 443/tcp comment 'HTTPS (Provisioner, Tenant-Apps)'
+ufw --force enable
+info "${C_B}UFW aktiv.${C_R} Von außen: ${C_YE}22/tcp (SSH)${C_R}, ${C_YE}80/tcp${C_R}, ${C_YE}443/tcp${C_R}."
+echo "  ${C_D}MariaDB und Provisioner (127.0.0.1:9100) bleiben nicht öffentlich erreichbar.${C_R}"
+echo ""
+
+step 12 "$STEPS" "Nginx-Beispielkonfiguration schreiben (noch nicht aktiviert) …"
 cat >/etc/nginx/sites-available/clh-provisioner.conf <<'NGX'
 server {
     listen 80;
@@ -200,11 +247,44 @@ server {
 NGX
 info "Beispiel-Site: /etc/nginx/sites-available/clh-provisioner.conf"
 
+step 13 "$STEPS" "Update-Skript + Pfade-Datei (install-paths.env) …"
+GIT_REF_PULL="${CLH_GIT_REF:-main}"
+{
+  printf '%s\n' \
+    '# Automatisch von bootstrap-cloud-host.sh — bei Umzug des Git-Klons CLH_REPO_ROOT anpassen.' \
+    '# Branch für „git pull“ (z. B. main, develop):' \
+    "CLH_GIT_REF=${GIT_REF_PULL}"
+  printf 'CLH_REPO_ROOT=%q\n' "$REPO_ROOT"
+} >/etc/clh-provisioner/install-paths.env
+chmod 0640 /etc/clh-provisioner/install-paths.env
+chown root:clh-provisioner /etc/clh-provisioner/install-paths.env
+install -m 0755 "${SCRIPT_DIR}/clh-cloud-host-update.sh" /usr/local/bin/clh-cloud-host-update.sh
+info "Updates: ${C_B}sudo /usr/local/bin/clh-cloud-host-update.sh${C_R} · optional ${C_D}--with-zip${C_R} (neue Tenant-ZIP)."
+info "Pfade: ${C_D}/etc/clh-provisioner/install-paths.env${C_R}"
+
 echo ""
-info "Bootstrap abgeschlossen. Nächste Schritte:"
-echo "  1) Release-ZIP nach /opt/clh-releases/current.zip legen (Laravel-App mit composer.json + artisan)."
-echo "  2) Wildcard-DNS *.app.creatorlinkhub.eu → diese Server-IP."
-echo "  3) Nginx-Site aktivieren: ln -sf /etc/nginx/sites-available/clh-provisioner.conf /etc/nginx/sites-enabled/ && nginx -t && systemctl reload nginx"
-echo "  4) TLS (certbot) für provision.* und Wildcard für *.app…"
-echo "  5) Geheimnis aus /etc/clh-provisioner/secret in creatorlinkhub.eu config provisioner.hmac_secret + provisioner.url (z. B. https://provision.app.creatorlinkhub.eu/ — exakt die POST-URL wie in Nginx)"
-echo "  6) journalctl -u clh-provisioner -f"
+banner_line
+echo ""
+echo "${C_CY}${C_B}  Bootstrap abgeschlossen ${C_GR}✓${C_R}"
+echo ""
+banner_line
+echo ""
+info "${C_B}Nächste Schritte${C_R} (über die Cloud-Doku abarbeiten):"
+echo ""
+echo "  ${C_YE}1.${C_R} Release-ZIP → ${C_D}/opt/clh-releases/current.zip${C_R}"
+echo ""
+echo "  ${C_YE}2.${C_R} Wildcard-DNS für Kunden-App-Hosts"
+echo ""
+echo "  ${C_YE}3.${C_R} Nginx aktivieren (${C_D}sites-enabled … && nginx -t …${C_R})"
+echo ""
+echo "  ${C_YE}4.${C_R} TLS mit Certbot (Provisioner + später Tenant-Domains)"
+echo ""
+echo "  ${C_YE}5.${C_R} Marketing: Secret + Provisioner-URL"
+echo ""
+echo "  ${C_YE}6.${C_R} Logs: ${C_D}journalctl -u clh-provisioner -f${C_R}"
+echo ""
+echo "  ${C_YE}7.${C_R} Nach GitHub-Push auf dem VPS: ${C_B}sudo /usr/local/bin/clh-cloud-host-update.sh${C_R}"
+echo "     ${C_D}(optional neue Release-ZIP: …/clh-cloud-host-update.sh --with-zip)${C_R}"
+echo ""
+echo "  ${C_GR}${C_B}Firewall:${C_R} ${C_D}sudo ufw status numbered${C_R} — Ports ${C_GR}22 · 80 · 443${C_R} sollten ALLOW sein."
+echo ""

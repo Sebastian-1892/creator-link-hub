@@ -4,6 +4,10 @@
 # Stdout: genau eine JSON-Zeile. Diagnostik nach stderr.
 # Voraussetzung: MariaDB/MySQL lokal (root per Socket), Nginx, PHP-FPM, Composer im PATH.
 #
+# TLS: Let's Encrypt via certbot **certonly --webroot** (public/.well-known), danach eigene Nginx-HTTP/HTTPS-
+# Sites — vermeidet certbot „--nginx“-Patches (return 404 / zerstückelte Konfiguration).
+# Voraussetzung: Port 80 + DNS A für --domain. Ohne TLS: --no-tls.
+#
 set -euo pipefail
 
 log() { echo "[clh-provision-tenant]" "$@" >&2; }
@@ -21,6 +25,7 @@ ADMIN_NAME="Admin"
 TENANT_ROOT="/var/www/clh-tenants"
 RELEASE_ZIP=""
 DB_DRIVER="mysql"
+ENABLE_TLS=1
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,6 +36,7 @@ while [[ $# -gt 0 ]]; do
     --tenant-root) TENANT_ROOT="${2:-}"; shift 2 ;;
     --release-zip) RELEASE_ZIP="${2:-}"; shift 2 ;;
     --db-driver) DB_DRIVER="${2:-}"; shift 2 ;;
+    --no-tls) ENABLE_TLS=0; shift ;;
     *) die_json "unknown argument: $1" ;;
   esac
 done
@@ -81,6 +87,8 @@ for comp in "${COMPOSERS[@]}"; do
 done
 [[ -n "$APPROOT" ]] || die_json "no valid app root found (composer.json + artisan) in release zip"
 mv "$APPROOT" "$INSTALL_DIR" || die_json "mv to install dir failed: $INSTALL_DIR"
+# mktemp-Extrakt liegt typisch unter drwx------: Nginx/php-fpm (www-data) müssen INSTALL_DIR traversieren (root …/public).
+chmod 0755 "$INSTALL_DIR" "$INSTALL_DIR/public" || die_json "chmod 755 tenant root/public failed"
 
 mysql -u root <<EOSQL || die_json "mysql bootstrap failed (root socket / permissions?)"
 CREATE DATABASE IF NOT EXISTS \`${DB_NAME}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;
@@ -90,7 +98,8 @@ GRANT ALL PRIVILEGES ON \`${DB_NAME}\`.* TO '${DB_USER}'@'localhost';
 FLUSH PRIVILEGES;
 EOSQL
 
-APP_URL="https://${DOMAIN}"
+# Zunächst http (ACME HTTP-01 / bis Zertifikat da ist); bei ENABLE_TLS=1 wird danach auf https umgestellt.
+APP_URL="http://${DOMAIN}"
 if [[ -f "$INSTALL_DIR/.env.example" ]]; then
   cp -f "$INSTALL_DIR/.env.example" "$INSTALL_DIR/.env"
 elif [[ -f "$INSTALL_DIR/.env.production.example" ]]; then
@@ -213,6 +222,82 @@ ln -sf "$SITE_AVAIL" "$SITE_EN"
 nginx -t
 systemctl reload nginx
 
+if [[ "$ENABLE_TLS" -eq 1 ]]; then
+  log "Let's Encrypt (webroot) für ${DOMAIN} — ACME-Mail: ${ADMIN_EMAIL}"
+  export DEBIAN_FRONTEND=noninteractive
+  if ! command -v certbot &>/dev/null; then
+    apt-get update -qq
+    apt-get install -y -qq certbot
+  fi
+
+  certbot certonly --webroot \
+    -w "$INSTALL_DIR/public" \
+    -d "$DOMAIN" \
+    --non-interactive \
+    --agree-tos \
+    -m "$ADMIN_EMAIL" \
+    --preferred-challenges http \
+    || die_json "certbot certonly/webroot fehlgeschlagen für ${DOMAIN} — DNS A hierher? Port 80 von außen? (Alternative: Tenant mit --no-tls)"
+
+  NG_DH_LINE=""
+  [[ -f /etc/letsencrypt/ssl-dhparams.pem ]] && NG_DH_LINE=$'    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;\n'
+
+  log "nginx final (HTTPS + ACME /.well-known auf :80)"
+  cat >"$SITE_AVAIL" <<NGX
+server {
+    listen 80;
+    listen [::]:80;
+    server_name ${DOMAIN};
+    location ^~ /.well-known/acme-challenge/ {
+        root ${INSTALL_DIR}/public;
+        default_type text/plain;
+    }
+    location / {
+        return 301 https://\$host\$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl;
+    listen [::]:443 ssl;
+    server_name ${DOMAIN};
+    ssl_certificate /etc/letsencrypt/live/${DOMAIN}/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/${DOMAIN}/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+${NG_DH_LINE}    root ${INSTALL_DIR}/public;
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    index index.php;
+    charset utf-8;
+    location / {
+        try_files \$uri \$uri/ /index.php?\$query_string;
+    }
+    location = /favicon.ico { access_log off; log_not_found off; }
+    location = /robots.txt  { access_log off; log_not_found off; }
+    error_page 404 /index.php;
+    location ~ \\.php\$ {
+        include snippets/fastcgi-php.conf;
+        fastcgi_pass unix:${FPM_SOCK};
+        fastcgi_param SCRIPT_FILENAME \$realpath_root\$fastcgi_script_name;
+        include fastcgi_params;
+        fastcgi_hide_header X-Powered-By;
+    }
+    location ~ /\\.(?!well-known).* { deny all; }
+}
+NGX
+  nginx -t
+  systemctl reload nginx
+
+  APP_URL="https://${DOMAIN}"
+  sed -i "s|^APP_URL=.*|APP_URL=${APP_URL}|" "$INSTALL_DIR/.env" || die_json "APP_URL in .env konnte nicht auf https gesetzt werden"
+  cd "$INSTALL_DIR"
+  php artisan config:clear --no-ansi
+  php artisan config:cache --no-ansi
+  log "TLS aktiv — APP_URL=${APP_URL}"
+else
+  log "TLS übersprungen (--no-tls). APP_URL bleibt http."
+fi
+
 ADMIN_URL="${APP_URL%/}/admin"
 printf '%s\n' "{\"instance_url\":\"${APP_URL}/\",\"ok\":true,\"admin_url\":\"${ADMIN_URL}\"}"
-log "tenant ready slug=$SLUG (Filament-Admin: $ADMIN_URL — initiales Admin-Passwort nur in Server-Logs / Passwort-Reset)"
+log "tenant ready slug=$SLUG instance=${APP_URL}/ admin=${ADMIN_URL} (initiales Admin-Passwort bei Bedarf per InstallAdminSeeder / Passwort-Reset)"

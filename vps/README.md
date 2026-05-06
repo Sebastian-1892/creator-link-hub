@@ -22,6 +22,7 @@ Nach `sudo bash scripts/bootstrap-cloud-host.sh` sind u. a. vorhanden:
 
 | Paket / Dienst | Funktion auf dem VPS |
 |----------------|---------------------|
+| **UFW** (Firewall) | Nach Bootstrap aktiv: von außen typisch nur **SSH** (Profil „OpenSSH“ / **limit** möglich), **80/tcp**, **443/tcp**. **9100** bleibt **nicht** freigegeben (nur localhost). Eigenen SSH-Port per `ufw allow …` nachrüsten. |
 | **Nginx** | TLS-Termination, `proxy_pass` zum Provisioner (`127.0.0.1:9100`), je Tenant eigene Site unter `sites-available`. |
 | **MariaDB oder MySQL** | Tenant-Datenbanken; Root-Zugriff fürs Provisioning oft per **`mysql -u root`** (Socket/Policies je nach Bootstrap). |
 | **PHP CLI** | `composer`, `php artisan`, Built-in Server des Provisioners. |
@@ -40,6 +41,7 @@ Konkrete PHP-Minor-Versionen richten sich nach dem Bootstrap und den Ubuntu-/Deb
 | Laufsystem-Prozess | `php -S 127.0.0.1:9100 …/router.php` (Built-in Server, **nicht** öffentlich ohne Nginx binden). |
 | Einstieg | [`deployment/cloud-host/router.php`](../deployment/cloud-host/router.php) → [`deployment/cloud-host/provisioner.php`](../deployment/cloud-host/provisioner.php) nach `/opt/clh-provisioner/` |
 | HMAC-Secret | `/etc/clh-provisioner/secret` — muss zum Marketing **`provisioner.hmac_secret`** passen (**Rohstring**, kein `hex2bin` auf dem Schlüssel). |
+| Git-Klon + Branch (Updates) | `/etc/clh-provisioner/install-paths.env` — `CLH_REPO_ROOT`, `CLH_GIT_REF`; wird beim Bootstrap geschrieben, von [`scripts/clh-cloud-host-update.sh`](../scripts/clh-cloud-host-update.sh) gelesen. |
 | Konfiguration (JSON) | `/etc/clh-provisioner/config.json` — u. a. `release_zip`, `tenants_root`, `db_driver`. |
 | Nonce-/Replay-Cache | `/var/lib/clh-provisioner/nonces/` |
 | systemd-Unit (auf dem VPS) | `/etc/systemd/system/clh-provisioner.service` — wird von [`scripts/bootstrap-cloud-host.sh`](../scripts/bootstrap-cloud-host.sh) geschrieben (keine Kopie im `deployment/cloud-host/`-Ordner nötig) |
@@ -62,7 +64,8 @@ Konkrete PHP-Minor-Versionen richten sich nach dem Bootstrap und den Ubuntu-/Deb
 
 | Repo-Datei | Ziel auf dem VPS | Zweck |
 |------------|------------------|-------|
-| [`scripts/clh-provision-tenant.sh`](../scripts/clh-provision-tenant.sh) | `/usr/local/bin/clh-provision-tenant.sh` | Neuer Tenant aus ZIP (Composer, Migrate, Seeds, Admin, Nginx-Reload). |
+| [`scripts/clh-provision-tenant.sh`](../scripts/clh-provision-tenant.sh) | `/usr/local/bin/clh-provision-tenant.sh` | Neuer Tenant aus ZIP (Composer, Migrate, Seeds, Admin), **`chmod 755`** Tenantroot/`public`, **Let’s Encrypt** per **`certbot certonly --webroot`**, Nginx‑Endconfig HTTP/HTTPS, optional **`--no-tls`**. |
+| [`scripts/clh-cloud-host-update.sh`](../scripts/clh-cloud-host-update.sh) | `/usr/local/bin/clh-cloud-host-update.sh` | Nach Push ins Repo: `git pull`, Provisioner-PHP + Tenant-Skripte ausrollen, optional `--with-zip`, Dienst + Nginx reload. |
 | `scripts/clh-delete-tenant.sh` | `/usr/local/bin/clh-delete-tenant.sh` | Tenant entfernen (Dateien, DB, Sites). |
 | `scripts/clh-suspend-tenant.sh` | `/usr/local/bin/clh-suspend-tenant.sh` | Tenant-Site aus `sites-enabled` nehmen. |
 

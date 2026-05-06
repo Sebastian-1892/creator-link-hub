@@ -47,7 +47,7 @@ sudo bash /tmp/install-cloud-host-interactive.sh
 
 (Skript liegt im Repo unter [`scripts/install-cloud-host-interactive.sh`](../../scripts/install-cloud-host-interactive.sh); roher Download nur sinnvoll ab dem Branch/Tag mit diesem Skript.)
 
-**Was der Wizard automatisch mit erledigt (je nach Auswahl):** Git-Clone oder Update unter dem gewünschten Elternordner, [`scripts/bootstrap-cloud-host.sh`](../../scripts/bootstrap-cloud-host.sh), `server_name` in `clh-provisioner.conf` setzen, Site in `sites-enabled` und `nginx reload`, optional [`scripts/build-cloud-release-zip.sh`](../../scripts/build-cloud-release-zip.sh) sowie Kopie nach `/opt/clh-releases/current.zip`, optional **TLS** für den einen Provisioner-Host.
+**Was der Wizard automatisch mit erledigt (je nach Auswahl):** Git-Clone oder Update unter dem gewünschten Elternordner, [`scripts/bootstrap-cloud-host.sh`](../../scripts/bootstrap-cloud-host.sh) (inkl. **UFW**: von außen typisch nur **SSH, 80, 443**), `server_name` in `clh-provisioner.conf` setzen, Site in `sites-enabled` und `nginx reload`, optional [`scripts/build-cloud-release-zip.sh`](../../scripts/build-cloud-release-zip.sh) sowie Kopie nach `/opt/clh-releases/current.zip`, optional **TLS** für den einen Provisioner-Host.
 
 **Nach dem Wizard:** wildcard-DNS für Kunden-Hostnamen, Marketing (`provisioner.hmac_secret`, URL) — weiter wie [Schritt 7](#schritt-7--marketing-backend-anbinden). Wildcard-/Tenant-TLS sind weiterhin eigener Feinschliff (gleiche Grundlagen wie in dieser Doku).
 
@@ -56,7 +56,7 @@ sudo bash /tmp/install-cloud-host-interactive.sh
 ## Vorarbeit: Checkliste
 
 - [ ] **VPS** mit Debian/Ubuntu LTS, SSH, idealerweise nur du als Admin.
-- [ ] Öffentliche **IPv4** (und ggf. IPv6); Firewall: **80** und **443** später von außen erreichbar (für TLS / HTTP-Challenge).
+- [ ] Öffentliche **IPv4** (und ggf. IPv6); **Bootstrap** aktiviert **UFW**: eingehend u. a. **SSH (OpenSSH)**, **80**, **443** — **9100** bleibt nur **loopback** (Provisioner). Eigenen **SSH-Port** ggf. nach dem Bootstrap mit `ufw allow …/tcp` ergänzen.
 - [ ] **`creator-link-hub`** auf dem Server: **[Schnellstart: Interaktiver Installer](#schnellstart-interaktiver-installer-empfohlen)** oder manuell [Installation über Git](#installation-über-git) — Alternativ: entpacktes Archiv mit `scripts/`.
 - [ ] Eine fertige **Release-ZIP** der App für neue Tenants, oder Build aus dem geklonten Repo (siehe [Schritt 3](#schritt-3--release-zip-ablegen)).
 - [ ] Entscheidung: **Provisioner-Hostname** (z. B. `provision.app.deinedomain.de`) und **Kunden-Basis** (z. B. `*.app.deinedomain.de`).
@@ -112,7 +112,7 @@ cd /opt/creator-link-hub-src/creator-link-hub   # Pfad anpassen
 sudo bash scripts/bootstrap-cloud-host.sh
 ```
 
-Es installiert u. a. **Git** (falls noch nicht da), Nginx, MariaDB, PHP-FPM, kopiert `provisioner.php` / `router.php` nach `/opt/clh-provisioner/` und richtet systemd ein — wie in [Schritt 2](#schritt-2--bootstrap-ausführen-einmalig) beschrieben.
+Es installiert u. a. **UFW** (Firewall), **Git** (falls noch nicht da), Nginx, MariaDB, PHP-FPM, kopiert `provisioner.php` / `router.php` nach `/opt/clh-provisioner/` und richtet systemd ein — wie in [Schritt 2](#schritt-2--bootstrap-ausführen-einmalig) beschrieben.
 
 ### 4. Release-ZIP aus demselben Clone
 
@@ -129,9 +129,23 @@ sudo chmod 644 /opt/clh-releases/current.zip
 
 ### 5. Spätere Updates
 
-- **Code:** `git pull` (oder erneut Tag/Branch checkout) im Klon-Verzeichnis.
-- **Provisioner-Dateien:** nach Änderungen an `deployment/cloud-host/provisioner.php` oder `router.php` erneut nach `/opt/clh-provisioner/` kopieren und Dienst neu starten — siehe [vps/README.md](../../vps/README.md).
-- **Neue App-Version für Tenant-Neuanlagen:** ZIP neu bauen und nach `/opt/clh-releases/current.zip` legen ([Schritt 9](#schritt-9--nach-einem-release-zip-aktualisieren)).
+**Empfohlen (nach Bootstrap):** Auf dem VPS als root:
+
+```bash
+sudo /usr/local/bin/clh-cloud-host-update.sh
+```
+
+Optional mit neuem Release-ZIP für **zukünftige** Tenant-Neuanlagen (benötigt `node`/`npm` und `zip` auf dem Server):
+
+```bash
+sudo /usr/local/bin/clh-cloud-host-update.sh --with-zip
+```
+
+Das Skript liest den **Git-Klon-Pfad** und den **Branch** aus `/etc/clh-provisioner/install-paths.env` (wird beim Bootstrap angelegt). Bei Umzug des Repos diesen Wert von `CLH_REPO_ROOT` anpassen.
+
+**Manuell (Fallback):** `git pull` im Klon-Verzeichnis; `deployment/cloud-host/provisioner.php` und `router.php` nach `/opt/clh-provisioner/` kopieren und Dienst neu starten — siehe [vps/README.md](../../vps/README.md). ZIP neu bauen und nach `/opt/clh-releases/current.zip` legen ([Schritt 9](#schritt-9--nach-einem-release-zip-aktualisieren)).
+
+> **Hinweis:** Bestehende Tenant-Instanzen unter `/var/www/clh-tenants/` werden durch das Update-Skript **nicht** automatisch angehoben.
 
 Danach wie unten: **DNS** → **Nginx/TLS** → **Tests** → Marketing.
 
@@ -159,9 +173,11 @@ cd /pfad/zu/creator-link-hub
 sudo bash scripts/bootstrap-cloud-host.sh
 ```
 
-**Erwartung:** Es erscheint eine nummerierte Schritt-Ausgabe `[bootstrap] Schritt x/11`. Der längste Block ist meist **Schritt 3** (`apt install`) — viele Zeilen von apt/dpkg sind normal.
+**Erwartung:** farbige Ausgabe mit **Schritt x / 13** (über **13** Arbeitsschritte). Der längste Block ist meist **`apt install`** — viele Zeilen von apt/dpkg sind normal.
 
-Das Skript installiert u. a. **nginx**, **mariadb-server**, **PHP-FPM 8.2–8.4**, kopiert **`deployment/cloud-host/provisioner.php`** und **`deployment/cloud-host/router.php`** nach `/opt/clh-provisioner/`, legt User **`clh-provisioner`**, **sudoers**, **systemd** und eine **Nginx-Beispieldatei** an.
+Das Skript installiert u. a. **`ufw`** (öffentlich typisch nur **SSH, 80/tcp, 443/tcp**), **nginx**, **mariadb-server**, **PHP-FPM 8.2–8.4**, kopiert **`deployment/cloud-host/provisioner.php`** und **`deployment/cloud-host/router.php`** nach `/opt/clh-provisioner/`, legt User **`clh-provisioner`**, **sudoers**, **systemd** und eine **Nginx-Beispieldatei** an. **Provisioner:** `127.0.0.1:9100` (von außen nicht freigegeben).
+
+**Firewall prüfen:** `sudo ufw status numbered`.
 
 > **Hinweis:** `router.php` liest den HTTP-Body einmal aus `php://input` und reicht ihn an `provisioner.php` weiter. Ohne diese Datei kann der PHP Built-in Server beim Signatur‑Check **`401 invalid signature`** liefern, obwohl Secret und Marketing-Code stimmen.
 
@@ -353,7 +369,7 @@ Optional: Kopien der Dateien **`provisioner.php`** und **`router.php`** liegen i
 
 ## Schritt 8 — Ersten Tenant anlegen
 
-1. Stelle sicher, dass DNS-Wildcard und ggf. TLS für **Kunden-Hostnamen** passen (`server_name` in den Tenant-Configs kommt vom Provision-Skript: **vollständiger Hostname**, den du beim Aufruf übergibst).
+1. Stelle sicher, dass ein **A-Record** für den **Tenant-Hostnamen** auf den VPS zeigt und **Port 80** von außen erreichbar ist — das Provision-Skript fordert **standardmäßig Let’s Encrypt** per **`certbot certonly --webroot`** unter **`…/public/.well-known`**, schreibt danach **stabile Nginx‑Blöcke** (HTTP: ACME + Redirect, HTTPS: App) und setzt **`APP_URL=https://…`**. Für reine Tests ohne TLS: **`--no-tls`**. DNS-**Wildcard** für viele Kunden-Unterdomains bleibt wie in den TLS-Abschnitten weiter oben beschrieben.
 2. Löse die Aktion vom **Marketing** aus ( oder testweise ein signiertes POST mit denselben Regeln wie oben ).
 3. Prüfen:
 
@@ -368,6 +384,50 @@ Logs bei Problemen:
 sudo journalctl -u clh-provisioner.service -n 80 --no-pager
 sudo tail -n 80 /var/log/nginx/error.log
 ```
+
+---
+
+## Fehlersuche: Kunden-URL zeigt Provisioner-JSON oder `nginx` meldet **404 Not Found**
+
+### A) Unter `https://…` erscheint die Provisioner-Health-JSON oder `{"error":"not found"}`
+
+**Ursache (ältere Installationen / kein TLS):** Es gab nur **HTTP** für den Tenant; unter **HTTPS** hat ein **anderer** vHost (z. B. **Provisioner** auf 443) zugeschlagen — JSON statt Laravel.
+
+**Aktueller Stand im Repo:** `clh-provision-tenant.sh` nutzt **`certbot certonly --webroot`** (kein `certbot --nginx`, damit keine defekten Nginx‑Fragmente wie `return 404` entstehen), schreibt **HTTP/HTTPS‑Sites selbst**, setzt **`APP_URL=https://`** und **`config:cache`**. **Port 80** muss für die Challenge erreichbar sein; auf **:80** bleibt **`/.well-known/acme-challenge/`** auch nach Umstellung auf HTTPS erhalten (Renew).
+
+**Manuell nachbessern** (wenn TLS beim Anlegen fehlgeschlagen ist oder alter Stand auf dem Server ohne Webroot‑Logik liegt):
+
+```bash
+sudo certbot certonly --webroot -w /var/www/clh-tenants/SLUG/public -d tenant.app.deinedomain.de
+# Anschließend Nginx HTTPS für den Tenant ergänzen bzw. Skript aktualisieren und Tenant neu durchspielen (--no-tls löschen oder frischen Slug verwenden).
+```
+
+**Prüfen**, welcher vHost greift:
+
+```bash
+sudo nginx -T 2>/dev/null | grep -E 'server_name|listen|ssl_certificate' | head -80
+curl -sS -o /dev/null -w '%{http_code}\n' -H 'Host: tenant.app.deinedomain.de' http://127.0.0.1/
+```
+
+### B) `404 Not Found` (Nginx-Fehlerseite, nicht Laravel)
+
+Häufig: **Document-Root** zeigt nicht auf die Laravel-**`public/`** mit `index.php`, oder das App-Verzeichnis ist unvollständig.
+
+**Sehr häufig:** Der Tenantordner **`/var/www/clh-tenants/SLUG`** hat Modus **`0700`** (z. B. weil beim Entpacken ein `mktemp`-Verzeichnis verschoben wurde) — dann kann **`www-data`** den Pfad zu **`…/public`** nicht durchlaufen, obwohl Nginx **`root`** richtig gesetzt hat. Abhilfe:
+
+```bash
+sudo chmod 0755 /var/www/clh-tenants/SLUG /var/www/clh-tenants/SLUG/public
+sudo systemctl reload nginx
+```
+
+Neue Instanzen: im Repo setzt **`clh-provision-tenant.sh`** nach dem `mv` **`chmod 0755`** auf Installations- und `public/`-Ordner.
+
+```bash
+sudo grep -E 'root|server_name' /etc/nginx/sites-enabled/clh-SLUG.conf
+ls -la /var/www/clh-tenants/SLUG/public/index.php
+```
+
+Ist **`artisan`** nicht unter `/var/www/clh-tenants/SLUG/`, liegt die App oft **in einem Unterordner** — dann ist der Tenantbaum fehl ausgerichtet; Nginx-`root` muss auf `…/APP/public` zeigen, wobei `…/APP` der Ordner mit `artisan` ist.
 
 ---
 
@@ -397,7 +457,7 @@ Skripte (nur per `sudo` vom User `clh-provisioner`):
 
 | Skript | Zweck |
 |--------|--------|
-| `clh-provision-tenant.sh` | Neuer Tenant: ZIP auspacken, `.env`, Composer/Artisan, Nginx-Site |
+| `clh-provision-tenant.sh` | Neuer Tenant: ZIP, `.env`, Composer/Artisan, Nginx + **Let’s Encrypt** (`certonly --webroot`), finale HTTP/HTTPS‑Sites im Repo‑Format, `chmod 755` Tenantroot, `APP_URL=https://…` (**`--no-tls`** möglich) |
 | `clh-delete-tenant.sh` | Tenant entfernen (DB, Dateien, Nginx) |
 | `clh-suspend-tenant.sh` | Tenant Site aus `sites-enabled` nehmen |
 
