@@ -2,6 +2,7 @@
 #
 # Release-ZIP für Cloud-Multi-Tenant (Provisioner: clh-provision-tenant.sh).
 # Voraussetzung: Node/npm für Vite (public/build ist in .gitignore, muss gebaut werden).
+# Zusätzlich: CLI „zip“ (Debian-Paket zip) — beim Cloud-Bootstrap mitinstalliert.
 #
 # Siehe docs/cloud-hosting-installation/README.md — ZIP nach /opt/clh-releases/current.zip auf dem VPS.
 #
@@ -13,7 +14,12 @@ cd "$ROOT"
 log() { echo "[build-cloud-release-zip]" "$@"; }
 
 command -v npm >/dev/null 2>&1 || {
-  log "npm nicht im PATH. Beispiel: Node 20 installieren oder siehe https://nodejs.org/"
+  log "npm nicht im PATH. Node.js installieren (VPS: docs/cloud-hosting-installation/README.md → Schritt 3 „Node.js auf dem VPS“), dann erneut ausführen."
+  exit 1
+}
+
+command -v zip >/dev/null 2>&1 || {
+  log "zip nicht im PATH. Debian/Ubuntu: sudo apt-get install -y zip — danach erneut ausführen."
   exit 1
 }
 

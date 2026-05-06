@@ -1,5 +1,7 @@
 # Creator Link Hub — Cloud-Host einrichten (Schritt für Schritt)
 
+> **Installation direkt vom GitHub:** Auf der Repository-Startseite im Abschnitt **„Cloud-Multi-Tenant“** → *Direkt vom GitHub installieren* steht der Kopierbefehl mit [`install-cloud-host-interactive.sh`](../../scripts/install-cloud-host-interactive.sh) (Rohdownload von Branch `main`). Details unten unter [Schnellstart: Interaktiver Installer](#schnellstart-interaktiver-installer-empfohlen).
+
 Diese Anleitung ist für **dich als Betreiber** eines **Multi-Tenant-App-Hosts**: ein VPS mit MariaDB, Nginx, Tenant-Verzeichnissen und einem kleinen **HTTP-Provisioner** (signierte API → `sudo` → `clh-provision-tenant.sh`). Dein **Marketing-Backend** (z. B. **creatorlinkhub.eu**, separates Repo) löst später Bestellungen aus und ruft diesen Provisioner auf.
 
 > **Nicht** dasselbe wie Self-Host (eine Installation mit `install-server.sh`). Hier entstehen **viele** Laravel-Instanzen unter `/var/www/clh-tenants/{slug}`.
@@ -23,17 +25,47 @@ Ersetze in allen Beispielen **Platzhalter-Domains** durch deine echten Namen (`p
 
 ---
 
+## Schnellstart: Interaktiver Installer (empfohlen)
+
+Alles Wesentliche in **einem** Ablauf: Das Skript fragt interaktiv u. a. nach Git-URL, Klonordner, Branch/Tag, **Provisioner-Hostnamen**, ob Nginx aktiviert, **Release-ZIP** gebaut werden soll (npm/Vite/`zip`), und ob **Certbot** laufen soll. Es läuft **als root**.
+
+**Vorgehen A — bereits Repo auf dem VPS:**
+
+```bash
+cd /opt/creator-link-hub-src/creator-link-hub    # Pfad zu deinem Klon
+sudo bash scripts/install-cloud-host-interactive.sh
+```
+
+**Vorgehen B — praktisch nacktes Ubuntu, nur Minimalpakete:**
+
+```bash
+sudo apt-get update && sudo apt-get install -y curl ca-certificates
+sudo curl -fsSL -o /tmp/install-cloud-host-interactive.sh \
+  https://raw.githubusercontent.com/Sebastian-1892/creator-link-hub/main/scripts/install-cloud-host-interactive.sh
+sudo bash /tmp/install-cloud-host-interactive.sh
+```
+
+(Skript liegt im Repo unter [`scripts/install-cloud-host-interactive.sh`](../../scripts/install-cloud-host-interactive.sh); roher Download nur sinnvoll ab dem Branch/Tag mit diesem Skript.)
+
+**Was der Wizard automatisch mit erledigt (je nach Auswahl):** Git-Clone oder Update unter dem gewünschten Elternordner, [`scripts/bootstrap-cloud-host.sh`](../../scripts/bootstrap-cloud-host.sh), `server_name` in `clh-provisioner.conf` setzen, Site in `sites-enabled` und `nginx reload`, optional [`scripts/build-cloud-release-zip.sh`](../../scripts/build-cloud-release-zip.sh) sowie Kopie nach `/opt/clh-releases/current.zip`, optional **TLS** für den einen Provisioner-Host.
+
+**Nach dem Wizard:** wildcard-DNS für Kunden-Hostnamen, Marketing (`provisioner.hmac_secret`, URL) — weiter wie [Schritt 7](#schritt-7--marketing-backend-anbinden). Wildcard-/Tenant-TLS sind weiterhin eigener Feinschliff (gleiche Grundlagen wie in dieser Doku).
+
+---
+
 ## Vorarbeit: Checkliste
 
 - [ ] **VPS** mit Debian/Ubuntu LTS, SSH, idealerweise nur du als Admin.
 - [ ] Öffentliche **IPv4** (und ggf. IPv6); Firewall: **80** und **443** später von außen erreichbar (für TLS / HTTP-Challenge).
-- [ ] **`creator-link-hub`** auf dem Server: **empfohlen per Git** (siehe [Installation über Git](#installation-über-git)) — Alternativ: entpacktes Archiv mit `scripts/`.
+- [ ] **`creator-link-hub`** auf dem Server: **[Schnellstart: Interaktiver Installer](#schnellstart-interaktiver-installer-empfohlen)** oder manuell [Installation über Git](#installation-über-git) — Alternativ: entpacktes Archiv mit `scripts/`.
 - [ ] Eine fertige **Release-ZIP** der App für neue Tenants, oder Build aus dem geklonten Repo (siehe [Schritt 3](#schritt-3--release-zip-ablegen)).
 - [ ] Entscheidung: **Provisioner-Hostname** (z. B. `provision.app.deinedomain.de`) und **Kunden-Basis** (z. B. `*.app.deinedomain.de`).
 
 ---
 
-## Installation über Git
+## Installation über Git (manuelle Einzelschritte)
+
+Die folgenden Schritte entsprechen dem, was der [interaktive Installer](#schnellstart-interaktiver-installer-empfohlen) gebündelt kann — wenn du lieber jeden Befehl selbst steuerst.
 
 So richtest du den Cloud-Host **vollständig aus dem Git-Repository** ein: Quellcode per `git clone`, anschließend wie gewohnt Bootstrap und DNS/TLS. Du brauchst **kein** separates Hochladen des Projektroots per SCP, wenn du diesen Weg gehst.
 
@@ -84,7 +116,7 @@ Es installiert u. a. **Git** (falls noch nicht da), Nginx, MariaDB, PHP-FPM, k
 
 ### 4. Release-ZIP aus demselben Clone
 
-Neue Tenants bekommen immer eine **ZIP** unter `/opt/clh-releases/current.zip`. Du kannst sie **auf dem VPS** aus dem geklonten Repo bauen, sobald **Node.js/npm** verfügbar sind (`scripts/build-cloud-release-zip.sh` führt `npm ci` und `npm run build` aus). Beispiel nach Installation von Node 20 LTS (siehe [nodejs.org](https://nodejs.org/)):
+Neue Tenants bekommen immer eine **ZIP** unter `/opt/clh-releases/current.zip`. Du kannst sie **auf dem VPS** aus dem geklonten Repo bauen — **Voraussetzung:** `node` und `npm` im `PATH` (das Bootstrap-Skript installiert **kein** Node.js). Installationsbeispiele stehen in [Schritt 3](#schritt-3--release-zip-ablegen) („Node.js auf dem VPS“).
 
 ```bash
 cd /opt/creator-link-hub-src/creator-link-hub
@@ -139,7 +171,51 @@ Das Skript installiert u. a. **nginx**, **mariadb-server**, **PHP-FPM 8.2–8.
 
 ## Schritt 3 — Release-ZIP ablegen
 
-**ZIP bauen** (lokal, in CI oder **auf dem VPS** im gleichen Git-Klon nach Installation von Node/npm):
+### Voraussetzungen auf dem VPS für den ZIP-Build
+
+- **Node.js / npm** für `npm ci` und `npm run build` (Vite). Fehlt `npm`, bricht das Skript ab — es gibt **keine** `distribution/releases/current-cloud.zip`.
+- **ZIP-Programm** (`zip` im PATH, Debian/Ubuntu-Paket **`zip`**). Das Cloud-Bootstrap installiert seit dem Repo-Update **`zip`** zusammen mit **`unzip`**; auf älteren Servern ggf. nachinstallieren:
+
+  ```bash
+  sudo apt-get install -y zip
+  ```
+
+`zip: command not found` nach erfolgreichem Vite-Build bedeutet: Paket **`zip`** installieren, Build-Skript **erneut** ausführen (damit werden Archiv und `unzip`-Test erzeugt).
+
+### Node.js auf dem VPS
+
+`scripts/build-cloud-release-zip.sh` ruft **`npm ci`** und **`npm run build`** auf.
+
+**Prüfen:**
+
+```bash
+command -v node && node -v
+command -v npm && npm -v
+```
+
+**Option A — Ubuntu/Debian: Distribution-Pakete** (oft ausreichend, z. B. Ubuntu 24.04 „Noble“ mit Node 18+):
+
+```bash
+sudo apt-get update
+sudo apt-get install -y nodejs npm
+```
+
+**Option B — Node.js 20.x LTS (NodeSource, empfohlen wenn `apt`-Node zu alt fehlt):**
+
+```bash
+curl -fsSL https://deb.nodesource.com/setup_20.x | sudo -E bash -
+sudo apt-get install -y nodejs
+```
+
+Danach erneut `node -v` / `npm -v` prüfen, dann im **Repository-Root**:
+
+```bash
+bash scripts/build-cloud-release-zip.sh
+```
+
+### ZIP erzeugen und nach `/opt/clh-releases/` legen
+
+**ZIP bauen** (lokal, in CI oder **auf dem VPS** im gleichen Git-Klon — siehe oben: Node/npm):
 
 ```bash
 bash scripts/build-cloud-release-zip.sh

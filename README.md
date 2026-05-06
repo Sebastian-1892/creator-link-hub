@@ -31,17 +31,49 @@ php artisan serve
 
 ## Cloud-Multi-Tenant (Marketing-Server + App-VPS)
 
+Ein **App-Host** (ein VPS) bedient viele Kunden-Installationen unter `/var/www/clh-tenants/{slug}` mit **HTTP-Provisioner** + **MariaDB**. Marketing (z. B. creatorlinkhub.eu) ruft den Provisioner per HMAC auf.
+
+### Direkt vom GitHub installieren (Ubuntu / Debian VPS)
+
+Auf einem frischen Server (als **root** oder mit **sudo**):
+
+1. **DNS:** A-Record für deinen späteren **Provisioner-Hostnamen** (z. B. `provision.app.deinedomain.de`) auf die Server-IP legen — vor **Let’s Encrypt** im Wizard nötig.
+2. **Installer starten** — lädt das Skript von `main` und führt den **interaktiven Wizard** aus (Git-Clone oder Update, Bootstrap, optional Release-ZIP mit Node, Nginx, optional Certbot):
+
+```bash
+sudo apt-get update && sudo apt-get install -y curl ca-certificates
+sudo curl -fsSL -o /tmp/install-cloud-host-interactive.sh \
+  https://raw.githubusercontent.com/Sebastian-1892/creator-link-hub/main/scripts/install-cloud-host-interactive.sh
+sudo bash /tmp/install-cloud-host-interactive.sh
+```
+
+**Alternativ** (Repo z. B. schon geklont oder private Git-URL):
+
+```bash
+git clone https://github.com/Sebastian-1892/creator-link-hub.git
+cd creator-link-hub
+sudo bash scripts/install-cloud-host-interactive.sh
+```
+
+Nach dem Wizard: **Wildcard-DNS** für Kunden-Subdomains, **`/etc/clh-provisioner/secret`** im Marketing als `provisioner.hmac_secret` eintragen und die **öffentliche Provisioner-URL** setzen — Details in der Anleitung unten.
+
+---
+
+**Schritt-für-Schritt (manuelle Einzelbefehle, Feinschliff):** [`docs/cloud-hosting-installation/README.md`](docs/cloud-hosting-installation/README.md)  
+**Komponenten/Pfade auf dem VPS:** [`vps/README.md`](vps/README.md)
+
+---
+
 Skripte zum Aufsetzen des **App-Hosts** und zum Anlegen/Löschen einzelner **Tenants** liegen unter **`scripts/`** und **`deployment/cloud-host/`**:
 
 | Komponente | Zweck |
 |------------|--------|
 | [`scripts/bootstrap-cloud-host.sh`](scripts/bootstrap-cloud-host.sh) | Einmalig: Nginx, MariaDB, PHP-FPM, User `clh-provisioner`, systemd, sudoers, kopiert Provisioner |
+| [`scripts/install-cloud-host-interactive.sh`](scripts/install-cloud-host-interactive.sh) | Interaktiver Wizard auf dem VPS: Git, Bootstrap, ZIP, Nginx, optional Certbot (siehe Cloud-Doku) |
 | [`deployment/cloud-host/router.php`](deployment/cloud-host/router.php) + [`provisioner.php`](deployment/cloud-host/provisioner.php) | HTTP-Provisioner (HMAC, Nonce, `sudo` → Tenant-Skripte); mit Marketing-Repo **creatorlinkhub.eu** unter `deployment/cloud-host/` bei Bedarf **inhaltlich synchron** halten |
 | [`scripts/build-cloud-release-zip.sh`](scripts/build-cloud-release-zip.sh) | Release-ZIP mit `npm run build` für `/opt/clh-releases/current.zip` auf dem VPS |
 | `clh-provision-tenant.sh`, `clh-delete-tenant.sh`, `clh-suspend-tenant.sh` | Auf dem VPS unter `/usr/local/bin/`, Aufruf durch Provisioner |
 
-**Schritt-für-Schritt (DNS, TLS, ZIP, Marketing-Anbindung):** [`docs/cloud-hosting-installation/README.md`](docs/cloud-hosting-installation/README.md)  
-**Komponenten/Pfade auf dem VPS:** [`vps/README.md`](vps/README.md)  
 Marketing (falls vorhanden): [`../creatorlinkhub.eu/deployment/cloud-host/README.md`](../creatorlinkhub.eu/deployment/cloud-host/README.md)
 
 **Demo-Logins (nach `migrate --seed`):**

@@ -47,8 +47,8 @@ done
 [[ -n "$PHP_VER" ]] || die "Kein php8.2–8.4-fpm in apt."
 info "Gewählt: PHP ${PHP_VER}"
 
-step 3 "$STEPS" "Pakete installieren (nginx, mariadb-server, php${PHP_VER}-*, unzip, …) — bitte warten …"
-apt-get install -y nginx mariadb-server unzip acl curl ca-certificates openssl git \
+step 3 "$STEPS" "Pakete installieren (nginx, mariadb-server, php${PHP_VER}-*, unzip, zip, …) — bitte warten …"
+apt-get install -y nginx mariadb-server unzip zip acl curl ca-certificates openssl git \
   "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-mbstring" "php${PHP_VER}-xml" \
   "php${PHP_VER}-curl" "php${PHP_VER}-zip" "php${PHP_VER}-intl" "php${PHP_VER}-bcmath" \
   "php${PHP_VER}-mysql"
