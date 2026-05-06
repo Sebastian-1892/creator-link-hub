@@ -27,9 +27,81 @@ Ersetze in allen Beispielen **Platzhalter-Domains** durch deine echten Namen (`p
 
 - [ ] **VPS** mit Debian/Ubuntu LTS, SSH, idealerweise nur du als Admin.
 - [ ] Öffentliche **IPv4** (und ggf. IPv6); Firewall: **80** und **443** später von außen erreichbar (für TLS / HTTP-Challenge).
-- [ ] **`creator-link-hub`** Repo auf dem Server (Git-Clone oder entpacktes Release mit `scripts/`).
-- [ ] Eine fertige **Release-ZIP** der App (mit `composer.json` + `artisan` im Archiv; `vendor`/`node_modules` dürfen fehlen).
+- [ ] **`creator-link-hub`** auf dem Server: **empfohlen per Git** (siehe [Installation über Git](#installation-über-git)) — Alternativ: entpacktes Archiv mit `scripts/`.
+- [ ] Eine fertige **Release-ZIP** der App für neue Tenants, oder Build aus dem geklonten Repo (siehe [Schritt 3](#schritt-3--release-zip-ablegen)).
 - [ ] Entscheidung: **Provisioner-Hostname** (z. B. `provision.app.deinedomain.de`) und **Kunden-Basis** (z. B. `*.app.deinedomain.de`).
+
+---
+
+## Installation über Git
+
+So richtest du den Cloud-Host **vollständig aus dem Git-Repository** ein: Quellcode per `git clone`, anschließend wie gewohnt Bootstrap und DNS/TLS. Du brauchst **kein** separates Hochladen des Projektroots per SCP, wenn du diesen Weg gehst.
+
+### 1. Repo klonen
+
+Auf dem VPS ein **festes Arbeitsverzeichnis** wählen (lesbar für deinen SSH-User; `root` ist für `sudo` nicht zwingend nötig):
+
+```bash
+sudo mkdir -p /opt/creator-link-hub-src
+sudo chown "$USER":"$USER" /opt/creator-link-hub-src
+cd /opt/creator-link-hub-src
+```
+
+**Öffentliches Repository** (HTTPS):
+
+```bash
+git clone https://github.com/Sebastian-1892/creator-link-hub.git
+cd creator-link-hub
+```
+
+**Privates Repository** nutzt du am sichersten mit **SSH-Deploy-Key** (nur Lesezugriff auf dieses Repo) oder einem persönlichen SSH-Key des Deploy-Users — dann:
+
+```bash
+git clone git@github.com:Sebastian-1892/creator-link-hub.git
+cd creator-link-hub
+```
+
+### 2. Revisionsstand festlegen (empfohlen)
+
+Für reproduzierbare Installationen einen **Tag** oder Branch auschecken:
+
+```bash
+git fetch --tags
+git checkout v1.2.3    # Beispiel: ersetzen durch euren echten Tag
+# oder: git checkout main
+```
+
+### 3. Bootstrap starten
+
+Das Bootstrap-Skript **muss** aus dem Repo-Root laufen (dort liegen `scripts/bootstrap-cloud-host.sh` und `deployment/cloud-host/`):
+
+```bash
+cd /opt/creator-link-hub-src/creator-link-hub   # Pfad anpassen
+sudo bash scripts/bootstrap-cloud-host.sh
+```
+
+Es installiert u. a. **Git** (falls noch nicht da), Nginx, MariaDB, PHP-FPM, kopiert `provisioner.php` / `router.php` nach `/opt/clh-provisioner/` und richtet systemd ein — wie in [Schritt 2](#schritt-2--bootstrap-ausführen-einmalig) beschrieben.
+
+### 4. Release-ZIP aus demselben Clone
+
+Neue Tenants bekommen immer eine **ZIP** unter `/opt/clh-releases/current.zip`. Du kannst sie **auf dem VPS** aus dem geklonten Repo bauen, sobald **Node.js/npm** verfügbar sind (`scripts/build-cloud-release-zip.sh` führt `npm ci` und `npm run build` aus). Beispiel nach Installation von Node 20 LTS (siehe [nodejs.org](https://nodejs.org/)):
+
+```bash
+cd /opt/creator-link-hub-src/creator-link-hub
+bash scripts/build-cloud-release-zip.sh
+sudo cp distribution/releases/current-cloud.zip /opt/clh-releases/current.zip
+sudo chmod 644 /opt/clh-releases/current.zip
+```
+
+**Alternative:** ZIP lokal oder in CI bauen und nur **`current.zip`** nach `/opt/clh-releases/` kopieren — das Repository muss auf dem VPS dann trotzdem für **Bootstrap und Skripte** vorliegen, wenn du „alles über Git“ fahren willst.
+
+### 5. Spätere Updates
+
+- **Code:** `git pull` (oder erneut Tag/Branch checkout) im Klon-Verzeichnis.
+- **Provisioner-Dateien:** nach Änderungen an `deployment/cloud-host/provisioner.php` oder `router.php` erneut nach `/opt/clh-provisioner/` kopieren und Dienst neu starten — siehe [vps/README.md](../../vps/README.md).
+- **Neue App-Version für Tenant-Neuanlagen:** ZIP neu bauen und nach `/opt/clh-releases/current.zip` legen ([Schritt 9](#schritt-9--nach-einem-release-zip-aktualisieren)).
+
+Danach wie unten: **DNS** → **Nginx/TLS** → **Tests** → Marketing.
 
 ---
 
@@ -46,7 +118,9 @@ Warte, bis die Auflösung von deinem Rechner aus stimmt (`dig` / `nslookup`).
 
 ## Schritt 2 — Bootstrap ausführen (einmalig)
 
-Auf dem VPS, im Verzeichnis des Repos:
+**Voraussetzung:** Du stehst im **Repository-Root** (bei Installation über Git z. B. `/opt/creator-link-hub-src/creator-link-hub`), siehe [Installation über Git](#installation-über-git).
+
+Auf dem VPS:
 
 ```bash
 cd /pfad/zu/creator-link-hub
@@ -65,7 +139,7 @@ Das Skript installiert u. a. **nginx**, **mariadb-server**, **PHP-FPM 8.2–8.
 
 ## Schritt 3 — Release-ZIP ablegen
 
-**ZIP lokal bauen (empfohlen):** Im Repo `creator-link-hub` ausführen:
+**ZIP bauen** (lokal, in CI oder **auf dem VPS** im gleichen Git-Klon nach Installation von Node/npm):
 
 ```bash
 bash scripts/build-cloud-release-zip.sh
