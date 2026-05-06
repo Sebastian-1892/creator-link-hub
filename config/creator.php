@@ -4,7 +4,7 @@ return [
     /**
      * Absoluter Pfad zum Projektroot (ohne trailing slash). Umgebungsvariable: `CLH_APP_ROOT`.
      * Wird von `scripts/install-server.sh` in `.env` gesetzt. Leer/null = keine Pfadbindung (typisch lokal).
-     * Shell: `scripts/update-from-git.sh` liest dieselbe Variable direkt aus `.env` und bricht bei Abweichung ab.
+     * Shell: `scripts/update-application.sh` liest dieselbe Variable direkt aus `.env` und bricht bei Abweichung ab.
      */
     'app_root' => filled(env('CLH_APP_ROOT')) ? rtrim((string) env('CLH_APP_ROOT'), '/\\') : null,
 

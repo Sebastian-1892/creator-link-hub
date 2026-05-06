@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Deployment & updates',
-    'intro' => 'Release channel: public versions.json (pCloud). Optional: Git deployment — fetch origin and run the server update script (composer, npm build, migrations, caches).',
+    'intro' => 'Release channel: public versions.json (pCloud). Server update: composer, npm build, migrations and caches — after replacing app files (e.g. new ZIP), without Git.',
 
     'manifest_section' => 'Release channel (versions.json)',
     'manifest_url_label' => 'Manifest URL',
@@ -16,32 +16,22 @@ return [
     'manifest_check_failed' => 'Could not load the release manifest.',
     'manifest_not_loaded' => 'Manifest not loaded yet — use Check.',
 
-    'git_section' => 'Git deployment (optional)',
-    'git_check_failed' => 'Git remote check failed.',
-    'git_update_available' => 'New commits on origin for this branch.',
-    'git_up_to_date' => 'Git branch is up to date with origin.',
+    'shell_section' => 'Server update (no Git)',
+    'shell_intro' => 'For a new version: deploy the ZIP from the manifest (replace files), then run “Run dependencies & migrations” here or via SSH. Git is not used.',
 
-    'no_git' => 'No Git repository at the configured path — Git actions are hidden. You can still use the release ZIP from the manifest.',
-    'script_missing' => 'The script scripts/update-from-git.sh was not found.',
-    'path_label' => 'Repository path',
+    'script_missing' => 'The script scripts/update-application.sh was not found.',
+    'script_ready' => 'Update script found',
+    'path_label' => 'Install path (CLH_APP_ROOT)',
 
-    'branch' => 'Branch',
-    'local' => 'This server (HEAD)',
-    'remote' => 'Origin (after fetch)',
-    'unknown' => 'Not checked yet',
-    'check' => 'Check (manifest + Git)',
+    'check' => 'Check (release manifest)',
     'checking' => 'Checking…',
 
-    'dirty_title' => 'Uncommitted local changes',
-    'dirty_hint' => 'The standard Git update will stop. Commit or stash, or use the advanced action (risk of overwriting).',
-
-    'apply' => 'Run Git update now',
+    'apply' => 'Run dependencies & migrations',
     'applying' => 'Running update…',
-    'apply_force' => 'Git update (ignore dirty tree)',
-    'apply_confirm' => 'Start the full Git update script (may take several minutes)? The site can briefly be unstable.',
+    'apply_confirm' => 'Start the update script (composer, npm, migrations, caches; may take several minutes)? The site may briefly be unstable.',
 
-    'success_title' => 'Git update finished',
-    'failure_title' => 'Git update failed',
+    'success_title' => 'Application update finished',
+    'failure_title' => 'Application update failed',
 
     'output_hint' => 'Last lines of the log (full output is in laravel.log).',
 ];

@@ -6,7 +6,7 @@
 #   sudo bash scripts/install-server.sh
 #
 # Voraussetzung: Internet. Debian 12+ oder Ubuntu 22.04/24.04 LTS — nur PHP-Pakete aus den offiziellen Repos (kein PPA).
-# Repository: https://github.com/Sebastian-1892/creator-link-hub.git
+# Die Anwendung muss bereits im Zielverzeichnis liegen (Release-ZIP entpackt oder Kunden-install.sh).
 #
 set -euo pipefail
 
@@ -77,7 +77,7 @@ if frage_ja "apt update && apt upgrade -y ausführen? (kann länger dauern)" "j"
 fi
 
 info "Installiere Basis-Pakete …"
-DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl git unzip acl ca-certificates lsb-release gnupg python3
+DEBIAN_FRONTEND=noninteractive apt-get install -y -qq curl unzip acl ca-certificates lsb-release gnupg python3
 
 apt-get update -qq
 
@@ -110,25 +110,17 @@ if ! command -v composer &>/dev/null; then
   chmod +x /usr/local/bin/composer
 fi
 
-DEFAULT_REPO="https://github.com/Sebastian-1892/creator-link-hub.git"
-INSTALL_DIR="$(frage "Installationsverzeichnis (ohne Schrägstrich am Ende)" "/var/www/creator-link-hub")"
-INSTALL_DIR="${INSTALL_DIR%/}"
-GIT_URL="$(frage "Git-Repository-URL" "$DEFAULT_REPO")"
-GIT_BRANCH="$(frage "Git-Branch" "main")"
-
-if [[ -d "$INSTALL_DIR/.git" ]]; then
-  warn "Git-Repository existiert bereits: $INSTALL_DIR"
-  if frage_ja "Mit git pull aktualisieren (Branch $GIT_BRANCH)?" "j"; then
-    git -C "$INSTALL_DIR" fetch origin
-    git -C "$INSTALL_DIR" checkout "$GIT_BRANCH"
-    git -C "$INSTALL_DIR" pull origin "$GIT_BRANCH"
-  fi
-elif [[ -e "$INSTALL_DIR" ]]; then
-  die "Pfad existiert, ist aber kein Git-Repository: $INSTALL_DIR — bitte leeren oder anderen Pfad wählen."
+if [[ -n "${CLH_INSTALL_TARGET:-}" ]]; then
+  INSTALL_DIR="${CLH_INSTALL_TARGET%/}"
+  [[ -n "$INSTALL_DIR" ]] || die "CLH_INSTALL_TARGET (absoluter Pfad zur entpackten App) ist leer."
+  [[ -f "$INSTALL_DIR/composer.json" && -f "$INSTALL_DIR/artisan" ]] || die "CLH_INSTALL_TARGET ist keine Laravel-App (composer.json/artisan fehlt): $INSTALL_DIR"
+  info "Installationsziel (vorkonfiguriert): $INSTALL_DIR"
 else
-  mkdir -p "$(dirname "$INSTALL_DIR")"
-  info "Klone Repository …"
-  git clone -b "$GIT_BRANCH" "$GIT_URL" "$INSTALL_DIR"
+  INSTALL_DIR="$(frage "Installationsverzeichnis — entpackte App (ohne Schrägstrich am Ende)" "/var/www/creator-link-hub")"
+  INSTALL_DIR="${INSTALL_DIR%/}"
+  if [[ ! -f "$INSTALL_DIR/composer.json" || ! -f "$INSTALL_DIR/artisan" ]]; then
+    die "Unter $INSTALL_DIR liegt keine gültige App (composer.json und artisan erforderlich). Zuerst Release-ZIP entpacken oder install.sh ausführen."
+  fi
 fi
 
 cd "$INSTALL_DIR" || die "Konnte nicht nach $INSTALL_DIR wechseln."
@@ -558,13 +550,13 @@ echo "Nginx root:  $INSTALL_DIR/public"
 echo ""
 echo "Nächste Schritte:"
 echo "  - Filament-Admin: $APP_URL/admin (falls beim Setup angelegt)."
-echo "  - Updates aus Git (ohne Datenverlust): cd $INSTALL_DIR && bash scripts/update-from-git.sh"
+echo "  - Nach neuem Release-ZIP: Dateien ersetzen, dann cd $INSTALL_DIR && bash scripts/update-application.sh"
 echo "  - Stripe: Webhook $APP_URL/stripe/webhook und STRIPE_WEBHOOK_SECRET setzen."
 echo "  - Ohne npm-Build: cd $INSTALL_DIR && (test -f package-lock.json && npm ci || npm install) && npm run build"
 echo "  - Logs: $INSTALL_DIR/storage/logs/"
 echo ""
-echo "Wichtig — nur EINE Arbeitskopie auf diesem Server:"
-echo "  - artisan, composer, npm und update-from-git.sh immer unter: $INSTALL_DIR"
-echo "  - Nicht zusätzlich in z. B. /root/... klonen — sonst nutzt die Shell eine andere .env/Datenbank als Nginx/PHP-FPM."
+echo "Wichtig — nur EINE Installationskopie auf diesem Server:"
+echo "  - artisan, composer, npm und scripts/update-application.sh immer unter: $INSTALL_DIR"
+echo "  - Keine zweite Kopie anlegen — sonst nutzt die Shell eine andere .env/Datenbank als Nginx/PHP-FPM."
 echo "  - In .env steht CLH_APP_ROOT (wird vom Update-Skript gegen das aktuelle Verzeichnis geprüft)."
 echo ""

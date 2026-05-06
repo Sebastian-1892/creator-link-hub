@@ -29,6 +29,21 @@ npm install && npm run build     # Vite-Assets (für UI ohne Fehler)
 php artisan serve
 ```
 
+## Cloud-Multi-Tenant (Marketing-Server + App-VPS)
+
+Skripte zum Aufsetzen des **App-Hosts** und zum Anlegen/Löschen einzelner **Tenants** liegen unter **`scripts/`** und **`deployment/cloud-host/`**:
+
+| Komponente | Zweck |
+|------------|--------|
+| [`scripts/bootstrap-cloud-host.sh`](scripts/bootstrap-cloud-host.sh) | Einmalig: Nginx, MariaDB, PHP-FPM, User `clh-provisioner`, systemd, sudoers, kopiert Provisioner |
+| [`deployment/cloud-host/router.php`](deployment/cloud-host/router.php) + [`provisioner.php`](deployment/cloud-host/provisioner.php) | HTTP-Provisioner (HMAC, Nonce, `sudo` → Tenant-Skripte); mit Marketing-Repo **creatorlinkhub.eu** unter `deployment/cloud-host/` bei Bedarf **inhaltlich synchron** halten |
+| [`scripts/build-cloud-release-zip.sh`](scripts/build-cloud-release-zip.sh) | Release-ZIP mit `npm run build` für `/opt/clh-releases/current.zip` auf dem VPS |
+| `clh-provision-tenant.sh`, `clh-delete-tenant.sh`, `clh-suspend-tenant.sh` | Auf dem VPS unter `/usr/local/bin/`, Aufruf durch Provisioner |
+
+**Schritt-für-Schritt (DNS, TLS, ZIP, Marketing-Anbindung):** [`docs/cloud-hosting-installation/README.md`](docs/cloud-hosting-installation/README.md)  
+**Komponenten/Pfade auf dem VPS:** [`vps/README.md`](vps/README.md)  
+Marketing (falls vorhanden): [`../creatorlinkhub.eu/deployment/cloud-host/README.md`](../creatorlinkhub.eu/deployment/cloud-host/README.md)
+
 **Demo-Logins (nach `migrate --seed`):**
 
 - Admin: `admin@example.com` / `password` → Filament `/admin`
@@ -46,14 +61,9 @@ php artisan test
 
 Ziel: einmaliges Setup mit **Nginx**, **PHP-FPM** (8.2–8.4 aus den **offiziellen Paketquellen**, kein PPA), **PostgreSQL oder MariaDB**, optional **Redis**, **Composer**, **Node/npm** (Vite-Build), Laravel-Migrationen und optional **SSL (Certbot)**.
 
-Repository klonen:
+**Kunden:** Release-ZIP einspielen (z. B. über `distribution/install.sh` mit Lizenz) — die Lizenz wird gegen **`https://creatorlinkhub.eu/license/check`** geprüft (`CLH_LICENSE_CHECK_URL` überschreibbar). Danach läuft `install-server.sh` automatisch im entpackten Verzeichnis.
 
-```bash
-git clone https://github.com/Sebastian-1892/creator-link-hub.git
-cd creator-link-hub
-```
-
-Install-Skript **als root** aus dem **Projektroot** starten (nicht aus dem Unterordner `scripts/` mit `scripts/scripts/...`):
+**Manuell:** Anwendung als ZIP entpacken (z. B. nach `/var/www/creator-link-hub`), in diesen Ordner wechseln, dann:
 
 ```bash
 sudo bash scripts/install-server.sh
@@ -62,7 +72,7 @@ sudo bash scripts/install-server.sh
 Das Skript ist **interaktiv** (deutsch) und fragt u. a. ab:
 
 - System-Update (`apt upgrade`)
-- Installationsverzeichnis, Git-URL und Branch
+- Installationsverzeichnis (muss bereits die entpackte Laravel-App enthalten)
 - Domain / `APP_URL` / `APP_NAME`
 - Datenbank (PostgreSQL oder MariaDB), Benutzer, Passwort, optional Löschen gleichnamiger Test-DB
 - Redis, NodeSource (Node 20) für den Frontend-Build
@@ -73,16 +83,16 @@ Das Skript ist **interaktiv** (deutsch) und fragt u. a. ab:
 
 **Wichtig:** Datenbank-Passwort ohne einfaches `'` und ohne `"`. Nach dem Setup: Kurzüberblick in [`docs/deployment.md`](docs/deployment.md), Go-Live in [`docs/launch-runbook.md`](docs/launch-runbook.md).
 
-### Updates aus Git (bestehende Installation)
+### Updates (bestehende Installation, ohne Git)
 
-Ohne Datenbank oder `.env` zu zerstören — nur Code ziehen, Abhängigkeiten und **ausstehende Migrationen**:
+Neue Version: **ZIP** einspielen (Dateien ersetzen), dann im Projektroot **Abhängigkeiten, Build und Migrationen**:
 
 ```bash
-cd creator-link-hub   # dein Installationspfad
-bash scripts/update-from-git.sh
+cd /pfad/zu/creator-link-hub   # dein Installationspfad
+bash scripts/update-application.sh
 ```
 
-Optionen: `bash scripts/update-from-git.sh --help` (u. a. `--dev` für Composer mit Dev-Paketen, `--yes` bei lokalem „dirty“ Git).
+Optionen: `bash scripts/update-application.sh --help` (u. a. `--dev` für Composer mit Dev-Paketen).
 
 ## Umgebungsvariablen
 

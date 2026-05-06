@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Deployment & Updates',
-    'intro' => 'Release-Kanal: öffentliche versions.json (pCloud). Optional: Git-Installation — origin abgleichen und Server-Update-Skript ausführen (Composer, npm-Build, Migrationen, Caches).',
+    'intro' => 'Release-Kanal: öffentliche versions.json (pCloud). Server-Update: Composer, npm-Build, Migrationen und Caches — nach Austausch der App-Dateien (z. B. neues ZIP), ohne Git.',
 
     'manifest_section' => 'Release-Kanal (versions.json)',
     'manifest_url_label' => 'Manifest-URL',
@@ -16,32 +16,22 @@ return [
     'manifest_check_failed' => 'Das Release-Manifest konnte nicht geladen werden.',
     'manifest_not_loaded' => 'Manifest noch nicht geladen — bitte „Prüfen“.',
 
-    'git_section' => 'Git-Deployment (optional)',
-    'git_check_failed' => 'Git-Remote-Prüfung fehlgeschlagen.',
-    'git_update_available' => 'Neue Commits auf origin für diesen Branch.',
-    'git_up_to_date' => 'Git-Branch ist mit origin auf dem neuesten Stand.',
+    'shell_section' => 'Server-Update (ohne Git)',
+    'shell_intro' => 'Neue Version: ZIP aus dem Manifest einspielen (Dateien ersetzen), dann hier oder per SSH „Abhängigkeiten & Migrationen ausführen“ starten. Es wird kein Git verwendet.',
 
-    'no_git' => 'Kein Git-Repository am konfigurierten Pfad — Git-Aktionen entfallen. Das Release-ZIP aus dem Manifest kannst du trotzdem nutzen.',
-    'script_missing' => 'Das Skript scripts/update-from-git.sh wurde nicht gefunden.',
-    'path_label' => 'Repository-Pfad',
+    'script_missing' => 'Das Skript scripts/update-application.sh wurde nicht gefunden.',
+    'script_ready' => 'Update-Skript gefunden',
+    'path_label' => 'Installationspfad (CLH_APP_ROOT)',
 
-    'branch' => 'Branch',
-    'local' => 'Dieser Server (HEAD)',
-    'remote' => 'Origin (nach fetch)',
-    'unknown' => 'Noch nicht geprüft',
-    'check' => 'Prüfen (Manifest + Git)',
+    'check' => 'Prüfen (Release-Manifest)',
     'checking' => 'Prüfe…',
 
-    'dirty_title' => 'Lokale, nicht committete Änderungen',
-    'dirty_hint' => 'Das Standard-Git-Update bricht ab. Bitte committen/stashen — oder die erweiterte Aktion (Überschreiben möglich).',
-
-    'apply' => 'Git-Update jetzt ausführen',
+    'apply' => 'Abhängigkeiten & Migrationen ausführen',
     'applying' => 'Update läuft…',
-    'apply_force' => 'Git-Update trotz lokaler Änderungen',
-    'apply_confirm' => 'Das vollständige Git-Update-Skript starten (kann mehrere Minuten dauern)? Die Seite kann kurz instabil sein.',
+    'apply_confirm' => 'Das Update-Skript starten (Composer, npm, Migrationen, Caches; kann mehrere Minuten dauern)? Die Seite kann kurz instabil sein.',
 
-    'success_title' => 'Git-Update abgeschlossen',
-    'failure_title' => 'Git-Update fehlgeschlagen',
+    'success_title' => 'Anwendungs-Update abgeschlossen',
+    'failure_title' => 'Anwendungs-Update fehlgeschlagen',
 
     'output_hint' => 'Auszug aus der Ausgabe (vollständig in laravel.log).',
 ];

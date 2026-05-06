@@ -21,3 +21,6 @@ yarn-error.log
 /.nova
 /.vscode
 /.zed
+
+# Release-ZIPs (lokal erzeugen, nicht ins Repo einchecken)
+/distribution/releases/*.zip

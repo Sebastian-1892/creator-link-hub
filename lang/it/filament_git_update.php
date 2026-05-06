@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Deploy e aggiornamenti',
-    'intro' => 'Canale release: versions.json pubblico (pCloud). Opzionale: deploy Git — confronta origin ed esegui lo script di aggiornamento sul server (Composer, build npm, migrazioni, cache).',
+    'intro' => 'Canale release: versions.json pubblico (pCloud). Aggiornamento server: Composer, build npm, migrazioni e cache — dopo la sostituzione dei file (es. nuovo ZIP), senza Git.',
 
     'manifest_section' => 'Canale release (versions.json)',
     'manifest_url_label' => 'URL manifest',
@@ -16,32 +16,22 @@ return [
     'manifest_check_failed' => 'Impossibile caricare il manifest di release.',
     'manifest_not_loaded' => 'Manifest non caricato — usa Controlla.',
 
-    'git_section' => 'Deploy Git (opzionale)',
-    'git_check_failed' => 'Verifica Git remota non riuscita.',
-    'git_update_available' => 'Nuovi commit su origin per questo branch.',
-    'git_up_to_date' => 'Il branch Git è aggiornato con origin.',
+    'shell_section' => 'Aggiornamento server (senza Git)',
+    'shell_intro' => 'Per una nuova versione: distribuire lo ZIP dal manifest (sostituire i file), poi avviare «Esegui dipendenze e migrazioni» qui o via SSH. Git non viene usato.',
 
-    'no_git' => 'Nessun repository Git nel percorso configurato — azioni Git nascoste. Puoi usare lo ZIP dal manifest.',
-    'script_missing' => 'Script scripts/update-from-git.sh non trovato.',
-    'path_label' => 'Percorso repository',
+    'script_missing' => 'Script scripts/update-application.sh non trovato.',
+    'script_ready' => 'Script di aggiornamento trovato',
+    'path_label' => 'Percorso installazione (CLH_APP_ROOT)',
 
-    'branch' => 'Branch',
-    'local' => 'Questo server (HEAD)',
-    'remote' => 'Origin (dopo fetch)',
-    'unknown' => 'Non ancora verificato',
-    'check' => 'Controlla (manifest + Git)',
+    'check' => 'Controlla (manifest release)',
     'checking' => 'Verifica…',
 
-    'dirty_title' => 'Modifiche locali non committate',
-    'dirty_hint' => 'L’aggiornamento Git standard si interrompe. Esegui commit/stash — o azione avanzata (rischio sovrascrittura).',
-
-    'apply' => 'Esegui aggiornamento Git',
+    'apply' => 'Esegui dipendenze e migrazioni',
     'applying' => 'Aggiornamento…',
-    'apply_force' => 'Aggiorna Git ignorando modifiche locali',
-    'apply_confirm' => 'Avviare lo script Git completo (minuti)? Possibile instabilità.',
+    'apply_confirm' => 'Avviare lo script di aggiornamento (Composer, npm, migrazioni, cache; può richiedere diversi minuti)? Possibile instabilità.',
 
-    'success_title' => 'Aggiornamento Git completato',
-    'failure_title' => 'Aggiornamento Git non riuscito',
+    'success_title' => 'Aggiornamento applicazione completato',
+    'failure_title' => 'Aggiornamento applicazione non riuscito',
 
     'output_hint' => 'Estratto dell’output (completo in laravel.log).',
 ];

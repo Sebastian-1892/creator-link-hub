@@ -1,9 +1,20 @@
 # Deployment (Kurz-Runbook)
 
-**Interaktive Debian-/Ubuntu-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-server.sh`](../scripts/install-server.sh) — Repository: [https://github.com/Sebastian-1892/creator-link-hub.git](https://github.com/Sebastian-1892/creator-link-hub.git)  
-Ausführung auf dem Server als root: `sudo bash scripts/install-server.sh` (im geklonten Projektordner). PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA). Das Skript legt nach den Migrationen optional einen **Filament-Administrator** an (E-Mail, Anzeigename, Passwort) und lädt zuvor die **Themes** per `ThemeSeeder`.
+## Zwei Betriebsmodelle
 
-## Server
+| Modell | Einstieg | Doku |
+|--------|----------|------|
+| **Ein Mandant (Self-Host)** | ZIP + [`scripts/install-server.sh`](../scripts/install-server.sh) | [`docs/self-host-installation/README.md`](self-host-installation/README.md) |
+| **Multi-Tenant Cloud-VPS** | [`scripts/bootstrap-cloud-host.sh`](../scripts/bootstrap-cloud-host.sh) | [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md) und [`vps/README.md`](../vps/README.md) (Komponentenübersicht) |
+
+Die folgenden Absätze gelten primär für die **klassische Einzelinstallation** (eine App, eine DB).
+
+---
+
+**Interaktive Debian-/Ubuntu-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-server.sh`](../scripts/install-server.sh)  
+Ausführung auf dem Server als root: `sudo bash scripts/install-server.sh` im **entpackten** Projektordner (Release-ZIP oder Kunden-`install.sh`). Es gibt **keinen Git-Clone** mehr. PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA). Das Skript legt nach den Migrationen optional einen **Filament-Administrator** an (E-Mail, Anzeigename, Passwort) und lädt zuvor die **Themes** per `ThemeSeeder`.
+
+## Server (Self-Host / klassisch)
 
 - PHP **8.2–8.4** (Projekt-Lock richtet sich nach Plattform **8.3** in `composer.json`; 8.4 auf dem Server ist unkritisch) + Extensions: `pdo_pgsql` bzw. `mysql`, `mbstring`, `openssl`, `curl`, `redis`, `intl`, `bcmath`
 - PostgreSQL 16, Redis 7
@@ -11,16 +22,18 @@ Ausführung auf dem Server als root: `sudo bash scripts/install-server.sh` (im g
 - Supervisor: `php artisan queue:work`
 - Cron: `* * * * * php /path/artisan schedule:run`
 
+**Cloud-App-Host (viele Tenants):** typisch **MariaDB**, Tenant-Datenbanken und Nginx-Sites werden von den `clh-*.sh`-Skripten angelegt — siehe [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md).
+
 ## Updates (bestehende Installation)
 
-Skript im Repo: [`scripts/update-from-git.sh`](../scripts/update-from-git.sh) — führt `git pull --ff-only`, `composer install`, `npm ci`/`npm run build`, `php artisan migrate --force`, Caches und optional Supervisor-Neustart aus. **`.env` und Datenbankinhalte** werden nicht angepasst; nur ausstehende **Migrationen** werden angewendet.
+Skript: [`scripts/update-application.sh`](../scripts/update-application.sh) — führt `composer install`, `npm ci`/`npm run build`, `php artisan migrate --force`, Caches und optional Supervisor-Neustart aus (ohne Git). Zuvor die App-Dateien aus dem **neuen Release-ZIP** ersetzen. **`.env` und Datenbankinhalte** werden nicht angepasst; nur ausstehende **Migrationen** werden angewendet.
 
 ```bash
 cd /pfad/zu/creator-link-hub
-bash scripts/update-from-git.sh
+bash scripts/update-application.sh
 ```
 
-Bei lokalen, uncommitteten Änderungen bricht das Skript ab, außer mit `--yes`. Für Entwicklungs-Dependencies: `bash scripts/update-from-git.sh --dev`.
+Für Entwicklungs-Dependencies: `bash scripts/update-application.sh --dev`.
 
 ## Nach dem Deploy
 

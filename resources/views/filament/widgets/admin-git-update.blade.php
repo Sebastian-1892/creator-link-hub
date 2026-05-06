@@ -1,8 +1,7 @@
 @php
-    use App\Services\GitDeploymentUpdateService;
-    $git = app(GitDeploymentUpdateService::class);
-    $repoPath = $git->repositoryPath();
-    $dirty = $git->workingTreeStatus();
+    use App\Services\ApplicationUpdateService;
+    $updates = app(ApplicationUpdateService::class);
+    $repoPath = $updates->repositoryPath();
     $manifestUrl = config('creator.update_manifest_url');
 @endphp
 
@@ -89,7 +88,7 @@
 
             <div>
                 <h3 class="text-sm font-semibold text-gray-950 dark:text-white">
-                    {{ __('filament_git_update.git_section') }}
+                    {{ __('filament_git_update.shell_section') }}
                 </h3>
                 <div class="mt-3 space-y-3 rounded-lg bg-gray-50 p-3 dark:bg-white/5">
                     <div>
@@ -100,55 +99,17 @@
                             {{ $repoPath }}
                         </p>
                     </div>
-
-                    @if (! $git->isGitDeployment())
-                        <x-filament::badge color="gray">
-                            {{ __('filament_git_update.no_git') }}
-                        </x-filament::badge>
-                    @elseif (! is_file($git->updateScriptPath()))
+                    <p class="m-0 text-xs text-gray-600 dark:text-gray-300">
+                        {{ __('filament_git_update.shell_intro') }}
+                    </p>
+                    @if (! $updates->isUpdateScriptAvailable())
                         <x-filament::badge color="danger">
                             {{ __('filament_git_update.script_missing') }}
                         </x-filament::badge>
                     @else
-                        @if ($dirty['dirty'])
-                            <div
-                                class="rounded-lg border border-amber-500/40 bg-amber-500/10 p-3 text-amber-950 dark:border-amber-400/30 dark:bg-amber-500/10 dark:text-amber-50"
-                            >
-                                <p class="m-0 font-semibold">{{ __('filament_git_update.dirty_title') }}</p>
-                                <p class="mt-1 text-xs opacity-90">{{ __('filament_git_update.dirty_hint') }}</p>
-                            </div>
-                        @endif
-
-                        <dl class="m-0 grid gap-2 sm:grid-cols-2">
-                            <div>
-                                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ __('filament_git_update.branch') }}</dt>
-                                <dd class="mt-0.5 font-semibold text-gray-950 dark:text-white">
-                                    {{ $gitCheck['branch'] ?? '—' }}
-                                </dd>
-                            </div>
-                            <div>
-                                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ __('filament_git_update.local') }}</dt>
-                                <dd class="mt-0.5 font-mono text-gray-950 dark:text-white">
-                                    {{ $gitCheck['local_short'] ?? __('filament_git_update.unknown') }}
-                                </dd>
-                            </div>
-                            <div class="sm:col-span-2">
-                                <dt class="text-xs font-medium text-gray-500 dark:text-gray-400">{{ __('filament_git_update.remote') }}</dt>
-                                <dd class="mt-0.5 font-mono text-gray-950 dark:text-white">
-                                    {{ $gitCheck['remote_short'] ?? __('filament_git_update.unknown') }}
-                                </dd>
-                            </div>
-                        </dl>
-
-                        @if ($gitCheck && ($gitCheck['update_available'] ?? false))
-                            <x-filament::badge color="warning">
-                                {{ __('filament_git_update.git_update_available') }}
-                            </x-filament::badge>
-                        @elseif ($gitCheck)
-                            <x-filament::badge color="success">
-                                {{ __('filament_git_update.git_up_to_date') }}
-                            </x-filament::badge>
-                        @endif
+                        <x-filament::badge color="success">
+                            {{ __('filament_git_update.script_ready') }}
+                        </x-filament::badge>
                     @endif
                 </div>
             </div>
@@ -166,13 +127,13 @@
                     type="button"
                     wire:click="checkForUpdates"
                     wire:loading.attr="disabled"
-                    wire:target="checkForUpdates,applyUpdateFromDashboard,applyUpdateIgnoringDirtyTree,bootCheck"
+                    wire:target="checkForUpdates,applyUpdateFromDashboard,bootCheck"
                 >
-                    <span wire:loading.remove wire:target="checkForUpdates,applyUpdateFromDashboard,applyUpdateIgnoringDirtyTree,bootCheck">{{ __('filament_git_update.check') }}</span>
+                    <span wire:loading.remove wire:target="checkForUpdates,applyUpdateFromDashboard,bootCheck">{{ __('filament_git_update.check') }}</span>
                     <span wire:loading wire:target="checkForUpdates,bootCheck">{{ __('filament_git_update.checking') }}</span>
                 </x-filament::button>
 
-                @if ($git->isGitDeployment() && is_file($git->updateScriptPath()))
+                @if ($updates->isUpdateScriptAvailable())
                     <x-filament::button
                         color="primary"
                         size="sm"
@@ -180,23 +141,10 @@
                         wire:click="applyUpdateFromDashboard"
                         wire:confirm="{{ __('filament_git_update.apply_confirm') }}"
                         wire:loading.attr="disabled"
-                        wire:target="checkForUpdates,applyUpdateFromDashboard,applyUpdateIgnoringDirtyTree,bootCheck"
+                        wire:target="checkForUpdates,applyUpdateFromDashboard,bootCheck"
                     >
                         <span wire:loading.remove wire:target="applyUpdateFromDashboard">{{ __('filament_git_update.apply') }}</span>
                         <span wire:loading wire:target="applyUpdateFromDashboard">{{ __('filament_git_update.applying') }}</span>
-                    </x-filament::button>
-
-                    <x-filament::button
-                        color="danger"
-                        outlined
-                        size="sm"
-                        type="button"
-                        wire:click="applyUpdateIgnoringDirtyTree"
-                        wire:confirm="{{ __('filament_git_update.apply_force') }} — {{ __('filament_git_update.apply_confirm') }}"
-                        wire:loading.attr="disabled"
-                        wire:target="checkForUpdates,applyUpdateFromDashboard,applyUpdateIgnoringDirtyTree,bootCheck"
-                    >
-                        {{ __('filament_git_update.apply_force') }}
                     </x-filament::button>
                 @endif
             </div>

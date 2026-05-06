@@ -2,8 +2,8 @@
 
 namespace App\Filament\Widgets;
 
+use App\Services\ApplicationUpdateService;
 use App\Services\ClhUpdateManifestService;
-use App\Services\GitDeploymentUpdateService;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
@@ -23,9 +23,6 @@ class AdminGitUpdateWidget extends Widget
     /** @var array<string, mixed>|null */
     public ?array $manifest = null;
 
-    /** @var array<string, mixed>|null */
-    public ?array $gitCheck = null;
-
     public string $lastError = '';
 
     public bool $busy = false;
@@ -39,7 +36,7 @@ class AdminGitUpdateWidget extends Widget
     }
 
     /**
-     * Beim Dashboard-Laden: Release-Manifest (pCloud) prüfen — kein Git-Fetch (schneller).
+     * Beim Dashboard-Laden: Release-Manifest (pCloud) prüfen.
      */
     public function bootCheck(ClhUpdateManifestService $manifests): void
     {
@@ -75,7 +72,7 @@ class AdminGitUpdateWidget extends Widget
         }
     }
 
-    public function checkForUpdates(ClhUpdateManifestService $manifests, GitDeploymentUpdateService $git): void
+    public function checkForUpdates(ClhUpdateManifestService $manifests): void
     {
         abort_unless(Filament::auth()->user()?->is_admin, 403);
 
@@ -111,69 +108,17 @@ class AdminGitUpdateWidget extends Widget
                         ->send();
                 }
             }
-
-            if ($git->isGitDeployment()) {
-                $this->runGitCheck($git, withNotifications: true);
-            } else {
-                $this->gitCheck = null;
-            }
         } finally {
             $this->busy = false;
         }
     }
 
-    public function applyUpdateFromDashboard(GitDeploymentUpdateService $git): void
+    public function applyUpdateFromDashboard(ApplicationUpdateService $updates): void
     {
-        $this->runApply($git, false);
+        $this->runApply($updates);
     }
 
-    public function applyUpdateIgnoringDirtyTree(GitDeploymentUpdateService $git): void
-    {
-        $this->runApply($git, true);
-    }
-
-    private function runGitCheck(GitDeploymentUpdateService $git, bool $withNotifications): void
-    {
-        if (! $git->isGitDeployment()) {
-            $this->gitCheck = null;
-
-            return;
-        }
-
-        $result = $git->checkForUpdates();
-
-        if (! $result['ok']) {
-            $this->gitCheck = null;
-            $msg = trim((string) (Arr::get($result, 'details') ?: Arr::get($result, 'error', 'error')));
-            if ($withNotifications) {
-                Notification::make()
-                    ->title(__('filament_git_update.git_check_failed'))
-                    ->body($msg !== '' ? $msg : null)
-                    ->danger()
-                    ->send();
-            }
-
-            return;
-        }
-
-        $this->gitCheck = $result;
-
-        if ($withNotifications) {
-            if ($result['update_available']) {
-                Notification::make()
-                    ->title(__('filament_git_update.git_update_available'))
-                    ->success()
-                    ->send();
-            } else {
-                Notification::make()
-                    ->title(__('filament_git_update.git_up_to_date'))
-                    ->success()
-                    ->send();
-            }
-        }
-    }
-
-    private function runApply(GitDeploymentUpdateService $git, bool $forceDirty): void
+    private function runApply(ApplicationUpdateService $updates): void
     {
         abort_unless(Filament::auth()->user()?->is_admin, 403);
 
@@ -185,7 +130,7 @@ class AdminGitUpdateWidget extends Widget
         set_time_limit(0);
 
         try {
-            $result = $git->runUpdateScript($forceDirty);
+            $result = $updates->runUpdateScript();
             $body = $this->truncateOutput((string) ($result['output'] ?? ''));
 
             if ($result['ok']) {
@@ -205,7 +150,6 @@ class AdminGitUpdateWidget extends Widget
             }
 
             $this->syncManifestQuietly(app(ClhUpdateManifestService::class));
-            $this->runGitCheck($git, withNotifications: false);
         } finally {
             $this->busy = false;
         }

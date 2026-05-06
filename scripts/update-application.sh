@@ -1,18 +1,13 @@
 #!/usr/bin/env bash
 #
-# Creator Link Hub — Update aus Git (ohne Datenverlust)
+# Creator Link Hub — Abhängigkeiten & Migrationen (ohne Git)
 #
-# Zieht Änderungen vom konfigurierten Remote/Branch, aktualisiert Composer/npm,
-# führt nur neue Migrationen aus (php artisan migrate --force).
-# .env, Datenbank-Inhalte und User bleiben unangetastet.
+# Nach Austausch der App-Dateien (z. B. neues Release-ZIP) im Projektroot ausführen.
+# Führt composer install, npm ci/build, migrate --force, Caches, optional Supervisor aus.
+# .env und Datenbankinhalte bleiben unverändert; nur ausstehende Migrationen werden angewendet.
 #
-# Ausführung im Projektroot oder von überall (Skript wechselt selbst ins Repo):
-#   bash scripts/update-from-git.sh
-#   bash scripts/update-from-git.sh --dev          # Composer mit Dev-Abhängigkeiten
-#   bash scripts/update-from-git.sh --yes         # Bei lokalem git status „dirty“ trotzdem fortfahren
-#
-# Server-Installation setzt CLH_APP_ROOT in .env (Projektroot). Weicht das aktuelle Verzeichnis davon ab,
-# bricht das Skript ab — verhindert Updates/artisan in einem zweiten Klon (z. B. /root/...) mit falscher DB.
+#   bash scripts/update-application.sh
+#   bash scripts/update-application.sh --dev   # Composer ohne --no-dev
 #
 set -euo pipefail
 
@@ -24,7 +19,6 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
 cd "$ROOT" || die "Projektroot nicht gefunden: $ROOT"
 
-# Gleiches Verzeichnis wie bei der Server-Installation (siehe install-server.sh → CLH_APP_ROOT in .env).
 if [[ -f .env ]]; then
   CLH_RAW="$(grep -E '^[[:space:]]*CLH_APP_ROOT=' .env 2>/dev/null | tail -n1 || true)"
   if [[ -n "$CLH_RAW" ]]; then
@@ -46,62 +40,34 @@ if [[ -f .env ]]; then
         EXPECT_RP=""
       fi
       if [[ -n "$EXPECT_RP" && "$ROOT_RP" != "$EXPECT_RP" ]]; then
-        die "Abbruch: Du bist in \"${ROOT_RP}\", in .env steht aber CLH_APP_ROOT=\"${CLH_VAL}\" → erwartet \"${EXPECT_RP}\". Nginx/PHP-FPM nutzen die Installation dort. Wechsel: cd \"${EXPECT_RP}\" && bash scripts/update-from-git.sh — keinen zweiten Klon für artisan/Updates nutzen."
+        die "Abbruch: Du bist in \"${ROOT_RP}\", in .env steht aber CLH_APP_ROOT=\"${CLH_VAL}\" → erwartet \"${EXPECT_RP}\". Nginx/PHP-FPM nutzen die Installation dort. Wechsel: cd \"${EXPECT_RP}\" && bash scripts/update-application.sh — nicht in einer zweiten Kopie ausführen."
       fi
     fi
   fi
 fi
 
 COMPOSER_NO_DEV=(--no-dev)
-FORCE_DIRTY=false
 for arg in "$@"; do
   case "$arg" in
     --dev) COMPOSER_NO_DEV=() ;;
-    --yes|-y) FORCE_DIRTY=true ;;
     -h|--help)
-      echo "Nutzen: bash scripts/update-from-git.sh [--dev] [--yes]"
+      echo "Nutzen: bash scripts/update-application.sh [--dev]"
       echo "  --dev   Composer ohne --no-dev (Entwicklung)"
-      echo "  --yes   Fortfahren trotz uncommitteter lokaler Änderungen (Vorsicht)"
       echo "  (Auf dem Server muss CLH_APP_ROOT in .env zum aktuellen Projektroot passen — siehe install-server.sh.)"
       exit 0
       ;;
   esac
 done
 
-[[ -d .git ]] || die "Kein Git-Repository (.git fehlt). Bitte im geklonten creator-link-hub ausführen."
+[[ -f composer.json && -f artisan ]] || die "Kein Laravel-Projekt (composer.json/artisan fehlt)."
 
 echo ""
 echo "=========================================="
-echo "  Creator Link Hub — Update aus Git"
+echo "  Creator Link Hub — Anwendungs-Update"
 echo "=========================================="
 echo ""
 echo "Verzeichnis: $ROOT"
-echo "Branch:      $(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo '?')"
 echo ""
-
-if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
-  warn "Es gibt lokale, nicht committete Änderungen."
-  if [[ "$FORCE_DIRTY" != true ]]; then
-    die "Abbruch. Änderungen committen/stashen oder mit --yes fortfahren (riskant)."
-  fi
-fi
-
-info "git fetch …"
-git fetch origin
-
-BRANCH="$(git rev-parse --abbrev-ref HEAD)"
-COMMIT_BEFORE="$(git rev-parse --short HEAD)"
-info "Aktueller Stand: $COMMIT_BEFORE ($BRANCH)"
-info "git pull --ff-only (Branch: $BRANCH) …"
-if ! git pull --ff-only origin "$BRANCH"; then
-  die "Fast-Forward nicht möglich (abweichende Historie oder Konflikte). Bitte manuell: git status, git pull/rebase/merge."
-fi
-COMMIT_AFTER="$(git rev-parse --short HEAD)"
-if [[ "$COMMIT_BEFORE" == "$COMMIT_AFTER" ]]; then
-  warn "Git meldet: Branch ist bereits auf dem neuesten Stand (kein neuer Commit von origin/$BRANCH). Wenn du trotzdem alte Oberfläche siehst: Browser-Cache leeren, PHP-FPM/Webserver neu laden (Opcache), oder prüfen ob du auf dem richtigen Server/Branch bist."
-else
-  info "Neuer Stand: $COMMIT_AFTER (vorher: $COMMIT_BEFORE)"
-fi
 
 if [[ "${EUID:-0}" -eq 0 ]]; then
   export COMPOSER_ALLOW_SUPERUSER=1
