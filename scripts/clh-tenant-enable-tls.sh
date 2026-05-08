@@ -3,7 +3,7 @@
 # TLS nachträglich für einen Tenant aktivieren (Let's Encrypt + Nginx HTTPS), z. B. wenn beim
 # ersten Provision Certbot scheiterte (DNS noch nicht auf den VPS) und die Site nur HTTP hat.
 #
-# ACME/Certbot-Kontakt: Standard support@creatorlinkhub.eu; überschreiben mit CLH_ACME_EMAIL oder
+# ACME/Certbot-Kontakt: Standard certbot@creatorlinkhub.eu; überschreiben mit CLH_ACME_EMAIL oder
 # optional --acme-email (einmaliger Aufruf).
 #
 # Als root:
@@ -13,7 +13,7 @@
 #
 set -euo pipefail
 
-readonly CLH_DEFAULT_ACME_EMAIL='support@creatorlinkhub.eu'
+readonly CLH_DEFAULT_ACME_EMAIL='certbot@creatorlinkhub.eu'
 
 log() { echo "[clh-tenant-enable-tls]" "$@" >&2; }
 die() { log "ERROR: $*"; exit 1; }

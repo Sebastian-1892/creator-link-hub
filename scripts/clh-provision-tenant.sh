@@ -7,12 +7,12 @@
 # TLS: Let's Encrypt via certbot **certonly --webroot** (public/.well-known), danach eigene Nginx-HTTP/HTTPS-
 # Sites — vermeidet certbot „--nginx“-Patches (return 404 / zerstückelte Konfiguration).
 # Voraussetzung: Port 80 + DNS A für --domain. Ohne TLS: --no-tls.
-# ACME/E-Mail für Certbot (-m): fest support@creatorlinkhub.eu, überschreibbar mit Umgebung CLH_ACME_EMAIL
+# ACME/E-Mail für Certbot (-m): fest certbot@creatorlinkhub.eu, überschreibbar mit Umgebung CLH_ACME_EMAIL
 # (unabhängig von --admin-email, das der Tenant-Admin für die App bleibt).
 #
 set -euo pipefail
 
-readonly CLH_DEFAULT_ACME_EMAIL='support@creatorlinkhub.eu'
+readonly CLH_DEFAULT_ACME_EMAIL='certbot@creatorlinkhub.eu'
 
 log() { echo "[clh-provision-tenant]" "$@" >&2; }
 die_json() {
