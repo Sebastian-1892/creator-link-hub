@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Cloud-App-Host mit dem GitHub-Stand synchronisieren (nach Push ins Repo creator-link-hub):
-#   git pull · provisioner.php + router.php · Tenant-Shell-Skripte · optional neue Release-ZIP
+#   git pull · provisioner.php + router.php · Tenant-Shell-Skripte (provision/delete/suspend/resume) · optional neue Release-ZIP
 # · clh-provisioner neu starten · Nginx reload
 #
 # Pfade/Branch: /etc/clh-provisioner/install-paths.env (wird vom Bootstrap geschrieben)
@@ -66,7 +66,7 @@ install -m 0644 "$ROUT" /opt/clh-provisioner/router.php
 chown clh-provisioner:clh-provisioner /opt/clh-provisioner/provisioner.php /opt/clh-provisioner/router.php
 
 log "Tenant-Skripte → /usr/local/bin/"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh; do
   [[ -f "$CLH_REPO_ROOT/scripts/$s" ]] || die "Skript fehlt: scripts/$s"
   install -m 0755 "$CLH_REPO_ROOT/scripts/$s" "/usr/local/bin/$s"
 done
@@ -89,6 +89,18 @@ fi
 log "Dienste: clh-provisioner neu starten, Nginx testen …"
 systemctl restart clh-provisioner.service
 nginx -t && systemctl reload nginx || log "WARN: nginx -t/reload ist fehlgeschlagen — manuell prüfen."
+
+SUDO_FP=/etc/sudoers.d/clh-provisioner
+if [[ -f "$SUDO_FP" ]] && ! grep -qF 'clh-resume-tenant.sh' "$SUDO_FP" 2>/dev/null; then
+  if grep -qE 'NOPASSWD:.*clh-suspend-tenant\.sh' "$SUDO_FP"; then
+    log "sudoers: clh-resume-tenant.sh nach clh-suspend-tenant ergänzen …"
+    sed -i 's#/usr/local/bin/clh-suspend-tenant\.sh#/usr/local/bin/clh-suspend-tenant.sh, /usr/local/bin/clh-resume-tenant.sh#' "$SUDO_FP"
+    chmod 0440 "$SUDO_FP"
+    visudo -c -f "$SUDO_FP" || die "sudoers nach Ergänzung von resume ungültig — Datei prüfen: $SUDO_FP"
+  else
+    log "WARN: $SUDO_FP passt nicht zum erwarteten Muster — resume manuell wie in bootstrap-cloud-host.sh (Schritt 9) ergänzen."
+  fi
+fi
 
 log "Fertig. Bestehende Tenants: weiterhin einzeln aktualisieren (Migration/Deploy pro Instanz)."
 echo ""

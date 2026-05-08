@@ -68,6 +68,7 @@ Konkrete PHP-Minor-Versionen richten sich nach dem Bootstrap und den Ubuntu-/Deb
 | [`scripts/clh-cloud-host-update.sh`](../scripts/clh-cloud-host-update.sh) | `/usr/local/bin/clh-cloud-host-update.sh` | Nach Push ins Repo: `git pull`, Provisioner-PHP + Tenant-Skripte ausrollen, optional `--with-zip`, Dienst + Nginx reload. |
 | `scripts/clh-delete-tenant.sh` | `/usr/local/bin/clh-delete-tenant.sh` | Tenant entfernen (Dateien, DB, Sites). |
 | `scripts/clh-suspend-tenant.sh` | `/usr/local/bin/clh-suspend-tenant.sh` | Tenant-Site aus `sites-enabled` nehmen. |
+| [`scripts/clh-resume-tenant.sh`](../scripts/clh-resume-tenant.sh) | `/usr/local/bin/clh-resume-tenant.sh` | Tenant-Site wieder aktivieren (`sites-available`-Config muss existieren). |
 
 Technische Kurzinfos stehen im **Kommentarkopf** der jeweiligen Shell-Datei im Repo.
 

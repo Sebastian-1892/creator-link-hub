@@ -115,10 +115,10 @@ chown clh-provisioner:clh-provisioner /opt/clh-provisioner /var/lib/clh-provisio
 info "Verzeichnisse und Benutzer fertig."
 
 step 6 "$STEPS" "Tenant-Skripte nach /usr/local/bin kopieren …"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh; do
   install -m 0755 "${SCRIPT_DIR}/${s}" "/usr/local/bin/${s}"
 done
-info "Skripte installiert: clh-provision-tenant.sh, clh-delete-tenant.sh, clh-suspend-tenant.sh"
+info "Skripte installiert: clh-provision-tenant, delete, suspend, resume (.sh)"
 
 step 7 "$STEPS" "Provisioner-PHP (provisioner.php + router.php) nach /opt/clh-provisioner …"
 PROV_SRC=""
@@ -175,10 +175,10 @@ CFG
 fi
 info "Secret und Konfiguration gesetzt (bestehende Dateien werden nicht überschrieben)."
 
-step 9 "$STEPS" "sudoers-Regel für clh-provisioner (NOPASSWD für die drei Skripte) …"
+step 9 "$STEPS" "sudoers-Regel für clh-provisioner (NOPASSWD für die Tenant-Skripte) …"
 cat >/etc/sudoers.d/clh-provisioner <<'SUDO'
 Defaults:clh-provisioner secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-clh-provisioner ALL=(root) NOPASSWD: /usr/local/bin/clh-provision-tenant.sh, /usr/local/bin/clh-delete-tenant.sh, /usr/local/bin/clh-suspend-tenant.sh
+clh-provisioner ALL=(root) NOPASSWD: /usr/local/bin/clh-provision-tenant.sh, /usr/local/bin/clh-delete-tenant.sh, /usr/local/bin/clh-suspend-tenant.sh, /usr/local/bin/clh-resume-tenant.sh
 SUDO
 chmod 0440 /etc/sudoers.d/clh-provisioner
 visudo -c -f /etc/sudoers.d/clh-provisioner

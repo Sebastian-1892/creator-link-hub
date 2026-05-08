@@ -73,7 +73,7 @@ Skripte zum Aufsetzen des **App-Hosts** und zum Anlegen/Löschen einzelner **Ten
 | [`scripts/clh-cloud-host-update.sh`](scripts/clh-cloud-host-update.sh) | Auf dem VPS: Repo pullen, Provisioner/Skripte aktualisieren, optional Release-ZIP bauen (`sudo /usr/local/bin/clh-cloud-host-update.sh`) |
 | [`deployment/cloud-host/router.php`](deployment/cloud-host/router.php) + [`provisioner.php`](deployment/cloud-host/provisioner.php) | HTTP-Provisioner (HMAC, Nonce, `sudo` → Tenant-Skripte); mit Marketing-Repo **creatorlinkhub.eu** unter `deployment/cloud-host/` bei Bedarf **inhaltlich synchron** halten |
 | [`scripts/build-cloud-release-zip.sh`](scripts/build-cloud-release-zip.sh) | Release-ZIP mit `npm run build` für `/opt/clh-releases/current.zip` auf dem VPS |
-| `clh-provision-tenant.sh`, `clh-delete-tenant.sh`, `clh-suspend-tenant.sh` | Auf dem VPS unter `/usr/local/bin/`, Aufruf durch Provisioner |
+| `clh-provision-tenant.sh`, `clh-delete-tenant.sh`, `clh-suspend-tenant.sh`, `clh-resume-tenant.sh` | Auf dem VPS unter `/usr/local/bin/`, Aufruf durch Provisioner |
 
 Marketing (falls vorhanden): [`../creatorlinkhub.eu/deployment/cloud-host/README.md`](../creatorlinkhub.eu/deployment/cloud-host/README.md)
 

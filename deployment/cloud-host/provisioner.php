@@ -120,6 +120,10 @@ if ($method === 'GET') {
                     'path' => '/usr/local/bin/clh-provision-tenant.sh',
                     'executable' => is_executable('/usr/local/bin/clh-provision-tenant.sh'),
                 ],
+                'resume_script' => [
+                    'path' => '/usr/local/bin/clh-resume-tenant.sh',
+                    'executable' => is_executable('/usr/local/bin/clh-resume-tenant.sh'),
+                ],
             ],
         ], 200);
     }
@@ -184,6 +188,7 @@ $script = match ($action) {
     'create' => '/usr/local/bin/clh-provision-tenant.sh',
     'delete' => '/usr/local/bin/clh-delete-tenant.sh',
     'suspend' => '/usr/local/bin/clh-suspend-tenant.sh',
+    'resume' => '/usr/local/bin/clh-resume-tenant.sh',
     default => '',
 };
 if ($script === '' || ! is_executable($script)) {
