@@ -3,27 +3,32 @@
 # TLS nachträglich für einen Tenant aktivieren (Let's Encrypt + Nginx HTTPS), z. B. wenn beim
 # ersten Provision Certbot scheiterte (DNS noch nicht auf den VPS) und die Site nur HTTP hat.
 #
+# ACME/Certbot-Kontakt: Standard support@creatorlinkhub.eu; überschreiben mit CLH_ACME_EMAIL oder
+# optional --acme-email (einmaliger Aufruf).
+#
 # Als root:
 #   sudo /usr/local/bin/clh-tenant-enable-tls.sh \
 #     --slug vpstest-einmalig \
-#     --domain vpstest-einmalig.app.creatorlinkhub.eu \
-#     --admin-email admin@example.com
+#     --domain vpstest-einmalig.app.creatorlinkhub.eu
 #
 set -euo pipefail
+
+readonly CLH_DEFAULT_ACME_EMAIL='support@creatorlinkhub.eu'
 
 log() { echo "[clh-tenant-enable-tls]" "$@" >&2; }
 die() { log "ERROR: $*"; exit 1; }
 
 SLUG=""
 DOMAIN=""
-ADMIN_EMAIL=""
+ACME_EMAIL_CLI=""
 TENANT_ROOT="/var/www/clh-tenants"
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --slug) SLUG="${2:-}"; shift 2 ;;
     --domain) DOMAIN="${2:-}"; shift 2 ;;
-    --admin-email) ADMIN_EMAIL="${2:-}"; shift 2 ;;
+    --acme-email) ACME_EMAIL_CLI="${2:-}"; shift 2 ;;
+    --admin-email) ACME_EMAIL_CLI="${2:-}"; shift 2 ;; # Altname, gleiche Bedeutung wie --acme-email
     --tenant-root) TENANT_ROOT="${2:-}"; shift 2 ;;
     *) die "unknown argument: $1" ;;
   esac
@@ -37,14 +42,9 @@ INSTALL_DIR="${TENANT_ROOT%/}/${SLUG}"
 [[ -d "$INSTALL_DIR" ]] || die "tenant dir missing: $INSTALL_DIR"
 [[ -d "$INSTALL_DIR/public" ]] || die "public/ missing under $INSTALL_DIR"
 
-if [[ -z "$ADMIN_EMAIL" ]]; then
-  if [[ -f "$INSTALL_DIR/.env" ]] && grep -qE '^[[:space:]]*MAIL_FROM_ADDRESS=' "$INSTALL_DIR/.env"; then
-    ADMIN_EMAIL="$(grep -E '^[[:space:]]*MAIL_FROM_ADDRESS=' "$INSTALL_DIR/.env" | head -1 | cut -d= -f2- | tr -d \"\'\r\")"
-    ADMIN_EMAIL="${ADMIN_EMAIL// /}"
-  fi
-fi
-[[ -n "$ADMIN_EMAIL" ]] || die "missing --admin-email (or MAIL_FROM_ADDRESS in .env)"
-[[ "$ADMIN_EMAIL" == *"@"* ]] || die "invalid --admin-email"
+ACME_EMAIL="${CLH_ACME_EMAIL:-$CLH_DEFAULT_ACME_EMAIL}"
+[[ -n "$ACME_EMAIL_CLI" ]] && ACME_EMAIL="$ACME_EMAIL_CLI"
+[[ "$ACME_EMAIL" == *"@"* ]] || die "invalid ACME e-mail: $ACME_EMAIL"
 
 FPM_SOCK="$(ls -1 /run/php/php*-fpm.sock 2>/dev/null | head -1 || true)"
 [[ -n "$FPM_SOCK" && -S "$FPM_SOCK" ]] || die "PHP-FPM socket not found under /run/php/"
@@ -60,13 +60,13 @@ if ! command -v certbot &>/dev/null; then
   apt-get install -y -qq certbot
 fi
 
-log "certbot certonly (webroot) für ${DOMAIN} — E-Mail: ${ADMIN_EMAIL}"
+log "certbot certonly (webroot) für ${DOMAIN} — ACME/E-Mail: ${ACME_EMAIL}"
 certbot certonly --webroot \
   -w "$INSTALL_DIR/public" \
   -d "$DOMAIN" \
   --non-interactive \
   --agree-tos \
-  -m "$ADMIN_EMAIL" \
+  -m "$ACME_EMAIL" \
   --preferred-challenges http \
   || die "certbot fehlgeschlagen — Auswertung: sudo tail -120 /var/log/letsencrypt/letsencrypt.log · Häufig: Let's-Encrypt-Wartung/Störung (https://letsencrypt.status.io/) — später erneut ausführen · sonst DNS-A auf diesen Host und Port 80 von außen prüfen."
 

@@ -7,8 +7,12 @@
 # TLS: Let's Encrypt via certbot **certonly --webroot** (public/.well-known), danach eigene Nginx-HTTP/HTTPS-
 # Sites — vermeidet certbot „--nginx“-Patches (return 404 / zerstückelte Konfiguration).
 # Voraussetzung: Port 80 + DNS A für --domain. Ohne TLS: --no-tls.
+# ACME/E-Mail für Certbot (-m): fest support@creatorlinkhub.eu, überschreibbar mit Umgebung CLH_ACME_EMAIL
+# (unabhängig von --admin-email, das der Tenant-Admin für die App bleibt).
 #
 set -euo pipefail
+
+readonly CLH_DEFAULT_ACME_EMAIL='support@creatorlinkhub.eu'
 
 log() { echo "[clh-provision-tenant]" "$@" >&2; }
 die_json() {
@@ -224,7 +228,8 @@ nginx -t
 systemctl reload nginx
 
 if [[ "$ENABLE_TLS" -eq 1 ]]; then
-  log "Let's Encrypt (webroot) für ${DOMAIN} — ACME-Mail: ${ADMIN_EMAIL}"
+  ACME_EMAIL="${CLH_ACME_EMAIL:-$CLH_DEFAULT_ACME_EMAIL}"
+  log "Let's Encrypt (webroot) für ${DOMAIN} — ACME-Mail: ${ACME_EMAIL} (Tenant-Admin-Login: ${ADMIN_EMAIL})"
   export DEBIAN_FRONTEND=noninteractive
   if ! command -v certbot &>/dev/null; then
     apt-get update -qq
@@ -236,7 +241,7 @@ if [[ "$ENABLE_TLS" -eq 1 ]]; then
     -d "$DOMAIN" \
     --non-interactive \
     --agree-tos \
-    -m "$ADMIN_EMAIL" \
+    -m "$ACME_EMAIL" \
     --preferred-challenges http \
     || die_json "certbot fehlgeschlagen für ${DOMAIN} — LE-Status https://letsencrypt.status.io/ · Log /var/log/letsencrypt/letsencrypt.log · oder DNS/Port 80 · Alternative: --no-tls"
 
