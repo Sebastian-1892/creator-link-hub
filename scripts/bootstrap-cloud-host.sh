@@ -155,6 +155,15 @@ info "Quelle router.php: $ROUTER_SRC"
 chown clh-provisioner:clh-provisioner /opt/clh-provisioner/provisioner.php /opt/clh-provisioner/router.php
 info "Provisioner-Dateien liegen unter /opt/clh-provisioner/."
 
+SMOKE_SRC="$(dirname "$PROV_SRC")/vps-smoke-provision.php"
+if [[ -f "$SMOKE_SRC" ]]; then
+  install -m 0644 "$SMOKE_SRC" /opt/clh-provisioner/vps-smoke-provision.php
+  chown root:root /opt/clh-provisioner/vps-smoke-provision.php
+  info "Smoke-Tester: sudo php /opt/clh-provisioner/vps-smoke-provision.php 'http://127.0.0.1:9100/' VPSTEST-SLUG"
+else
+  info "Hinweis: vps-smoke-provision.php fehlt — nach git pull erneut ausführen oder clh-cloud-host-update.sh nutzen."
+fi
+
 step 8 "$STEPS" "Geheimnis und config.json (falls neu) unter /etc/clh-provisioner …"
 if [[ ! -f /etc/clh-provisioner/secret ]]; then
   openssl rand -hex 32 >/etc/clh-provisioner/secret

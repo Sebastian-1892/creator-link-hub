@@ -65,6 +65,15 @@ install -m 0644 "$PROV" /opt/clh-provisioner/provisioner.php
 install -m 0644 "$ROUT" /opt/clh-provisioner/router.php
 chown clh-provisioner:clh-provisioner /opt/clh-provisioner/provisioner.php /opt/clh-provisioner/router.php
 
+SMOKE="$CLH_REPO_ROOT/deployment/cloud-host/vps-smoke-provision.php"
+if [[ -f "$SMOKE" ]]; then
+  install -m 0644 "$SMOKE" /opt/clh-provisioner/vps-smoke-provision.php
+  chown root:root /opt/clh-provisioner/vps-smoke-provision.php
+  log "Smoke-Tester: sudo php /opt/clh-provisioner/vps-smoke-provision.php 'http://127.0.0.1:9100/' VPSTEST-SLUG"
+else
+  log "WARN: vps-smoke-provision.php fehlt unter deployment/cloud-host/ — Smoke-Tests manuell aus Marketing-Repo kopieren."
+fi
+
 log "Tenant-Skripte → /usr/local/bin/"
 for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh; do
   [[ -f "$CLH_REPO_ROOT/scripts/$s" ]] || die "Skript fehlt: scripts/$s"
