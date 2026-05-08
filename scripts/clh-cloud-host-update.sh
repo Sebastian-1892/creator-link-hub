@@ -50,10 +50,26 @@ git fetch --prune origin || die "git fetch fehlgeschlagen — Netzwerk, Remote �
 log "git checkout $CLH_GIT_REF …"
 git checkout "$CLH_GIT_REF" || die "git checkout fehlgeschlagen — existiert Branch/Tag „$CLH_GIT_REF“? In $PATH_CFG ggf. CLH_GIT_REF anpassen."
 
+# VPS: oft lokale Edits (z. B. an bootstrap-cloud-host.sh) — ohne Stash blockiert pull --ff-only.
+STASHED=0
+if [[ -n "$(git status --porcelain 2>/dev/null)" ]]; then
+  log "Lokale Änderungen im Arbeitsbaum → temporärer Stash vor git pull …"
+  git stash push -m "clh-cloud-host-update autostash $(date -Iseconds 2>/dev/null || date +%Y%m%d%H%M%S)" || die "git stash fehlgeschlagen — manuell committen/stashen und erneut ausführen."
+  STASHED=1
+fi
+
 log "git pull --ff-only origin $CLH_GIT_REF …"
 if ! git pull --ff-only "origin" "$CLH_GIT_REF"; then
   log "Hinweis: pull mit explizitem Ref fehlgeschlagen, versuche git pull --ff-only (Upstream) …"
   git pull --ff-only || die "git pull fehlgeschlagen — Konflikte oder abweichender Upstream (git status, git branch -vv)."
+fi
+
+if [[ "$STASHED" -eq 1 ]]; then
+  if git stash pop; then
+    log "Stash nach Pull wieder eingespielt."
+  else
+    log "WARN: git stash pop fehlgeschlagen (Konflikt mit upstream). cd $CLH_REPO_ROOT — git status, git stash list — Konflikt lösen; sonst stash verwerfen: git stash drop"
+  fi
 fi
 
 PROV="$CLH_REPO_ROOT/deployment/cloud-host/provisioner.php"
@@ -75,7 +91,7 @@ else
 fi
 
 log "Tenant-Skripte → /usr/local/bin/"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh; do
   [[ -f "$CLH_REPO_ROOT/scripts/$s" ]] || die "Skript fehlt: scripts/$s"
   install -m 0755 "$CLH_REPO_ROOT/scripts/$s" "/usr/local/bin/$s"
 done
@@ -108,6 +124,17 @@ if [[ -f "$SUDO_FP" ]] && ! grep -qF 'clh-resume-tenant.sh' "$SUDO_FP" 2>/dev/nu
     visudo -c -f "$SUDO_FP" || die "sudoers nach Ergänzung von resume ungültig — Datei prüfen: $SUDO_FP"
   else
     log "WARN: $SUDO_FP passt nicht zum erwarteten Muster — resume manuell wie in bootstrap-cloud-host.sh (Schritt 9) ergänzen."
+  fi
+fi
+
+if [[ -f "$SUDO_FP" ]] && ! grep -qF 'clh-tenant-enable-tls.sh' "$SUDO_FP" 2>/dev/null; then
+  if grep -qF 'clh-resume-tenant.sh' "$SUDO_FP"; then
+    log "sudoers: clh-tenant-enable-tls.sh ergänzen …"
+    sed -i 's#/usr/local/bin/clh-resume-tenant\.sh#/usr/local/bin/clh-resume-tenant.sh, /usr/local/bin/clh-tenant-enable-tls.sh#' "$SUDO_FP"
+    chmod 0440 "$SUDO_FP"
+    visudo -c -f "$SUDO_FP" || die "sudoers nach TLS-Skript ungültig — Datei prüfen: $SUDO_FP"
+  elif grep -qE 'NOPASSWD:.*clh-suspend-tenant\.sh' "$SUDO_FP"; then
+    log "sudoers: clh-resume + enable-tls fehlen — bitte /etc/sudoers.d/clh-provisioner mit bootstrap-cloud-host Schritt 9 abgleichen."
   fi
 fi
 

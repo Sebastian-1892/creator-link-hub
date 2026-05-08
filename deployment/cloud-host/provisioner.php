@@ -60,6 +60,38 @@ function clhProvisionerLog(string $line): void
     @error_log('[clh-provisioner] ' . $line . "\n", 3, $f);
 }
 
+/** Vollständige Skript-Ausgabe für Diagnose (clh-provisioner-User muss schreiben dürfen). */
+function clhProvisionerLastScriptErrorPath(): string
+{
+    return getenv('CLH_LAST_SCRIPT_ERROR_LOG') ?: '/var/lib/clh-provisioner/last-script-error.log';
+}
+
+/**
+ * stderr + stdout zusammenführen; bei langem Output das Ende behalten (Composer: viel Log am Anfang, Fehler oft am Schluss).
+ */
+function clhProvisionerScriptErrorDetail(string $stderr, string $stdout, int $maxLen = 24000): string
+{
+    $stderr = trim($stderr);
+    $stdout = trim($stdout);
+    $parts = [];
+    if ($stderr !== '') {
+        $parts[] = $stderr;
+    }
+    if ($stdout !== '') {
+        $parts[] = "--- stdout ---\n".$stdout;
+    }
+    $merged = implode("\n\n", $parts);
+
+    if ($merged === '') {
+        return '(keine Ausgabe)';
+    }
+    if (strlen($merged) <= $maxLen) {
+        return $merged;
+    }
+
+    return '… (nur letzte '.$maxLen.' von '.strlen($merged).' Zeichen) …'."\n".substr($merged, -$maxLen);
+}
+
 function clhProvisionerClientSignature(): string
 {
     $s = strtolower(trim((string) ($_SERVER['HTTP_X_CLH_SIGNATURE'] ?? '')));
@@ -245,10 +277,21 @@ fclose($pipes[2]);
 $exit = proc_close($proc);
 
 if ($exit !== 0) {
-    clhProvisionerLog("script fail exit={$exit} stderr=" . substr($stderr, 0, 800));
+    $stderrT = trim($stderr);
+    $stdoutT = trim($stdout);
+    $mergedFull = ($stderrT !== '' ? $stderrT : '').($stderrT !== '' && $stdoutT !== '' ? "\n\n--- stdout ---\n" : '').$stdoutT;
+    $detail = clhProvisionerScriptErrorDetail($stderr, $stdout);
+    $errFile = clhProvisionerLastScriptErrorPath();
+    @file_put_contents(
+        $errFile,
+        gmdate('c')." exit={$exit}\n\n".$mergedFull."\n",
+        LOCK_EX
+    );
+    clhProvisionerLog('script fail exit='.$exit.' detail_len='.strlen($detail).' full_log='.$errFile);
     clhProvisionerJson([
         'error' => 'provision script failed',
-        'detail' => substr(trim($stderr) !== '' ? $stderr : $stdout, 0, 500),
+        'detail' => $detail,
+        'full_log_path' => $errFile,
     ], 500);
 }
 

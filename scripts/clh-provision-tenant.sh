@@ -173,7 +173,8 @@ mkdir -p \
   storage/framework/views \
   storage/logs
 export COMPOSER_ALLOW_SUPERUSER=1
-log "composer install"
+export COMPOSER_MEMORY_LIMIT="${COMPOSER_MEMORY_LIMIT:--1}"
+log "composer install (COMPOSER_MEMORY_LIMIT=${COMPOSER_MEMORY_LIMIT})"
 composer install --no-dev --no-interaction --optimize-autoloader --no-ansi
 log "artisan"
 php artisan key:generate --force
