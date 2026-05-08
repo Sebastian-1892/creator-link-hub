@@ -330,6 +330,62 @@ Erwartung: JSON mit `"ok":true` und `"service":"clh-provisioner"` (GET `/`, `/he
 curl -sS https://provision.app.deinedomain.de/health
 ```
 
+### 6.3 Testweise einen Tenant ohne Marketing anlegen (Skript direkt auf dem VPS)
+
+So bekommst du **eine echte App-URL** (Laravel unter deinem Tenant-Hostnamen), **ohne** Marketing und **ohne** den HMAC-Provisioner — nützlich für Smoke-Tests nach dem Bootstrap.
+
+**Voraussetzungen**
+
+- **DNS:** A-Record (oder passender Wildcard) für den gewählten **`--domain`** muss auf diese Maschine zeigen — siehe [Schritt 1](#schritt-1--dns-vorbereiten). Für **Let’s Encrypt** (Standard) muss **Port 80** von außen bis zur Challenge erreichbar sein.
+- **Release-ZIP:** typisch `/opt/clh-releases/current.zip` (wie [Schritt 3](#schritt-3--release-zip-ablegen)); abweichend: `--release-zip /pfad/zur.zip`.
+- **Slug:** erlaubtes Muster wie beim Provisioner (`a-z0-9`, Bindestriche, Länge — siehe Validierung in [`deployment/cloud-host/provisioner.php`](../../deployment/cloud-host/provisioner.php)); Verzeichnis **`/var/www/clh-tenants/<slug>/`** darf noch **nicht** existieren.
+
+**Auf dem App-Host per SSH** (ein User mit `sudo`; Befehl als eine Zeile oder mit `\` wie unten):
+
+```bash
+sudo /usr/local/bin/clh-provision-tenant.sh \
+  --slug demo \
+  --domain demo.app.deinedomain.de \
+  --admin-email du@deinedomain.de \
+  --release-zip /opt/clh-releases/current.zip
+```
+
+Optional **Anzeigename** des ersten Admins:
+
+`--admin-name "Test Admin"`
+
+Wenn **`tenants_root`** in `/etc/clh-provisioner/config.json` von `/var/www/clh-tenants` abweicht, denselben Wert hier mitgeben:
+
+`--tenant-root /dein/pfad`
+
+**TLS überspringen** (reiner HTTP-Test, z. B. nur intern oder ohne DNS-Le):
+
+```bash
+sudo /usr/local/bin/clh-provision-tenant.sh \
+  --slug demo \
+  --domain demo.app.deinedomain.de \
+  --admin-email du@deinedomain.de \
+  --release-zip /opt/clh-releases/current.zip \
+  --no-tls
+```
+
+**Nach erfolgreichem Lauf**
+
+- **Stdout:** eine JSON-Zeile mit u. a. `instance_url` und `admin_url` (`…/admin`). **stderr** enthält Lognachrichten des Skripts.
+- Im Browser die **Tenant-URL** öffnen (bei TLS: `https://<domain>/`, sonst `http://…`).
+- **Admin:** unter `…/admin` mit der bei `--admin-email` gesetzten Adresse anmelden. Das **initiale Passwort** wird beim Seeding **nicht** auf der Konsole ausgegeben. Für einen bekannten Test kannst du es im Tenant-Verzeichnis neu setzen (≥ 8 Zeichen):
+
+  ```bash
+  cd /var/www/clh-tenants/demo   # slug anpassen
+  sudo -u www-data env \
+    CLH_ADMIN_EMAIL="du@deinedomain.de" \
+    CLH_ADMIN_PASSWORD="dein-sicheres-passwort" \
+    CLH_ADMIN_NAME="Admin" \
+    php artisan db:seed --class=Database\\Seeders\\InstallAdminSeeder --force
+  ```
+
+**Hinweis:** Derselbe Ablauf läuft intern, wenn der **HTTP-Provisioner** mit `action: create` aufgerufen wird — du rufst hier nur direkt das Skript auf, das der Provisioner sonst per `sudo` startet.
+
 ---
 
 ## Schritt 7 — Marketing-Backend anbinden
@@ -370,7 +426,7 @@ Optional: Kopien der Dateien **`provisioner.php`** und **`router.php`** liegen i
 ## Schritt 8 — Ersten Tenant anlegen
 
 1. Stelle sicher, dass ein **A-Record** für den **Tenant-Hostnamen** auf den VPS zeigt und **Port 80** von außen erreichbar ist — das Provision-Skript fordert **standardmäßig Let’s Encrypt** per **`certbot certonly --webroot`** unter **`…/public/.well-known`**, schreibt danach **stabile Nginx‑Blöcke** (HTTP: ACME + Redirect, HTTPS: App) und setzt **`APP_URL=https://…`**. Für reine Tests ohne TLS: **`--no-tls`**. DNS-**Wildcard** für viele Kunden-Unterdomains bleibt wie in den TLS-Abschnitten weiter oben beschrieben.
-2. Löse die Aktion vom **Marketing** aus ( oder testweise ein signiertes POST mit denselben Regeln wie oben ).
+2. Tenant anlegen: vom **Marketing** aus, **ohne Marketing** wie in **[6.3 Testweise einen Tenant ohne Marketing](#63-testweise-einen-tenant-ohne-marketing-anlegen-skript-direkt-auf-dem-vps)** (Skript direkt auf dem VPS), oder testweise ein **signiertes POST** wie in [Schritt 7](#schritt-7--marketing-backend-anbinden).
 3. Prüfen:
 
    ```bash
