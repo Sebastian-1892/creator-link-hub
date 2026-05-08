@@ -238,7 +238,7 @@ if [[ "$ENABLE_TLS" -eq 1 ]]; then
     --agree-tos \
     -m "$ADMIN_EMAIL" \
     --preferred-challenges http \
-    || die_json "certbot certonly/webroot fehlgeschlagen für ${DOMAIN} — DNS A hierher? Port 80 von außen? (Alternative: Tenant mit --no-tls)"
+    || die_json "certbot fehlgeschlagen für ${DOMAIN} — LE-Status https://letsencrypt.status.io/ · Log /var/log/letsencrypt/letsencrypt.log · oder DNS/Port 80 · Alternative: --no-tls"
 
   NG_DH_LINE=""
   [[ -f /etc/letsencrypt/ssl-dhparams.pem ]] && NG_DH_LINE=$'    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;\n'

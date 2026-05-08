@@ -68,7 +68,7 @@ certbot certonly --webroot \
   --agree-tos \
   -m "$ADMIN_EMAIL" \
   --preferred-challenges http \
-  || die "certbot fehlgeschlagen — DNS A für ${DOMAIN} auf diesen Server? Port 80 von außen erreichbar?"
+  || die "certbot fehlgeschlagen — Auswertung: sudo tail -120 /var/log/letsencrypt/letsencrypt.log · Häufig: Let's-Encrypt-Wartung/Störung (https://letsencrypt.status.io/) — später erneut ausführen · sonst DNS-A auf diesen Host und Port 80 von außen prüfen."
 
 NG_DH_LINE=""
 [[ -f /etc/letsencrypt/ssl-dhparams.pem ]] && NG_DH_LINE=$'    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;\n'
