@@ -2,6 +2,13 @@
 
 return [
     /**
+     * Deployment-Art: `cloud` = gekapselte Tenant-Instanz auf gemeinsamem Host (Subdomain),
+     * dann zeigt der Admin u. a. „Betriebs-Versand“ ohne sichtbare SMTP-Zugangsdaten.
+     * Standard `self_hosted` — Umgebungsvariable: `CLH_DEPLOYMENT`.
+     */
+    'deployment' => env('CLH_DEPLOYMENT', 'self_hosted'),
+
+    /**
      * Absoluter Pfad zum Projektroot (ohne trailing slash). Umgebungsvariable: `CLH_APP_ROOT`.
      * Wird von `scripts/install-server.sh` in `.env` gesetzt. Leer/null = keine Pfadbindung (typisch lokal).
      * Shell: `scripts/update-application.sh` liest dieselbe Variable direkt aus `.env` und bricht bei Abweichung ab.

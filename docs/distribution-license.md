@@ -9,7 +9,7 @@ Antwort (Beispiele):
 - `{"ok":true,"status":"trial","valid_until":"2026-06-02","package_url":"https://…/creator-link-hub.zip"}`
 - `{"ok":false,"reason":"unknown|expired|blocked|unverified|rate_limited"}`
 
-Der Kunden-Installer [`distribution/install.sh`](../install.sh) ruft diese URL auf (`CLH_LICENSE_CHECK_URL` überschreibbar).
+Der Kunden-Installer [`distribution/install.sh`](../distribution/install.sh) ruft diese URL auf (`CLH_LICENSE_CHECK_URL` überschreibbar).
 
 ## Lizenzkey-Algorithmus (Kunde + Verkäufer)
 

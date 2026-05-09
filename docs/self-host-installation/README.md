@@ -125,6 +125,6 @@ Wenn ein **neues Release-ZIP** vorliegt:
 | [`docs/deployment.md`](../deployment.md) | Kurz-Runbook, Stripe, Backups; Verweis Self-Host vs. Cloud |
 | [`docs/launch-runbook.md`](../launch-runbook.md) | Go-Live-Checkliste |
 | [`docs/cloud-hosting-installation/README.md`](../cloud-hosting-installation/README.md) | Nur bei **Multi-Tenant-Cloud-VPS** (nicht diese Self-Host-Route) |
-| [`vps/README.md`](../../vps/README.md) | Kurzübersicht Komponenten auf dem Cloud-App-Server |
+| [VPS-Komponenten](../vps-components.md) | Kurzübersicht Komponenten auf dem Cloud-App-Server |
 
 Support-Anfragen richten Sie an den Kanal, den Sie beim Kauf von **creatorlinkhub.eu** erhalten haben.

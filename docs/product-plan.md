@@ -1,4 +1,8 @@
-# Creator Link Hub
+# Produktvision — Creator Link Hub
+
+> Hinweis: Langfristige Planung; nicht alles ist im aktuellen MVP umgesetzt. Siehe auch [`plan/steps/`](../plan/steps/).
+
+---
 
 ### 🧠 Projektübersicht
 Creator Link Hub ist eine erweiterte Link-in-Bio- und Creator-Monetarisierungsplattform, ähnlich wie Linktree, aber mit deutlich mehr Fokus auf Wachstum, Attribution, Community-Belohnungen und Conversion.

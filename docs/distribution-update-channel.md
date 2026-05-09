@@ -4,7 +4,7 @@
 
 Lokaler Spiegel (pCloud Drive): **`Public Folder/creator-link-hub/update`** (Inhalt dieses Ordners dorthin kopieren bzw. synchron halten).
 
-Nur statische Dateien (gleiches Muster wie beim Projekt **software.rechnungsschmiede.eu** unter `update/README.md`): **`versions.json`**, Changelogs (`.md`), ZIPs unter **`downloads/`**. Kein PHP auf dem Host nötig.
+Nur statische Dateien (gleiches Muster wie bei **software.rechnungsschmiede.eu** unter `update/README.md`): **`versions.json`**, Changelogs (`.md`), ZIPs unter **`downloads/`**. Kein PHP auf dem Host nötig.
 
 ## Struktur
 
@@ -13,7 +13,7 @@ Nur statische Dateien (gleiches Muster wie beim Projekt **software.rechnungsschm
 | `versions.json` | `latest_version`, `min_php_version`, Liste `versions[]` mit `download_url`, `changelog_url`, `signature` (SHA-256, optional leer) |
 | `downloads/` | `creator-link-hub-<version>.zip` |
 | `changelogs/` | `0.1.0.md` usw. |
-| `roadmap/README.md` | Sammelliste bis zum nächsten Release |
+| `roadmap/README.md` | Sammelliste bis zum nächsten Release (im Repo: [distribution-roadmap.md](distribution-roadmap.md)) |
 | `update_versions_json.sh` | Helfer zum Eintragen einer neuen Version |
 
 ## Release-Ablauf (Kurz)

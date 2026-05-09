@@ -50,7 +50,7 @@ sudo bash /tmp/install-cloud-host-interactive.sh
 
 (Skript liegt im Repo unter [`scripts/install-cloud-host-interactive.sh`](../../scripts/install-cloud-host-interactive.sh); roher Download nur sinnvoll ab dem Branch/Tag mit diesem Skript.)
 
-**Was der Wizard automatisch mit erledigt (je nach Auswahl):** Git-Clone oder Update unter dem gewünschten Elternordner, [`scripts/bootstrap-cloud-host.sh`](../../scripts/bootstrap-cloud-host.sh) (inkl. **UFW**: von außen typisch nur **SSH, 80, 443**), `server_name` in `clh-provisioner.conf` setzen, Site in `sites-enabled` und `nginx reload`, optional [`scripts/build-cloud-release-zip.sh`](../../scripts/build-cloud-release-zip.sh) sowie Kopie nach `/opt/clh-releases/current.zip`, optional **TLS** für den einen Provisioner-Host.
+**Was der Wizard automatisch mit erledigt (je nach Auswahl):** Git-Clone oder Update unter dem gewünschten Elternordner, [`scripts/bootstrap-cloud-host.sh`](../../scripts/bootstrap-cloud-host.sh) (inkl. **UFW**: von außen typisch nur **SSH, 80, 443**), optional **SMTP-Relay für Postfix** (Zugangsdaten nur auf dem Host; Tenant-Apps bleiben bei `MAIL_MAILER=sendmail`), `server_name` in `clh-provisioner.conf` setzen, Site in `sites-enabled` und `nginx reload`, optional [`scripts/build-cloud-release-zip.sh`](../../scripts/build-cloud-release-zip.sh) sowie Kopie nach `/opt/clh-releases/current.zip`, optional **TLS** für den einen Provisioner-Host.
 
 **Nach dem Wizard:** wildcard-DNS für Kunden-Hostnamen, Marketing (`provisioner.hmac_secret`, URL) — weiter wie [Schritt 7](#schritt-7--marketing-backend-anbinden). Wildcard-/Tenant-TLS sind weiterhin eigener Feinschliff (gleiche Grundlagen wie in dieser Doku).
 
@@ -146,7 +146,7 @@ sudo /usr/local/bin/clh-cloud-host-update.sh --with-zip
 
 Das Skript liest den **Git-Klon-Pfad** und den **Branch** aus `/etc/clh-provisioner/install-paths.env` (wird beim Bootstrap angelegt). Bei Umzug des Repos diesen Wert von `CLH_REPO_ROOT` anpassen.
 
-**Manuell (Fallback):** `git pull` im Klon-Verzeichnis; `deployment/cloud-host/provisioner.php` und `router.php` nach `/opt/clh-provisioner/` kopieren und Dienst neu starten — siehe [vps/README.md](../../vps/README.md). ZIP neu bauen und nach `/opt/clh-releases/current.zip` legen ([Schritt 9](#schritt-9--nach-einem-release-zip-aktualisieren)).
+**Manuell (Fallback):** `git pull` im Klon-Verzeichnis; `deployment/cloud-host/provisioner.php` und `router.php` nach `/opt/clh-provisioner/` kopieren und Dienst neu starten — siehe [VPS-Komponenten](../vps-components.md). ZIP neu bauen und nach `/opt/clh-releases/current.zip` legen ([Schritt 9](#schritt-9--nach-einem-release-zip-aktualisieren)).
 
 > **Hinweis:** Bestehende Tenant-Instanzen unter `/var/www/clh-tenants/` werden durch das Update-Skript **nicht** automatisch angehoben.
 
@@ -452,7 +452,7 @@ Nach dem Deployment der App (Migration **`settings`** ausgeführt: `php artisan 
 
 | Seite | Pfad | Inhalt |
 |-------|------|--------|
-| **E-Mail (SMTP)** | `/admin/mail-settings` | Mailer, SMTP-Host/Port/Scheme, Zugangsdaten, Absender; optional **Test-Mail** |
+| **E-Mail (SMTP)** | `/admin/mail-settings` | **Cloud-Tenants** (`CLH_DEPLOYMENT=cloud`): Versandart **Betriebs-Versand** / **Sendmail** / **eigener SMTP**; SMTP-Zugangsdaten des Betreibers sind verborgen. Sonst: Mailer (SMTP/Sendmail/Log), SMTP und Absender; optional **Test-Mail** |
 | **Stripe & Pläne** | `/admin/stripe-settings` | Stripe Publishable/Secret/Webhook-Secret sowie **Price-IDs** je Plan (`free` / `starter` / `pro`), passend zu den Produkten im Stripe-Dashboard |
 
 **Persistenz:** Die Werte liegen in der Tabelle **`settings`** (sensible Felder verschlüsselt mit **`APP_KEY`**). **`RuntimeConfigServiceProvider`** überschreibt zur Laufzeit `config('mail.*')`, `config('cashier.*')` und `config('creator.stripe_prices.*')` — Laravel Mail, Cashier (Checkout/Webhook) und die bestehende Billing-UI nutzen dieselben Konfig-Pfade wie bei Installation über **`.env`**.
@@ -502,14 +502,17 @@ Kunden-Cloud-Instanzen erhalten bei der Erstellung **keine** SMTP-Zugangsdaten a
 | Variable | Bedeutung |
 |----------|-----------|
 | `MAIL_MAILER` | `sendmail` — Laravel übergibt an **`/usr/sbin/sendmail`** (Symfony/Laravel-Transport) |
+| `CLH_DEPLOYMENT` | `cloud` — aktiviert die Cloud-Mail-Einstellungen im Filament-Admin |
 | `MAIL_FROM_ADDRESS` | `noreply@<Tenant-Hostname>` (z. B. `noreply@test.app.creatorlinkhub.eu`) |
 | `MAIL_FROM_NAME` | `Creator Link Hub` |
 
 **Host / MTA:** Tenant-Mail braucht **`/usr/sbin/sendmail`**. Beim **ersten neuen Tenant** installiert **`clh-provision-tenant.sh`** fehlendes **Postfix** selbst (`apt-get install`, debconf non-interactive, „Internet Site“, `mailname` = FQDN oder `hostname`). Schlägt das fehl, bricht das Provisioning mit Fehler ab — kein nur noch halb nutzbarer Mail-Stack ohne MTA.
 
-**Bootstrap:** **`scripts/bootstrap-cloud-host.sh`** installiert **Postfix** ebenfalls, damit frisch eingerichtete Hosts den MTA schon haben, bevor der erste Tenant angelegt wird (doppeltes `apt-get install postfix` ist harmlos).
+**Bootstrap:** **`scripts/bootstrap-cloud-host.sh`** installiert **Postfix** ebenfalls, damit frisch eingerichtete Hosts den MTA schon haben, bevor der erste Tenant angelegt wird (doppeltes `apt-get install postfix` ist harmlos). Anschließend fragt das Skript optional nach einem **SMTP-Relay** und ruft [`scripts/configure-postfix-smtp-relay.sh`](../../scripts/configure-postfix-smtp-relay.sh) auf — Authentifizierung liegt nur in **`/etc/postfix/sasl_passwd`** auf dem Host (nicht in Tenant-`.env`). Nicht-interaktiv per Umgebung: **`CLH_SMTP_RELAY_HOST`**, **`CLH_SMTP_RELAY_PORT`** (Standard **587**), **`CLH_SMTP_RELAY_USER`**, **`CLH_SMTP_RELAY_PASSWORD`**. Erneut ausführen: **`sudo /usr/local/bin/configure-postfix-smtp-relay.sh`** (wird beim Bootstrap nach `/usr/local/bin` kopiert).
 
-**Zustellbarkeit:** Direktversand vom VPS funktioniert je nach Ruf des Servers, DNS (SPF/PTR) und Empfänger-Policy; manche Postfächer sortieren streng. Langfristig können Betreiber einen **Smarthost**/Relay konfigurieren oder **SMTP in der App** setzen: seit den Admin-Seiten **`/admin/mail-settings`** mit Persistenz in **`settings`** (siehe Abschnitt [Admin-Dashboard: SMTP und Stripe](#admin-dashboard-smtp-und-stripe-je-tenant-filament)); alternativ weiterhin nur Tenant-**`.env`** (`MAIL_MAILER=smtp`, …) oder Support-Anpassung.
+**Tenant-Kennzeichnung:** **`clh-provision-tenant.sh`** setzt **`CLH_DEPLOYMENT=cloud`** in der Tenant-**.env**, damit **`/admin/mail-settings`** die Cloud-Oberfläche mit **Betriebs-Versand** (maskierte SMTP-Felder) nutzt.
+
+**Zustellbarkeit:** Direktversand vom VPS funktioniert je nach Ruf des Servers, DNS (SPF/PTR) und Empfänger-Policy; manche Postfächer sortieren streng. Mit **SMTP-Relay** (siehe oben) oder **eigenem SMTP** im Admin (**`/admin/mail-settings`**, Persistenz in **`settings`**) verbessert sich die Ausgangszustellung typischerweise. Alternativ weiterhin nur Tenant-**`.env`** (`MAIL_MAILER=smtp`, …) oder Support-Anpassung.
 
 **Bestehende Tenants** (vor diesem Stand): In `…/tenant/.env` dieselben `MAIL_*`-Schlüssel ergänzen/anpassen, dann im Tenant-Verzeichnis:
 
@@ -603,7 +606,7 @@ Skripte (nur per `sudo` vom User `clh-provisioner`):
 |----------|--------|
 | [`server-update-nach-github.md`](server-update-nach-github.md) | **Nach GitHub-Release:** Host-VPS (`git pull`, Provisioner, optional ZIP), Rollout zu bestehenden Tenants |
 | [`README.md`](../../README.md) (Projektroot) | MVP-Features, Verweis Cloud vs. Self-Host |
-| [`vps/README.md`](../../vps/README.md) | Komponenten- und Pfadübersicht App-VPS |
+| [VPS-Komponenten](../vps-components.md) | Komponenten- und Pfadübersicht App-VPS |
 | [`docs/deployment.md`](../deployment.md) | Laravel-Betrieb allgemein; Tabelle Self-Host / Cloud |
 | [`docs/launch-runbook.md`](../launch-runbook.md) | Go-Live-Checkliste (ein Produkt) |
 | [`docs/self-host-installation/README.md`](../self-host-installation/README.md) | **Eine** Installation — nicht die Cloud-Route |

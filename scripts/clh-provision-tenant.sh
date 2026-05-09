@@ -12,7 +12,7 @@
 #
 # Mail: Laravel **MAIL_MAILER=sendmail**. Fehlt **/usr/sbin/sendmail**, installiert dieses Skript **postfix**
 # (debconf non-interactive) — zwingend für Cloud-Mail ohne SMTP beim Kundenkauf.
-# Absender **noreply@<domain>**; SMTP/Relay später in Tenant-.env oder Admin möglich.
+# Absender **noreply@<domain>**; Versand **MAIL_MAILER=sendmail** → Postfix auf dem Host (ideal mit SMTP-Relay aus bootstrap).
 #
 set -euo pipefail
 
@@ -163,6 +163,7 @@ updates = {
     "APP_DEBUG": "false",
     "APP_URL": esc(os.environ["PY_APP_URL"]),
     "CLH_APP_ROOT": esc(os.environ["PY_INSTALL_DIR"]),
+    "CLH_DEPLOYMENT": esc("cloud"),
     "DB_CONNECTION": "mysql",
     "DB_HOST": "127.0.0.1",
     "DB_PORT": "3306",

@@ -11,4 +11,4 @@
 - Mobile App
 - AI-Optimierung
 
-Siehe [plan/README.md](../README.md) und [plan/ARCHITECTURE.md](../ARCHITECTURE.md).
+Siehe [Produktvision & Plan](../../docs/product-plan.md) und [plan/ARCHITECTURE.md](../ARCHITECTURE.md).

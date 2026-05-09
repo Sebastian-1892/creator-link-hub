@@ -8,6 +8,9 @@ use Illuminate\Support\Facades\DB;
 
 class SettingsService
 {
+    /** Cloud-Admin: `provider` | `sendmail` | `custom_smtp` (SMTP nur bei custom_smtp aus DB/.env-Overrides). */
+    public const MAIL_CLOUD_TRANSPORT_MODE_KEY = 'mail.cloud_transport_mode';
+
     /** Keys stored encrypted at rest (values passed through Crypt::encryptString). */
     public const ENCRYPTED_KEYS = [
         'mail.mailers.smtp.password',
@@ -81,6 +84,45 @@ class SettingsService
      */
     public function applyRuntimeConfigOverrides(): void
     {
+        $isCloud = config('creator.deployment') === 'cloud';
+        $cloudMode = $this->resolveCloudMailTransportMode($isCloud);
+
+        if ($isCloud && in_array($cloudMode, ['provider', 'sendmail'], true)) {
+            config(['mail.default' => 'sendmail']);
+            $this->applyMailFromConfigOverrides();
+            $this->applyCashierConfigOverrides();
+            $this->applyStripePricesConfigOverrides();
+
+            return;
+        }
+
+        $this->applySmtpMailerOverrides();
+        $this->applyMailFromConfigOverrides();
+        $this->applyCashierConfigOverrides();
+        $this->applyStripePricesConfigOverrides();
+    }
+
+    /**
+     * Effektiver Cloud-Mailmodus (auch ohne gesetzten DB-Schlüssel, Legacy: SMTP-Host in DB).
+     */
+    public function resolveCloudMailTransportMode(bool $isCloud): ?string
+    {
+        if (! $isCloud) {
+            return null;
+        }
+
+        $mode = $this->getStored(self::MAIL_CLOUD_TRANSPORT_MODE_KEY);
+        if (in_array($mode, ['provider', 'sendmail', 'custom_smtp'], true)) {
+            return $mode;
+        }
+
+        $host = $this->getStored('mail.mailers.smtp.host');
+
+        return ($host !== null && $host !== '') ? 'custom_smtp' : 'provider';
+    }
+
+    protected function applySmtpMailerOverrides(): void
+    {
         $smtpHost = $this->getStored('mail.mailers.smtp.host');
         $smtpPassword = $this->getStored('mail.mailers.smtp.password');
         $smtpUsername = $this->getStored('mail.mailers.smtp.username');
@@ -117,7 +159,10 @@ class SettingsService
                 config(['mail.default' => $mailDefault]);
             }
         }
+    }
 
+    protected function applyMailFromConfigOverrides(): void
+    {
         $fromAddress = $this->getStored('mail.from.address');
         if ($fromAddress !== null && $fromAddress !== '') {
             config(['mail.from.address' => $fromAddress]);
@@ -127,7 +172,10 @@ class SettingsService
         if ($fromName !== null && $fromName !== '') {
             config(['mail.from.name' => $fromName]);
         }
+    }
 
+    protected function applyCashierConfigOverrides(): void
+    {
         $pk = $this->getStored('cashier.key');
         if ($pk !== null && $pk !== '') {
             config(['cashier.key' => $pk]);
@@ -142,7 +190,10 @@ class SettingsService
         if ($whSecret !== null && $whSecret !== '') {
             config(['cashier.webhook.secret' => $whSecret]);
         }
+    }
 
+    protected function applyStripePricesConfigOverrides(): void
+    {
         $stripePrices = config('creator.stripe_prices', []);
         foreach (['free', 'starter', 'pro'] as $planKey) {
             $pid = $this->getStored('creator.stripe_prices.'.$planKey);

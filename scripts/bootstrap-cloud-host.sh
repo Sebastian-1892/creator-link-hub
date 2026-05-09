@@ -30,6 +30,28 @@ fi
 die() { echo "${C_RE}${C_B}✖ Fehler:${C_R} $*" >&2; exit 1; }
 info() { echo "${C_GR}${C_B}●${C_R} ${C_GR}[bootstrap]${C_R} $*"; }
 
+frage() {
+  local prompt="$1"
+  local def="${2:-}"
+  local r
+  if [[ -n "$def" ]]; then
+    read -r -p "$prompt [$def]: " r
+    echo "${r:-$def}"
+  else
+    read -r -p "$prompt: " r
+    echo "$r"
+  fi
+}
+
+frage_ja() {
+  local prompt="$1"
+  local def="${2:-j}"
+  local r
+  read -r -p "$prompt (j/n) [$def]: " r
+  r="${r:-$def}"
+  [[ "${r,,}" == "j" || "${r,,}" == "ja" || "${r,,}" == "y" || "${r,,}" == "yes" ]]
+}
+
 step() {
   # $1 = laufende Nummer, $2 = von, $3 = Kurztext
   echo ""
@@ -89,6 +111,35 @@ apt-get install -y nginx mariadb-server postfix unzip zip acl curl ca-certificat
 [[ -x /usr/sbin/sendmail ]] || info "${C_YE}WARN:${C_R} /usr/sbin/sendmail fehlt — ausgehende Mail von Tenants braucht einen MTA (postfix sollte installiert sein)."
 info "Paketinstallation erledigt."
 
+echo ""
+info "Ausgehende Mail: Tenant-Apps nutzen Sendmail → Postfix. Für zuverlässigen Versand wird ein SMTP-Relay empfohlen (Zugangsdaten nur auf diesem Server, nicht in den Tenant-.env-Dateien)."
+RELAY_DO=0
+if [[ -n "${CLH_SMTP_RELAY_HOST:-}" ]]; then
+  RELAY_DO=1
+elif frage_ja "SMTP-Relay für Postfix jetzt einrichten?" "j"; then
+  RELAY_DO=1
+fi
+if [[ "$RELAY_DO" -eq 1 ]]; then
+  RH="${CLH_SMTP_RELAY_HOST:-$(frage "SMTP-Relay-Host (Hostname)" "")}"
+  RP="${CLH_SMTP_RELAY_PORT:-$(frage "SMTP-Relay-Port" "587")}"
+  RU="${CLH_SMTP_RELAY_USER:-$(frage "SMTP-Benutzername" "")}"
+  if [[ -n "${CLH_SMTP_RELAY_PASSWORD:-}" ]]; then
+    RPW="$CLH_SMTP_RELAY_PASSWORD"
+  else
+    echo -n "SMTP-Passwort: "
+    read -rs RPW
+    echo ""
+  fi
+  [[ -n "$RH" ]] || die "SMTP-Relay-Host darf nicht leer sein."
+  [[ -n "$RU" ]] || die "SMTP-Benutzername darf nicht leer sein."
+  [[ -n "$RPW" ]] || die "SMTP-Passwort darf nicht leer sein."
+  CLH_SMTP_RELAY_HOST="$RH" CLH_SMTP_RELAY_PORT="$RP" CLH_SMTP_RELAY_USER="$RU" CLH_SMTP_RELAY_PASSWORD="$RPW" \
+    bash "${SCRIPT_DIR}/configure-postfix-smtp-relay.sh" || die "SMTP-Relay-Konfiguration fehlgeschlagen."
+  info "SMTP-Relay aktiv."
+else
+  info "SMTP-Relay übersprungen — Postfix versendet direkt (Zustellbarkeit ggf. schlechter)."
+fi
+
 step 4 "$STEPS" "Composer (falls noch nicht vorhanden) …"
 if ! command -v composer &>/dev/null; then
   curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
@@ -120,10 +171,10 @@ chown clh-provisioner:clh-provisioner /opt/clh-provisioner /var/lib/clh-provisio
 info "Verzeichnisse und Benutzer fertig."
 
 step 6 "$STEPS" "Tenant-Skripte nach /usr/local/bin kopieren …"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh configure-postfix-smtp-relay.sh; do
   install -m 0755 "${SCRIPT_DIR}/${s}" "/usr/local/bin/${s}"
 done
-info "Skripte installiert: clh-provision-tenant, delete, suspend, resume, tenant-enable-tls (.sh)"
+info "Skripte installiert: clh-provision-tenant, delete, suspend, resume, tenant-enable-tls, configure-postfix-smtp-relay (.sh)"
 
 step 7 "$STEPS" "Provisioner-PHP (provisioner.php + router.php) nach /opt/clh-provisioner …"
 PROV_SRC=""

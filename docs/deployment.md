@@ -5,7 +5,7 @@
 | Modell | Einstieg | Doku |
 |--------|----------|------|
 | **Ein Mandant (Self-Host)** | ZIP + [`scripts/install-server.sh`](../scripts/install-server.sh) | [`docs/self-host-installation/README.md`](self-host-installation/README.md) |
-| **Multi-Tenant Cloud-VPS** | [`scripts/bootstrap-cloud-host.sh`](../scripts/bootstrap-cloud-host.sh) | [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md) und [`vps/README.md`](../vps/README.md) (Komponentenübersicht) |
+| **Multi-Tenant Cloud-VPS** | [`scripts/bootstrap-cloud-host.sh`](../scripts/bootstrap-cloud-host.sh) | [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md) und [VPS-Komponenten](vps-components.md) (Komponentenübersicht) |
 
 Die folgenden Absätze gelten primär für die **klassische Einzelinstallation** (eine App, eine DB).
 

@@ -110,7 +110,7 @@ Verzeichnisse ohne Laravel (kein **`composer.json`/`artisan`**) werden überspru
 |----------|--------|
 | [README.md — Cloud-Multi-Tenant](../../README.md#cloud-multi-tenant-marketing-server--app-vps) | Schnelleinstieg Installer |
 | [Cloud-Hosting README](README.md) | Gesamtinstallation, DNS, Provisioner, ZIP |
-| [vps/README.md](../../vps/README.md) | Pfade und Komponenten auf dem VPS |
+| [VPS-Komponenten](../vps-components.md) | Pfade und Komponenten auf dem VPS |
 | [deployment.md](../deployment.md) | `update-application.sh` im Überblick |
 
 ---

@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Lizenzkey aus E-Mail und Domain (SHA-256 Hex, siehe distribution/license/README.md).
+# Lizenzkey aus E-Mail und Domain (SHA-256 Hex, siehe docs/distribution-license.md).
 # Nutzung: ./generate-license-key.sh <email> <domain>
 set -euo pipefail
 if [[ "${1:-}" == "" || "${2:-}" == "" ]]; then
