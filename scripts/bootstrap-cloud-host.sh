@@ -77,11 +77,16 @@ done
 [[ -n "$PHP_VER" ]] || die "Kein php8.2–8.4-fpm in apt."
 info "Gewählt: PHP ${PHP_VER}"
 
-step 3 "$STEPS" "Pakete installieren (nginx, mariadb-server, php${PHP_VER}-*, unzip, zip, …) — bitte warten …"
-apt-get install -y nginx mariadb-server unzip zip acl curl ca-certificates openssl git \
+step 3 "$STEPS" "Pakete installieren (nginx, mariadb-server, postfix sendmail, php${PHP_VER}-*, …) — bitte warten …"
+# Postfix debconf: sonst interaktive Fragen beim apt; Tenant-Apps nutzen MAIL_MAILER=sendmail
+MAILNAME="$(hostname -f 2>/dev/null || hostname)"
+echo "postfix postfix/mailname string ${MAILNAME}" | debconf-set-selections
+echo "postfix postfix/main_mailer_type select Internet Site" | debconf-set-selections
+apt-get install -y nginx mariadb-server postfix unzip zip acl curl ca-certificates openssl git \
   "php${PHP_VER}-fpm" "php${PHP_VER}-cli" "php${PHP_VER}-mbstring" "php${PHP_VER}-xml" \
   "php${PHP_VER}-curl" "php${PHP_VER}-zip" "php${PHP_VER}-intl" "php${PHP_VER}-bcmath" \
   "php${PHP_VER}-mysql"
+[[ -x /usr/sbin/sendmail ]] || info "${C_YE}WARN:${C_R} /usr/sbin/sendmail fehlt — ausgehende Mail von Tenants braucht einen MTA (postfix sollte installiert sein)."
 info "Paketinstallation erledigt."
 
 step 4 "$STEPS" "Composer (falls noch nicht vorhanden) …"

@@ -10,6 +10,10 @@
 # ACME/E-Mail für Certbot (-m): fest certbot@creatorlinkhub.eu, überschreibbar mit Umgebung CLH_ACME_EMAIL
 # (unabhängig von --admin-email, das der Tenant-Admin für die App bleibt).
 #
+# Mail: Laravel **MAIL_MAILER=sendmail**. Fehlt **/usr/sbin/sendmail**, installiert dieses Skript **postfix**
+# (debconf non-interactive) — zwingend für Cloud-Mail ohne SMTP beim Kundenkauf.
+# Absender **noreply@<domain>**; SMTP/Relay später in Tenant-.env oder Admin möglich.
+#
 set -euo pipefail
 
 readonly CLH_DEFAULT_ACME_EMAIL='certbot@creatorlinkhub.eu'
@@ -20,6 +24,21 @@ die_json() {
   msg=$(printf '%s' "$*" | sed 's/\\/\\\\/g; s/"/\\"/g')
   printf '%s\n' "{\"error\":\"${msg}\"}"
   exit 1
+}
+
+ensure_postfix_for_cloud_mail() {
+  if [[ -x /usr/sbin/sendmail ]]; then
+    return 0
+  fi
+  log "Installiere Postfix (debconf non-interactive) für /usr/sbin/sendmail — erforderlich für Tenant-Mail …"
+  export DEBIAN_FRONTEND=noninteractive
+  local mn
+  mn="$(hostname -f 2>/dev/null || hostname)"
+  echo "postfix postfix/mailname string ${mn}" | debconf-set-selections
+  echo "postfix postfix/main_mailer_type select Internet Site" | debconf-set-selections
+  apt-get update -qq || die_json "apt-get update failed (postfix/network?)"
+  apt-get install -y -qq postfix || die_json "apt install postfix failed — Cloud-Mail ohne sendmail nicht nutzbar"
+  [[ -x /usr/sbin/sendmail ]] || die_json "postfix installiert aber /usr/sbin/sendmail fehlt oder ist nicht ausführbar"
 }
 
 SLUG=""
@@ -67,6 +86,8 @@ FPM_SOCK="$(ls -1 /run/php/php*-fpm.sock 2>/dev/null | head -1 || true)"
 if [[ -d "$INSTALL_DIR" ]]; then
   die_json "tenant directory already exists: $INSTALL_DIR"
 fi
+
+ensure_postfix_for_cloud_mail
 
 TMP=$(mktemp -d)
 trap 'rm -rf "$TMP"' EXIT
@@ -122,7 +143,7 @@ else
     : >"$INSTALL_DIR/.env"
   fi
 fi
-export PY_APP_URL="$APP_URL" PY_DB_NAME="$DB_NAME" PY_DB_USER="$DB_USER" PY_DB_PASS="$DB_PASS" PY_INSTALL_DIR="$INSTALL_DIR"
+export PY_APP_URL="$APP_URL" PY_MAIL_DOMAIN="$DOMAIN" PY_DB_NAME="$DB_NAME" PY_DB_USER="$DB_USER" PY_DB_PASS="$DB_PASS" PY_INSTALL_DIR="$INSTALL_DIR"
 python3 <<'PY'
 import os, pathlib, re
 
@@ -135,6 +156,7 @@ def line_key(line: str):
     m = re.match(r"^([A-Za-z_][A-Za-z0-9_]*)=", line)
     return m.group(1) if m else None
 
+mail_from = f"noreply@{os.environ['PY_MAIL_DOMAIN']}"
 updates = {
     "APP_NAME": esc("Creator Link Hub"),
     "APP_ENV": "production",
@@ -150,6 +172,10 @@ updates = {
     "QUEUE_CONNECTION": "database",
     "CACHE_STORE": "database",
     "SESSION_DRIVER": "database",
+    # Outgoing mail ohne SMTP-Credentials: Laravel sendmail → /usr/sbin/sendmail (Host: typ. postfix)
+    "MAIL_MAILER": "sendmail",
+    "MAIL_FROM_ADDRESS": esc(mail_from),
+    "MAIL_FROM_NAME": esc("Creator Link Hub"),
 }
 path = pathlib.Path(os.environ["PY_INSTALL_DIR"]) / ".env"
 lines = path.read_text(encoding="utf-8").splitlines()

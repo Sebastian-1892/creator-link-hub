@@ -443,6 +443,30 @@ sudo tail -n 80 /var/log/nginx/error.log
 
 ---
 
+## E-Mail aus Tenant-Apps — Standard **sendmail** (ohne SMTP in der Bestellung)
+
+Kunden-Cloud-Instanzen erhalten bei der Erstellung **keine** SMTP-Zugangsdaten aus dem Marketing. Stattdessen setzt `clh-provision-tenant.sh` in der Tenant-`.env` u. a.:
+
+| Variable | Bedeutung |
+|----------|-----------|
+| `MAIL_MAILER` | `sendmail` — Laravel übergibt an **`/usr/sbin/sendmail`** (Symfony/Laravel-Transport) |
+| `MAIL_FROM_ADDRESS` | `noreply@<Tenant-Hostname>` (z. B. `noreply@test.app.creatorlinkhub.eu`) |
+| `MAIL_FROM_NAME` | `Creator Link Hub` |
+
+**Host / MTA:** Tenant-Mail braucht **`/usr/sbin/sendmail`**. Beim **ersten neuen Tenant** installiert **`clh-provision-tenant.sh`** fehlendes **Postfix** selbst (`apt-get install`, debconf non-interactive, „Internet Site“, `mailname` = FQDN oder `hostname`). Schlägt das fehl, bricht das Provisioning mit Fehler ab — kein nur noch halb nutzbarer Mail-Stack ohne MTA.
+
+**Bootstrap:** **`scripts/bootstrap-cloud-host.sh`** installiert **Postfix** ebenfalls, damit frisch eingerichtete Hosts den MTA schon haben, bevor der erste Tenant angelegt wird (doppeltes `apt-get install postfix` ist harmlos).
+
+**Zustellbarkeit:** Direktversand vom VPS funktioniert je nach Ruf des Servers, DNS (SPF/PTR) und Empfänger-Policy; manche Postfächer sortieren streng. Langfristig können Betreiber einen **Smarthost**/Relay konfigurieren oder Kunden eigene **SMTP-Daten** (z. B. in der Tenant-`.env` per `MAIL_MAILER=smtp` und Zugangsdaten) hinterlegen — sofern die App solche Einstellungen anbietet oder du sie per Support setzt.
+
+**Bestehende Tenants** (vor diesem Stand): In `…/tenant/.env` dieselben `MAIL_*`-Schlüssel ergänzen/anpassen, dann im Tenant-Verzeichnis:
+
+```bash
+sudo -u www-data php artisan config:cache
+```
+
+---
+
 ## Fehlersuche: Kunden-URL zeigt Provisioner-JSON oder `nginx` meldet **404 Not Found**
 
 ### A) Unter `https://…` erscheint die Provisioner-Health-JSON oder `{"error":"not found"}`
