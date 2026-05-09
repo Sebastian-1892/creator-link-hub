@@ -155,16 +155,13 @@ php artisan migrate --force
 info "Filament-Assets aktualisieren (falls Filament beteiligt) …"
 php artisan filament:upgrade -n 2>/dev/null || true
 
-php artisan storage:link --force 2>/dev/null || true
+info "Storage (Uploads, Logs), Symlink public/storage und Rechte für www-data …"
+bash "$ROOT/scripts/ensure-laravel-storage.sh" "$ROOT"
 
 info "Laravel-Cache neu aufbauen …"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
-
-if [[ "${EUID:-0}" -eq 0 ]] && id www-data &>/dev/null; then
-  chown -R www-data:www-data "$ROOT/bootstrap/cache" "$ROOT/storage" 2>/dev/null || true
-fi
 
 info "Queue-Worker zum Neustart signalisieren (nach nächstem Job) …"
 php artisan queue:restart 2>/dev/null || warn "queue:restart nicht ausgeführt (Queue evtl. nicht konfiguriert)."

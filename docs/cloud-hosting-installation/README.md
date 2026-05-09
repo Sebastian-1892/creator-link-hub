@@ -471,6 +471,8 @@ Nach dem Deployment der App (Migration **`settings`** ausgeführt: `php artisan 
 
 ### Anwendungs-Update im Dashboard (`composer` / `update-application.sh`)
 
+**Storage, Symlink und Rechte (Logo-Upload, Logs, Cache):** Das Repo enthält [`scripts/ensure-laravel-storage.sh`](../../scripts/ensure-laravel-storage.sh). Es wird automatisch von **`update-application.sh`**, **`install-server.sh`** und **`clh-provision-tenant.sh`** aufgerufen: legt die **`storage/`**-Unterverzeichnisse an, erzeugt **`public/storage`** (wie `php artisan storage:link`) und setzt **`chown`/`chmod`** für **`www-data`** auf **`storage/`** und **`bootstrap/cache/`**. Rollst du eine Instanz **ohne** diese Skripte aus (reiner Git-Klon), einmal ausführen: `sudo bash scripts/ensure-laravel-storage.sh /pfad/zur/app`.
+
 Das Dashboard startet [`scripts/update-application.sh`](../../scripts/update-application.sh) im Tenant-Verzeichnis. **PHP-FPM** läuft dabei als **`www-data`**. Schlägt **Composer** mit **`Permission denied`** bei **`vendor/composer/…`** fehl, gehören **`vendor/`** und andere Ordner oft noch **`root:root`** — beim Provisioning wurde **`composer install`** zuvor als **root** ausgeführt, ohne abschließende **`chown`** für die gesamte Installation.
 
 **Einmalige Korrektur auf dem VPS** (Slug durch den echten Tenant ersetzen):

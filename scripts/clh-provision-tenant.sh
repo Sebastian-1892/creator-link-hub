@@ -216,9 +216,7 @@ ADMIN_PW="$(openssl rand -hex 12)"
 CLH_ADMIN_EMAIL="$ADMIN_EMAIL" CLH_ADMIN_PASSWORD="$ADMIN_PW" CLH_ADMIN_NAME="$ADMIN_NAME" \
   php artisan db:seed --class=Database\\Seeders\\InstallAdminSeeder --force --no-interaction --no-ansi -q >/dev/stderr
 
-php artisan storage:link --force --no-interaction --no-ansi -q >/dev/stderr || true
-chown -R www-data:www-data "$INSTALL_DIR/storage" "$INSTALL_DIR/bootstrap/cache" 2>/dev/null || chown -R www-data:www-data storage bootstrap/cache
-chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
+bash "$INSTALL_DIR/scripts/ensure-laravel-storage.sh" "$INSTALL_DIR" >/dev/stderr
 php artisan config:cache --no-interaction --no-ansi -q >/dev/stderr
 php artisan route:cache --no-interaction --no-ansi -q >/dev/stderr
 php artisan view:cache --no-interaction --no-ansi -q >/dev/stderr

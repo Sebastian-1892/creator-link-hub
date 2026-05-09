@@ -447,9 +447,7 @@ if frage_ja "Zusätzlichen Demo-Nutzer (creator@example.com, Passwort: password)
   php artisan db:seed --class=Database\\Seeders\\DemoCreatorSeeder --force
 fi
 
-php artisan storage:link --force || true
-chown -R www-data:www-data storage bootstrap/cache
-chmod -R ug+rwx storage bootstrap/cache
+bash "$INSTALL_DIR/scripts/ensure-laravel-storage.sh" "$INSTALL_DIR"
 
 info "Laravel-Optimierung …"
 php artisan config:cache
