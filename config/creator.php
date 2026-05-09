@@ -36,6 +36,7 @@ return [
     'free_link_limit' => 10,
 
     'stripe_prices' => [
+        'free' => env('STRIPE_PRICE_FREE'),
         'starter' => env('STRIPE_PRICE_STARTER'),
         'pro' => env('STRIPE_PRICE_PRO'),
     ],

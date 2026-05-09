@@ -13,6 +13,7 @@ Diese Anleitung ist für **dich als Betreiber** eines **Multi-Tenant-App-Hosts**
 | Was | Typischer Pfad / Port |
 |-----|-------------------------|
 | Tenant-Installationen | `/var/www/clh-tenants/<slug>/` |
+| Tenant App-Einstellungen (SMTP/Stripe, Admin-UI) | Tabelle `settings` (siehe [Admin-Dashboard](#admin-dashboard-smtp-und-stripe-je-tenant-filament)) |
 | Release-ZIP für neue Tenants | `/opt/clh-releases/current.zip` |
 | Provisioner (PHP builtin server) | `127.0.0.1:9100` (nur lokal) |
 | Provisioner-Dateien | `/opt/clh-provisioner/` |
@@ -443,6 +444,23 @@ sudo tail -n 80 /var/log/nginx/error.log
 
 ---
 
+## Admin-Dashboard: SMTP und Stripe je Tenant (Filament)
+
+Nach dem Deployment der App (Migration **`settings`** ausgeführt: `php artisan migrate --force`) können Betreiber mit **`users.is_admin = true`** im Filament-Admin (**`/admin`**) unter der Navigationsgruppe **„System“** pflegen:
+
+| Seite | Pfad | Inhalt |
+|-------|------|--------|
+| **E-Mail (SMTP)** | `/admin/mail-settings` | Mailer, SMTP-Host/Port/Scheme, Zugangsdaten, Absender; optional **Test-Mail** |
+| **Stripe & Pläne** | `/admin/stripe-settings` | Stripe Publishable/Secret/Webhook-Secret sowie **Price-IDs** je Plan (`free` / `starter` / `pro`), passend zu den Produkten im Stripe-Dashboard |
+
+**Persistenz:** Die Werte liegen in der Tabelle **`settings`** (sensible Felder verschlüsselt mit **`APP_KEY`**). **`RuntimeConfigServiceProvider`** überschreibt zur Laufzeit `config('mail.*')`, `config('cashier.*')` und `config('creator.stripe_prices.*')` — Laravel Mail, Cashier (Checkout/Webhook) und die bestehende Billing-UI nutzen dieselben Konfig-Pfade wie bei Installation über **`.env`**.
+
+**Fallback:** Fehlt ein DB-Eintrag für einen Wert, gilt weiterhin die Tenant-**`.env`** (wie nach `clh-provision-tenant.sh`). Eintrag im UI **ersetzt** den `.env`-Wert nur für dieses Schlüsselfeld.
+
+**Stripe-Webhook:** Endpoint bleibt **`POST /stripe/webhook`** (Cashier, Prefix aus `CASHIER_PATH`). Das Signing-Secret kann im Admin gesetzt oder weiterhin via **`STRIPE_WEBHOOK_SECRET`** in der `.env` gepflegt werden.
+
+---
+
 ## E-Mail aus Tenant-Apps — Standard **sendmail** (ohne SMTP in der Bestellung)
 
 Kunden-Cloud-Instanzen erhalten bei der Erstellung **keine** SMTP-Zugangsdaten aus dem Marketing. Stattdessen setzt `clh-provision-tenant.sh` in der Tenant-`.env` u. a.:
@@ -457,7 +475,7 @@ Kunden-Cloud-Instanzen erhalten bei der Erstellung **keine** SMTP-Zugangsdaten a
 
 **Bootstrap:** **`scripts/bootstrap-cloud-host.sh`** installiert **Postfix** ebenfalls, damit frisch eingerichtete Hosts den MTA schon haben, bevor der erste Tenant angelegt wird (doppeltes `apt-get install postfix` ist harmlos).
 
-**Zustellbarkeit:** Direktversand vom VPS funktioniert je nach Ruf des Servers, DNS (SPF/PTR) und Empfänger-Policy; manche Postfächer sortieren streng. Langfristig können Betreiber einen **Smarthost**/Relay konfigurieren oder Kunden eigene **SMTP-Daten** (z. B. in der Tenant-`.env` per `MAIL_MAILER=smtp` und Zugangsdaten) hinterlegen — sofern die App solche Einstellungen anbietet oder du sie per Support setzt.
+**Zustellbarkeit:** Direktversand vom VPS funktioniert je nach Ruf des Servers, DNS (SPF/PTR) und Empfänger-Policy; manche Postfächer sortieren streng. Langfristig können Betreiber einen **Smarthost**/Relay konfigurieren oder **SMTP in der App** setzen: seit den Admin-Seiten **`/admin/mail-settings`** mit Persistenz in **`settings`** (siehe Abschnitt [Admin-Dashboard: SMTP und Stripe](#admin-dashboard-smtp-und-stripe-je-tenant-filament)); alternativ weiterhin nur Tenant-**`.env`** (`MAIL_MAILER=smtp`, …) oder Support-Anpassung.
 
 **Bestehende Tenants** (vor diesem Stand): In `…/tenant/.env` dieselben `MAIL_*`-Schlüssel ergänzen/anpassen, dann im Tenant-Verzeichnis:
 

@@ -10,8 +10,8 @@ Link-in-Bio-SaaS mit **Laravel 11**, **Livewire/Volt**, **Filament Admin**, **Po
 - **Profil-Vorlagen** (30 Farb-Themes) + Profilbild (öffentlicher `storage`-Disk)
 - **Analytics** (Klicks pro Tag, Top-Links)
 - **Pläne & Limits** (Free: max. 10 Links, Plattform-Branding)
-- **Stripe** Checkout & Kundenportal (Price-IDs in `.env`)
-- **Admin** `/admin` (nur `users.is_admin = true`) — Sprachwahl **EN / DE / FR / IT** im **Benutzermenü** oben rechts (Flaggen + Name, Filament-Oberfläche)
+- **Stripe** Checkout & Kundenportal (Price-IDs in `.env` oder im Admin unter **`/admin/stripe-settings`**)
+- **Admin** `/admin` (nur `users.is_admin = true`) — Sprachwahl **EN / DE / FR / IT** im **Benutzermenü** oben rechts (Flaggen + Name, Filament-Oberfläche); unter **System** auch **E-Mail/SMTP** (`/admin/mail-settings`) und **Stripe & Abo-Preise** (`/admin/stripe-settings`) — Overrides in der DB, `.env` bleibt Fallback
 - Marketing: `/`, `/pricing`, `/faq`, Legal-Seiten, Cookie-Banner (Stub)
 
 Detaillierte Ablauf-Schritte: [`plan/steps/00-overview.md`](plan/steps/00-overview.md)
