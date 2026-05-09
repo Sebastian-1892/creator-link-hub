@@ -67,6 +67,7 @@ Konkrete PHP-Minor-Versionen richten sich nach dem Bootstrap und den Ubuntu-/Deb
 |------------|------------------|-------|
 | [`scripts/clh-provision-tenant.sh`](../scripts/clh-provision-tenant.sh) | `/usr/local/bin/clh-provision-tenant.sh` | Neuer Tenant aus ZIP (Composer, Migrate, Seeds, Admin), **Standard-Mail:** `MAIL_MAILER=sendmail`, `MAIL_FROM_ADDRESS=noreply@<Domain>`, **`chmod 755`** Tenantroot/`public`, **Let’s Encrypt** per **`certbot certonly --webroot`**, Nginx‑Endconfig HTTP/HTTPS, optional **`--no-tls`**. |
 | [`scripts/clh-cloud-host-update.sh`](../scripts/clh-cloud-host-update.sh) | `/usr/local/bin/clh-cloud-host-update.sh` | Nach Push ins Repo: `git pull`, Provisioner-PHP + Tenant-Skripte ausrollen, optional `--with-zip`, Dienst + Nginx reload. |
+| [`scripts/clh-rollout-all-tenants.sh`](../scripts/clh-rollout-all-tenants.sh) | `/usr/local/bin/clh-rollout-all-tenants.sh` | Ein Lauf: Host-Update wie oben, dann alle Tenant-Slugs unter `tenants_root` per `rsync` vom Klon + `update-application.sh` je Instanz ([Doku](../docs/cloud-hosting-installation/server-update-nach-github.md)). |
 | `scripts/clh-delete-tenant.sh` | `/usr/local/bin/clh-delete-tenant.sh` | Tenant entfernen (Dateien, DB, Sites). |
 | `scripts/clh-suspend-tenant.sh` | `/usr/local/bin/clh-suspend-tenant.sh` | Tenant-Site aus `sites-enabled` nehmen. |
 | [`scripts/clh-resume-tenant.sh`](../scripts/clh-resume-tenant.sh) | `/usr/local/bin/clh-resume-tenant.sh` | Tenant-Site wieder aktivieren (`sites-available`-Config muss existieren). |

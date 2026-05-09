@@ -100,6 +100,10 @@ SELF="$CLH_REPO_ROOT/scripts/clh-cloud-host-update.sh"
 [[ -f "$SELF" ]] || die "Skript fehlt: scripts/clh-cloud-host-update.sh"
 install -m 0755 "$SELF" /usr/local/bin/clh-cloud-host-update.sh
 
+ROLLOUT="$CLH_REPO_ROOT/scripts/clh-rollout-all-tenants.sh"
+[[ -f "$ROLLOUT" ]] || die "Skript fehlt: scripts/clh-rollout-all-tenants.sh"
+install -m 0755 "$ROLLOUT" /usr/local/bin/clh-rollout-all-tenants.sh
+
 if [[ "$WITH_ZIP" == true ]]; then
   log "Release-ZIP bauen (npm ci, vite, zip) …"
   command -v npm >/dev/null 2>&1 || die "npm nicht im PATH — Node installieren oder ohne --with-zip ausführen."

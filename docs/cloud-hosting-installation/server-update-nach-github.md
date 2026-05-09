@@ -76,6 +76,22 @@ Kunden arbeiten in **ihrer** Instanz unter **`/var/www/clh-tenants/<slug>/`**. D
 - **`NPM_CONFIG_CACHE`** kann unter **`storage/npm-cache`** liegen ([`update-application.sh`](../../scripts/update-application.sh)); globales **`/var/www/.npm`** mit falschem Besitzer verursacht **`EACCES`** — siehe Fehlerabschnitte in der [Cloud-Hosting README](./README.md).
 - Viele Tenants → wiederholendes Deploy + Update pro Slug oder eigenes Orchestrierungs-Skript (außerhalb dieses Repos).
 
+### Alle Slugs in einem Lauf (Host + Tenants)
+
+Nach dem nächsten **`clh-cloud-host-update`** liegt auf dem VPS **[`scripts/clh-rollout-all-tenants.sh`](../../scripts/clh-rollout-all-tenants.sh)** als **`/usr/local/bin/clh-rollout-all-tenants.sh`**. Ein Aufruf **als root**:
+
+1. Führt **`clh-cloud-host-update.sh`** aus (**`git pull`**, Provisioner, Tenant-Skripte, optional **`--with-zip`**).
+2. Liest **`tenants_root`** aus **`/etc/clh-provisioner/config.json`** (Fallback **`/var/www/clh-tenants`**).
+3. Für **jedes** Unterverzeichnis mit **`composer.json`** und **`artisan`**: **`rsync`** vom **`CLH_REPO_ROOT`** (ohne **`.env`**, **`storage/`**, **`bootstrap/cache/`**), **`chown www-data`**, dann **`scripts/update-application.sh`**.
+
+```bash
+sudo /usr/local/bin/clh-rollout-all-tenants.sh
+sudo /usr/local/bin/clh-rollout-all-tenants.sh --skip-host-update   # nur Tenants, Repo schon aktuell
+sudo /usr/local/bin/clh-rollout-all-tenants.sh --with-zip            # inkl. Release-ZIP wie beim Host-Update
+```
+
+Verzeichnisse ohne Laravel (kein **`composer.json`/`artisan`**) werden übersprungen.
+
 ---
 
 ## Kurz-Checkliste für ein Release
