@@ -332,5 +332,21 @@ else
 fi
 
 ADMIN_URL="${APP_URL%/}/admin"
-printf '%s\n' "{\"instance_url\":\"${APP_URL}/\",\"ok\":true,\"admin_url\":\"${ADMIN_URL}\"}"
-log "tenant ready slug=$SLUG instance=${APP_URL}/ admin=${ADMIN_URL} (initiales Admin-Passwort bei Bedarf per InstallAdminSeeder / Passwort-Reset)"
+APP_INST="${APP_URL%/}/"
+export ADMIN_PW ADMIN_URL APP_INST
+python3 <<'PY'
+import json, os
+
+print(
+    json.dumps(
+        {
+            "instance_url": os.environ["APP_INST"],
+            "ok": True,
+            "admin_url": os.environ["ADMIN_URL"],
+            "initial_admin_password": os.environ["ADMIN_PW"],
+        },
+        separators=(",", ":"),
+    )
+)
+PY
+log "tenant ready slug=$SLUG instance=${APP_INST} admin=${ADMIN_URL}"

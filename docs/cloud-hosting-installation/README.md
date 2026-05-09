@@ -529,7 +529,8 @@ Bestehende Tenants aktualisierst du **nicht** automatisch — das ist eigene Pol
 ```text
 Internet → Nginx :443 provision.* → Proxy → 127.0.0.1:9100 (router.php → provisioner.php)
                 → Nginx :80/443 tenant.* → je Tenant /var/www/clh-tenants/<slug>/public
-Marketing (creatorlinkhub.eu) → HTTPS + HMAC POST → Provisioner-Host
+Marketing (creatorlinkhub.eu) → HTTPS + HMAC POST → Provisioner-Host  
+Erfolgs-JSON vom Provisioner enthält u. a. **`initial_admin_password`** (vom Skript erzeugt, gleicher Wert wie beim `InstallAdminSeeder` auf dem Tenant) — wird vom Marketing genutzt, um die „Cloud bereit“-E-Mail mit Erstpasswort zu versenden.
 MariaDB auf dem VPS → eine DB pro Tenant (clh_<slug>)
 ```
 
