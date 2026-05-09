@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Creator Link Hub — Laravel storage/bootstrap/cache für PHP-FPM (typisch www-data):
-#   - benötigte Unterverzeichnisse
+#   - benötigte Unterverzeichnisse (inkl. storage/app/private/livewire-tmp für Filament/Livewire-Uploads)
 #   - Besitz + Schreibrechte auf storage/ und bootstrap/cache/
 #   - Symlink public/storage → storage/app/public (wie artisan storage:link)
 #
@@ -32,7 +32,8 @@ mkdir -p \
   "$ROOT/storage/framework/sessions" \
   "$ROOT/storage/framework/views" \
   "$ROOT/storage/logs" \
-  "$ROOT/storage/app/public"
+  "$ROOT/storage/app/public" \
+  "$ROOT/storage/app/private/livewire-tmp"
 
 WEB_USER="www-data"
 WEB_GROUP="www-data"

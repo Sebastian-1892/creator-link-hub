@@ -15,6 +15,8 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->alias([
             'onboarding' => EnsureOnboardingCompleted::class,
         ]);
+        // Livewire/Filament Datei-Uploads nutzen signierte URLs; hinter Nginx/TLS muss das Schema stimmen.
+        $middleware->trustProxies(at: '*');
     })
     ->withExceptions(function (Exceptions $exceptions) {
         //
