@@ -64,6 +64,15 @@ done
 
 [[ -f composer.json && -f artisan ]] || die "Kein Laravel-Projekt (composer.json/artisan fehlt)."
 
+# Vor Composer/Artisan: Verzeichnisse müssen existieren (Rollout rsync schließt bootstrap/cache u. U. aus).
+mkdir -p "$ROOT/bootstrap/cache"
+mkdir -p "$ROOT/storage/framework/cache/data" "$ROOT/storage/framework/sessions" "$ROOT/storage/framework/views" "$ROOT/storage/logs"
+chmod ug+rwx "$ROOT/bootstrap/cache" 2>/dev/null || true
+if [[ "${EUID:-0}" -eq 0 ]] && id www-data &>/dev/null; then
+  chown www-data:www-data "$ROOT/bootstrap/cache"
+  chown -R www-data:www-data "$ROOT/storage" 2>/dev/null || true
+fi
+
 echo ""
 echo "=========================================="
 echo "  Creator Link Hub — Anwendungs-Update"
@@ -74,6 +83,11 @@ echo ""
 
 if [[ "${EUID:-0}" -eq 0 ]]; then
   export COMPOSER_ALLOW_SUPERUSER=1
+fi
+
+# Tenant-Kopien können .git vom Host-Klon enthalten (www-data) — Composer läuft oft als root → „dubious ownership“.
+if [[ -d "$ROOT/.git" ]] && [[ "${EUID:-0}" -eq 0 ]]; then
+  git config --global --add safe.directory "$ROOT" 2>/dev/null || true
 fi
 
 info "Composer …"

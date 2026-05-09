@@ -95,7 +95,10 @@ for tenant_dir in "${tenant_dirs[@]}"; do
   fi
 
   log "—— Tenant: $slug ——"
+  # Kein Git im Tenant: vermeidet „dubious ownership“, wenn Composer als root läuft (Besitzer www-data).
+  rm -rf "$tenant_dir/.git"
   rsync -a --delete \
+    --exclude '.git/' \
     --exclude '.env' \
     --exclude 'storage/' \
     --exclude 'bootstrap/cache/' \
