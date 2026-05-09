@@ -480,7 +480,18 @@ Anschließend das Update im Admin erneut ausführen. Mit aktuellem **`clh-provis
 sudo chown -R www-data:www-data /var/www/.npm
 ```
 
-Mit aktuellem Repo setzt [`scripts/update-application.sh`](../../scripts/update-application.sh) zusätzlich **`NPM_CONFIG_CACHE=$PWD/storage/npm-cache`**, damit der Cache **im Tenant** liegt und dieselben Rechte wie **`storage/`** hat (ersetzt das Problem langfristig).
+Mit aktuellem Repo setzt [`scripts/update-application.sh`](../../scripts/update-application.sh) zusätzlich **`NPM_CONFIG_CACHE=$PWD/storage/npm-cache`**, damit der Cache **im Tenant** liegt und dieselben Rechte wie **`storage/`** hat (ersetzt das Problem langfristig). Existiert **`/var/www/.npm`** noch nicht, reicht: **`sudo mkdir -p /var/www/.npm && sudo chown -R www-data:www-data /var/www/.npm`**.
+
+**npm (`EACCES`, `rmdir` / Pfad unter `node_modules/`):** Wurde **`npm`** im Tenant einmal als **root** ausgeführt (z. B. interaktiv auf der Shell), gehören Teile von **`node_modules/`** **`root`** — **`npm ci`** als **`www-data`** kann sie dann nicht löschen (**`Error: EACCES: permission denied, rmdir … @alloc/quick-lru`** o. Ä.). Einmal bereinigen:
+
+```bash
+sudo rm -rf /var/www/clh-tenants/SLUG/node_modules
+sudo chown -R www-data:www-data /var/www/clh-tenants/SLUG
+```
+
+Anschließend **`scripts/update-application.sh`** erneut (Dashboard oder `sudo -u www-data bash scripts/update-application.sh`). Aktuelles **`update-application.sh`** bricht vor **`npm ci`** mit einer klaren Meldung ab, wenn noch root-eigene Dateien unter **`node_modules`** liegen.
+
+**Recovery:** Einmalig **`sudo bash scripts/update-application.sh`** im Tenant ausführen: Als **root** setzt das Skript **`vendor`/`storage`/`bootstrap/cache`** auf **`www-data`**, bereinigt **`node_modules`** bei Bedarf und führt **`npm ci` / Build** intern als **`www-data`** aus — danach funktioniert das Dashboard-Update wieder wie gewohnt.
 
 ---
 

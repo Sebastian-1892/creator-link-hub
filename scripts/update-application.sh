@@ -6,6 +6,9 @@
 # Führt composer install, npm ci/build, migrate --force, Caches, optional Supervisor aus.
 # .env und Datenbankinhalte bleiben unverändert; nur ausstehende Migrationen werden angewendet.
 #
+# Wenn als root gestartet: nach composer vendor/storage/cache → www-data; npm läuft immer als
+# www-data (vermeidet root-eigene node_modules). Als www-data (Filament-Dashboard): unverändert.
+#
 #   bash scripts/update-application.sh
 #   bash scripts/update-application.sh --dev   # Composer ohne --no-dev
 #
@@ -76,19 +79,58 @@ fi
 info "Composer …"
 composer install "${COMPOSER_NO_DEV[@]}" --no-interaction --optimize-autoloader
 
+# Nach composer als root: vendor/cache/storage für PHP-FPM (www-data) konsistent — vermeidet gemischte root/www-data-Bäume.
+if [[ "${EUID:-0}" -eq 0 ]] && id www-data &>/dev/null; then
+  chown -R www-data:www-data "$ROOT/vendor" "$ROOT/bootstrap/cache" "$ROOT/storage" 2>/dev/null || true
+fi
+
 if command -v npm &>/dev/null; then
-  # Vermeidet /var/www/.npm mit root-Rechten (www-data + Dashboard-Update → EACCES „mkdir … errno -13“).
+  # Projektbezogener npm-Cache — nie /var/www/.npm mit root-only (Dashboard läuft als www-data).
   export NPM_CONFIG_CACHE="${ROOT}/storage/npm-cache"
   mkdir -p "$NPM_CONFIG_CACHE"
+
+  RUN_NPM_AS_WWW=0
+  if [[ "${EUID:-0}" -eq 0 ]] && id www-data &>/dev/null; then
+    RUN_NPM_AS_WWW=1
+    info "npm wird als www-data ausgeführt (keine root-eigenen node_modules)."
+    chown -R www-data:www-data "$NPM_CONFIG_CACHE"
+    if [[ -d "$ROOT/node_modules" ]]; then
+      if ! chown -R www-data:www-data "$ROOT/node_modules" 2>/dev/null; then
+        warn "node_modules ließen sich nicht auf www-data umbiegen — Verzeichnis wird entfernt, npm ci baut neu auf."
+        rm -rf "$ROOT/node_modules"
+      fi
+    fi
+  elif [[ -d "$ROOT/node_modules" ]]; then
+    # Läuft bereits als www-data (z. B. Filament-Dashboard): fremde Besitzer nur melden.
+    foreign=$(find "$ROOT/node_modules" -not -user "$(id -u)" 2>/dev/null | head -1)
+    if [[ -n "${foreign:-}" ]]; then
+      die "node_modules enthält Dateien anderer Besitzer (z. B. ${foreign}). Einmal als root: sudo bash \"$ROOT/scripts/update-application.sh\" oder: sudo rm -rf \"$ROOT/node_modules\" && sudo chown -R www-data:www-data \"$ROOT\""
+    fi
+    if ! touch "$ROOT/node_modules/.clh_write_probe" 2>/dev/null; then
+      die "Schreibzugriff auf node_modules fehlgeschlagen. Als root: sudo rm -rf \"$ROOT/node_modules\" && sudo chown -R www-data:www-data \"$ROOT\""
+    fi
+    rm -f "$ROOT/node_modules/.clh_write_probe"
+  fi
+
   info "npm-Cache: ${NPM_CONFIG_CACHE}"
+
+  npm_do() {
+    local inner=$1
+    if [[ "$RUN_NPM_AS_WWW" -eq 1 ]]; then
+      sudo -u www-data env NPM_CONFIG_CACHE="$NPM_CONFIG_CACHE" HOME=/var/www bash -lc "cd \"$ROOT\" && $inner"
+    else
+      bash -lc "cd \"$ROOT\" && $inner"
+    fi
+  }
+
   if [[ -f package-lock.json ]]; then
     info "npm ci && npm run build …"
-    npm ci --no-fund --no-audit
+    npm_do "npm ci --no-fund --no-audit"
   else
     warn "package-lock.json fehlt — npm install"
-    npm install --no-fund --no-audit
+    npm_do "npm install --no-fund --no-audit"
   fi
-  npm run build
+  npm_do "npm run build"
 else
   warn "npm nicht im PATH — überspringe Frontend-Build. Bei Bedarf: npm ci && npm run build"
 fi
@@ -105,6 +147,10 @@ info "Laravel-Cache neu aufbauen …"
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
+
+if [[ "${EUID:-0}" -eq 0 ]] && id www-data &>/dev/null; then
+  chown -R www-data:www-data "$ROOT/bootstrap/cache" "$ROOT/storage" 2>/dev/null || true
+fi
 
 info "Queue-Worker zum Neustart signalisieren (nach nächstem Job) …"
 php artisan queue:restart 2>/dev/null || warn "queue:restart nicht ausgeführt (Queue evtl. nicht konfiguriert)."
