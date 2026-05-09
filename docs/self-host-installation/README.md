@@ -104,6 +104,21 @@ Wenn ein **neues Release-ZIP** vorliegt:
 
 `.env` und Datenbankinhalte bleiben unverändert; es laufen u. a. Composer, Frontend-Build, Migrationen und Cache-Optimierung.
 
+### Updates mit Git auf dem Server
+
+Wenn du die App als **Git-Klon** (z. B. von GitHub) unter einem festen Pfad betreibst — **nicht** der ZIP-Installationsweg oben — dann nach jedem Push den Stand auf dem VPS holen und das Update-Skript ausführen. **`main`** durch euren Branch ersetzen:
+
+```bash
+cd /pfad/zu/creator-link-hub
+sudo -u www-data git fetch origin
+sudo -u www-data git pull --ff-only origin main
+sudo -u www-data bash scripts/update-application.sh
+```
+
+*(Wenn PHP/Webserver nicht als `www-data` läuft, denselben Benutzer verwenden wie für die Anwendungsdateien.)*
+
+**Multi-Tenant-Cloud-VPS** (Provisioner, viele Mandanten unter `/var/www/clh-tenants/`) ist **nicht** diese Route — dort siehe [`docs/cloud-hosting-installation/server-update-nach-github.md`](../cloud-hosting-installation/server-update-nach-github.md#konsole-vps-nach-github-aktualisieren).
+
 ---
 
 ## 6. Optional: Umgebungs-URLs überschreiben

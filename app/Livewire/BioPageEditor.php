@@ -26,6 +26,9 @@ class BioPageEditor extends Component
 
     public ?int $theme_id = null;
 
+    /** @var 'all'|'light'|'dark'|'colorful'|'minimal' */
+    public string $theme_filter = 'all';
+
     public bool $is_published = false;
 
     public $avatar;
@@ -101,8 +104,14 @@ class BioPageEditor extends Component
 
     public function render()
     {
+        $query = Theme::query()->orderBy('name');
+
+        if ($this->theme_filter !== 'all') {
+            $query->where('template_group', $this->theme_filter);
+        }
+
         return view('livewire.bio-page-editor', [
-            'themes' => Theme::query()->orderBy('name')->get(),
+            'themes' => $query->get(),
         ]);
     }
 }

@@ -1,7 +1,10 @@
+@php
+    $bio = $branding['bio'] ?? [];
+@endphp
 <div id="clh-cookie-banner" class="hidden fixed bottom-0 inset-x-0 z-50 p-4">
-    <div class="max-w-3xl mx-auto rounded-xl border p-4 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm" style="background: var(--brand-card, #1e293b); border-color: var(--brand-border, rgba(255,255,255,0.14)); color: var(--brand-text, #f8fafc);">
-        <p>{{ __('Wir verwenden notwendige Cookies für Login, Sicherheit und Analytics. Details in der Datenschutzerklärung.') }}</p>
-        <button type="button" id="clh-cookie-ok" class="shrink-0 rounded-full px-5 py-2 font-semibold transition hover:opacity-95" style="background: var(--brand-primary, #6366f1); color: var(--brand-primary-contrast, #ffffff);">{{ __('Verstanden') }}</button>
+    <div class="max-w-3xl mx-auto rounded-xl border p-4 shadow-xl flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 text-sm bg-white" style="border-color: var(--brand-border, #e8e2d5); color: var(--brand-text, #1a1a1a);">
+        <p>{{ $bio['cookie_text'] ?? '' }}</p>
+        <button type="button" id="clh-cookie-ok" class="shrink-0 rounded-full px-5 py-2 font-semibold transition hover:opacity-95" style="background: var(--brand-primary, #dc4b3f); color: var(--brand-primary-contrast, #ffffff);">{{ $bio['cookie_button'] ?? __('Verstanden') }}</button>
     </div>
 </div>
 <script>

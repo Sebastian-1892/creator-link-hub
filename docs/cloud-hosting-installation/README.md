@@ -132,6 +132,8 @@ sudo chmod 644 /opt/clh-releases/current.zip
 
 ### 5. Spätere Updates
 
+**Ausführliche Befehlsübersicht** (Cloud-Host vs. Self-Host mit Git, Tenant-Rollout, private Repos): [**Server-Update nach GitHub**](server-update-nach-github.md#konsole-vps-nach-github-aktualisieren).
+
 **Empfohlen (nach Bootstrap):** Auf dem VPS als root:
 
 ```bash
@@ -144,11 +146,17 @@ Optional mit neuem Release-ZIP für **zukünftige** Tenant-Neuanlagen (benötigt
 sudo /usr/local/bin/clh-cloud-host-update.sh --with-zip
 ```
 
+**Alle bestehenden Tenants** nach einem Release auf den gleichen Stand wie der Host-Klon (optional mit ZIP):
+
+```bash
+sudo /usr/local/bin/clh-rollout-all-tenants.sh --with-zip
+```
+
 Das Skript liest den **Git-Klon-Pfad** und den **Branch** aus `/etc/clh-provisioner/install-paths.env` (wird beim Bootstrap angelegt). Bei Umzug des Repos diesen Wert von `CLH_REPO_ROOT` anpassen.
 
 **Manuell (Fallback):** `git pull` im Klon-Verzeichnis; `deployment/cloud-host/provisioner.php` und `router.php` nach `/opt/clh-provisioner/` kopieren und Dienst neu starten — siehe [VPS-Komponenten](../vps-components.md). ZIP neu bauen und nach `/opt/clh-releases/current.zip` legen ([Schritt 9](#schritt-9--nach-einem-release-zip-aktualisieren)).
 
-> **Hinweis:** Bestehende Tenant-Instanzen unter `/var/www/clh-tenants/` werden durch das Update-Skript **nicht** automatisch angehoben.
+> **Hinweis:** Bestehende Tenant-Instanzen unter `/var/www/clh-tenants/` werden durch **`clh-cloud-host-update.sh` allein** **nicht** automatisch angehoben — dafür **`clh-rollout-all-tenants.sh`** oder manuell pro Tenant (siehe [Server-Update nach GitHub](server-update-nach-github.md)).
 
 Danach wie unten: **DNS** → **Nginx/TLS** → **Tests** → Marketing.
 

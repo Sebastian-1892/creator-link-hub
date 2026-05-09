@@ -12,6 +12,11 @@ class Theme extends Model
         'slug',
         'variables',
         'preview_image_path',
+        'button_style',
+        'background_style',
+        'font_family',
+        'card_style',
+        'template_group',
     ];
 
     protected function casts(): array

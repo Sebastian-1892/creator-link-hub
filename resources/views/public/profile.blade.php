@@ -1,19 +1,22 @@
 @extends('layouts.public', ['profile' => $profile, 'showPlatformBranding' => $showPlatformBranding])
 
 @section('content')
+    @php
+        $clh = clh_public_theme($profile);
+    @endphp
     <div class="max-w-md mx-auto px-4 py-12 pb-28">
         <header class="text-center">
             @if ($profile->avatar_path)
                 <img
                     src="{{ \Illuminate\Support\Facades\Storage::url($profile->avatar_path) }}"
                     alt=""
-                    class="mx-auto h-28 w-28 rounded-full object-cover shadow-xl"
-                    style="box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 38%, transparent); border: 3px solid color-mix(in srgb, var(--clh-accent) 60%, transparent);"
+                    class="{{ $clh['avatar_class'] }}"
+                    style="{{ $clh['avatar_style'] }}"
                 >
             @else
                 <div
-                    class="mx-auto flex h-28 w-28 items-center justify-center rounded-full text-4xl font-bold shadow-xl"
-                    style="background: color-mix(in srgb, var(--clh-card) 90%, transparent); color: var(--clh-accent); border: 3px solid color-mix(in srgb, var(--clh-accent) 50%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 28%, transparent);"
+                    class="{{ $clh['placeholder_avatar_class'] }} text-4xl"
+                    style="{{ $clh['placeholder_avatar_style'] }}"
                 >
                     {{ \Illuminate\Support\Str::substr($profile->display_name, 0, 1) }}
                 </div>
@@ -35,8 +38,8 @@
                     href="{{ $href }}"
                     target="{{ $target }}"
                     @if ($rel) rel="{{ $rel }}" @endif
-                    class="group relative flex w-full items-center gap-3 rounded-2xl px-5 py-4 font-semibold shadow-md transition duration-200 hover:-translate-y-0.5 hover:shadow-xl focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2"
-                    style="background: var(--clh-card); color: var(--clh-text); border: 1px solid var(--clh-border);"
+                    class="{{ $clh['link_class'] }} shadow-md hover:shadow-xl"
+                    style="{{ $clh['link_style'] }}"
                 >
                     <span class="flex-1 text-center">{{ $link->title }}</span>
                     <span class="absolute right-4 text-lg opacity-0 transition group-hover:opacity-100" style="color: var(--clh-accent);" aria-hidden="true">→</span>

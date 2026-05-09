@@ -35,6 +35,11 @@ bash scripts/update-application.sh
 
 Für Entwicklungs-Dependencies: `bash scripts/update-application.sh --dev`.
 
+**Nach GitHub-Push — welche Konsole-Befehle?**
+
+- **Cloud-Host (Multi-Tenant):** Kopierreferenz in [`docs/cloud-hosting-installation/server-update-nach-github.md`](cloud-hosting-installation/server-update-nach-github.md#konsole-vps-nach-github-aktualisieren) (`clh-cloud-host-update.sh`, optional `clh-rollout-all-tenants.sh`).
+- **Self-Host mit Git-Klon:** `git pull` im Projektroot, danach wie oben `bash scripts/update-application.sh` (Details: [`docs/self-host-installation/README.md`](self-host-installation/README.md#updates-mit-git-auf-dem-server)).
+
 ## Nach dem Deploy
 
 ```bash
