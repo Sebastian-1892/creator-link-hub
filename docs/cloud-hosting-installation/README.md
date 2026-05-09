@@ -472,6 +472,14 @@ sudo chmod -R ug+rwx /var/www/clh-tenants/SLUG/storage /var/www/clh-tenants/SLUG
 
 Anschließend das Update im Admin erneut ausführen. Mit aktuellem **`clh-provision-tenant.sh`** wird nach den Artisan-Caches **`chown -R www-data:www-data`** auf das Tenantroot gesetzt — neue Tenants sind davon nicht betroffen.
 
+**npm (`EACCES`, Pfad `/var/www/.npm`):** Unter Debian/Ubuntu ist das Home von **`www-data`** oft **`/var/www`** — npm nutzt standardmäßig **`~/.npm`** → **`/var/www/.npm`**. Wenn dort einmal **`npm`** als **root** gelaufen ist, gehören Dateien **`root`** → beim Dashboard-Update als **`www-data`** schlägt **`npm ci`** mit **`mkdir`** / **`errno -13`** fehl — **nach** erfolgreichem Filament („Successfully published assets!“). Einmal beheben:
+
+```bash
+sudo chown -R www-data:www-data /var/www/.npm
+```
+
+Mit aktuellem Repo setzt [`scripts/update-application.sh`](../../scripts/update-application.sh) zusätzlich **`NPM_CONFIG_CACHE=$PWD/storage/npm-cache`**, damit der Cache **im Tenant** liegt und dieselben Rechte wie **`storage/`** hat (ersetzt das Problem langfristig).
+
 ---
 
 ## E-Mail aus Tenant-Apps — Standard **sendmail** (ohne SMTP in der Bestellung)

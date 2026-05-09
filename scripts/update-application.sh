@@ -77,6 +77,10 @@ info "Composer …"
 composer install "${COMPOSER_NO_DEV[@]}" --no-interaction --optimize-autoloader
 
 if command -v npm &>/dev/null; then
+  # Vermeidet /var/www/.npm mit root-Rechten (www-data + Dashboard-Update → EACCES „mkdir … errno -13“).
+  export NPM_CONFIG_CACHE="${ROOT}/storage/npm-cache"
+  mkdir -p "$NPM_CONFIG_CACHE"
+  info "npm-Cache: ${NPM_CONFIG_CACHE}"
   if [[ -f package-lock.json ]]; then
     info "npm ci && npm run build …"
     npm ci --no-fund --no-audit
