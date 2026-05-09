@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Déploiement et mises à jour',
-    'intro' => 'Canal de publication : versions.json public (pCloud). Mise à jour serveur : Composer, build npm, migrations et caches — après remplacement des fichiers (ex. nouveau ZIP), sans Git.',
+    'intro' => 'Le bouton ci-dessous ne télécharge **pas** une nouvelle version depuis GitHub — il met à jour uniquement les dépendances pour les fichiers **déjà** présents. Déployez d’abord la nouvelle version (ZIP/déploiement), puis « Exécuter dépendances et migrations ». Sans Git.',
 
     'manifest_section' => 'Canal de publication (versions.json)',
     'manifest_url_label' => 'URL du manifeste',
@@ -33,5 +33,7 @@ return [
     'success_title' => 'Mise à jour de l’application terminée',
     'failure_title' => 'Échec de la mise à jour de l’application',
 
-    'output_hint' => 'Extrait de la sortie (complet dans laravel.log).',
+    'output_truncated_middle' => '[… partie centrale de la sortie omise …]',
+
+    'output_hint' => 'Journal complet : storage/logs/laravel.log. Aucun téléchargement GitHub — seulement composer/npm/migrations pour le dossier actuel. Pour du **code** plus récent : déployer le ZIP d’abord, puis relancer.',
 ];

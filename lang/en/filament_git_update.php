@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Deployment & updates',
-    'intro' => 'Release channel: public versions.json (pCloud). Server update: composer, npm build, migrations and caches — after replacing app files (e.g. new ZIP), without Git.',
+    'intro' => 'Release channel: public versions.json (pCloud). The button below does **not** download a new version from GitHub — it only refreshes dependencies and builds for files **already** on disk. Deploy the new version first (ZIP/deploy), then run “Run dependencies & migrations”. No Git.',
 
     'manifest_section' => 'Release channel (versions.json)',
     'manifest_url_label' => 'Manifest URL',
@@ -33,5 +33,7 @@ return [
     'success_title' => 'Application update finished',
     'failure_title' => 'Application update failed',
 
-    'output_hint' => 'Last lines of the log (full output is in laravel.log).',
+    'output_truncated_middle' => '[… middle of console output omitted …]',
+
+    'output_hint' => 'Full log: storage/logs/laravel.log. This step does **not** pull from GitHub — only composer/npm/migrations for the current folder. To upgrade **application code**, deploy the release ZIP/files first, then run again.',
 ];

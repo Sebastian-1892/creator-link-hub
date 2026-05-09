@@ -60,7 +60,8 @@ Nach dem Wizard: **Wildcard-DNS** für Kunden-Subdomains, **`/etc/clh-provisione
 ---
 
 **Schritt-für-Schritt (manuelle Einzelbefehle, Feinschliff):** [`docs/cloud-hosting-installation/README.md`](docs/cloud-hosting-installation/README.md)  
-**Komponenten/Pfade auf dem VPS:** [`vps/README.md`](vps/README.md)
+**Komponenten/Pfade auf dem VPS:** [`vps/README.md`](vps/README.md)  
+**Nach einem Release auf GitHub — Host & Tenants:** [`docs/cloud-hosting-installation/server-update-nach-github.md`](docs/cloud-hosting-installation/server-update-nach-github.md)
 
 ---
 

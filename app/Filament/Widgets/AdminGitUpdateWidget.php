@@ -4,6 +4,7 @@ namespace App\Filament\Widgets;
 
 use App\Services\ApplicationUpdateService;
 use App\Services\ClhUpdateManifestService;
+use App\Support\UpdateScriptOutputFormatter;
 use Filament\Facades\Filament;
 use Filament\Notifications\Notification;
 use Filament\Widgets\Widget;
@@ -131,20 +132,25 @@ class AdminGitUpdateWidget extends Widget
 
         try {
             $result = $updates->runUpdateScript();
-            $body = $this->truncateOutput((string) ($result['output'] ?? ''));
+            $raw = (string) ($result['output'] ?? '');
+            $body = UpdateScriptOutputFormatter::forNotification($raw, ! $result['ok']);
+            $hint = __('filament_git_update.output_hint');
+            $fullBody = $body !== ''
+                ? trim($body."\n\n".$hint)
+                : ($result['ok'] ? '' : $hint);
 
             if ($result['ok']) {
                 Notification::make()
                     ->title(__('filament_git_update.success_title'))
                     ->success()
-                    ->body($body !== '' ? $body : null)
+                    ->body($fullBody !== '' ? $fullBody : null)
                     ->persistent()
                     ->send();
             } else {
                 Notification::make()
                     ->title(__('filament_git_update.failure_title'))
                     ->danger()
-                    ->body($body !== '' ? $body : null)
+                    ->body($fullBody !== '' ? $fullBody : null)
                     ->persistent()
                     ->send();
             }
@@ -161,16 +167,5 @@ class AdminGitUpdateWidget extends Widget
         if ($m['ok']) {
             $this->manifest = $m;
         }
-    }
-
-    private function truncateOutput(string $output): string
-    {
-        $max = 3500;
-
-        if (strlen($output) <= $max) {
-            return $output;
-        }
-
-        return "…\n".substr($output, -$max);
     }
 }

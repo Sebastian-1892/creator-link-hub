@@ -2,7 +2,7 @@
 
 return [
     'title' => 'Deploy e aggiornamenti',
-    'intro' => 'Canale release: versions.json pubblico (pCloud). Aggiornamento server: Composer, build npm, migrazioni e cache — dopo la sostituzione dei file (es. nuovo ZIP), senza Git.',
+    'intro' => 'Il pulsante qui sotto **non** scarica una nuova versione da GitHub — aggiorna solo dipendenze e build per i file **già** presenti. Prima distribuire la nuova versione (ZIP/deploy), poi «Esegui dipendenze e migrazioni». Senza Git.',
 
     'manifest_section' => 'Canale release (versions.json)',
     'manifest_url_label' => 'URL manifest',
@@ -33,5 +33,7 @@ return [
     'success_title' => 'Aggiornamento applicazione completato',
     'failure_title' => 'Aggiornamento applicazione non riuscito',
 
-    'output_hint' => 'Estratto dell’output (completo in laravel.log).',
+    'output_truncated_middle' => '[… parte centrale dell’output omessa …]',
+
+    'output_hint' => 'Log completo: storage/logs/laravel.log. Nessun pull da GitHub — solo composer/npm/migrazioni per la cartella attuale. Per **codice** più recente: prima distribuire il ZIP, poi ripetere.',
 ];

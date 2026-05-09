@@ -6,6 +6,8 @@ Diese Anleitung ist für **dich als Betreiber** eines **Multi-Tenant-App-Hosts**
 
 > **Nicht** dasselbe wie Self-Host (eine Installation mit `install-server.sh`). Hier entstehen **viele** Laravel-Instanzen unter `/var/www/clh-tenants/{slug}`.
 
+**Betrieb nach Releases auf GitHub:** [`server-update-nach-github.md`](server-update-nach-github.md) — Host mit `clh-cloud-host-update.sh` aktualisieren, Release-ZIP optional (`--with-zip`), Rollout für **bestehende** Tenant-Ordner separat planen.
+
 ---
 
 ## Begriffe und Pfade (merken)
@@ -588,6 +590,7 @@ Skripte (nur per `sudo` vom User `clh-provisioner`):
 
 | Dokument | Inhalt |
 |----------|--------|
+| [`server-update-nach-github.md`](server-update-nach-github.md) | **Nach GitHub-Release:** Host-VPS (`git pull`, Provisioner, optional ZIP), Rollout zu bestehenden Tenants |
 | [`README.md`](../../README.md) (Projektroot) | MVP-Features, Verweis Cloud vs. Self-Host |
 | [`vps/README.md`](../../vps/README.md) | Komponenten- und Pfadübersicht App-VPS |
 | [`docs/deployment.md`](../deployment.md) | Laravel-Betrieb allgemein; Tabelle Self-Host / Cloud |
