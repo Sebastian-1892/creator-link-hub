@@ -459,6 +459,19 @@ Nach dem Deployment der App (Migration **`settings`** ausgeführt: `php artisan 
 
 **Stripe-Webhook:** Endpoint bleibt **`POST /stripe/webhook`** (Cashier, Prefix aus `CASHIER_PATH`). Das Signing-Secret kann im Admin gesetzt oder weiterhin via **`STRIPE_WEBHOOK_SECRET`** in der `.env` gepflegt werden.
 
+### Anwendungs-Update im Dashboard (`composer` / `update-application.sh`)
+
+Das Dashboard startet [`scripts/update-application.sh`](../../scripts/update-application.sh) im Tenant-Verzeichnis. **PHP-FPM** läuft dabei als **`www-data`**. Schlägt **Composer** mit **`Permission denied`** bei **`vendor/composer/…`** fehl, gehören **`vendor/`** und andere Ordner oft noch **`root:root`** — beim Provisioning wurde **`composer install`** zuvor als **root** ausgeführt, ohne abschließende **`chown`** für die gesamte Installation.
+
+**Einmalige Korrektur auf dem VPS** (Slug durch den echten Tenant ersetzen):
+
+```bash
+sudo chown -R www-data:www-data /var/www/clh-tenants/SLUG
+sudo chmod -R ug+rwx /var/www/clh-tenants/SLUG/storage /var/www/clh-tenants/SLUG/bootstrap/cache
+```
+
+Anschließend das Update im Admin erneut ausführen. Mit aktuellem **`clh-provision-tenant.sh`** wird nach den Artisan-Caches **`chown -R www-data:www-data`** auf das Tenantroot gesetzt — neue Tenants sind davon nicht betroffen.
+
 ---
 
 ## E-Mail aus Tenant-Apps — Standard **sendmail** (ohne SMTP in der Bestellung)

@@ -222,6 +222,11 @@ php artisan config:cache --no-interaction --no-ansi -q >/dev/stderr
 php artisan route:cache --no-interaction --no-ansi -q >/dev/stderr
 php artisan view:cache --no-interaction --no-ansi -q >/dev/stderr
 
+# Composer/npm im Filament-Dashboard laufen als www-data (PHP-FPM). Nach composer als root
+# gehört vendor/ sonst root → „Permission denied“ bei Admin → Anwendungs-Update.
+chown -R www-data:www-data "$INSTALL_DIR"
+chmod -R ug+rwx "$INSTALL_DIR/storage" "$INSTALL_DIR/bootstrap/cache" 2>/dev/null || true
+
 log "nginx $SITE_AVAIL"
 cat >"$SITE_AVAIL" <<NGX
 server {
