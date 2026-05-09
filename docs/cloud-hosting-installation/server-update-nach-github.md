@@ -82,7 +82,7 @@ Nach dem nächsten **`clh-cloud-host-update`** liegt auf dem VPS **[`scripts/clh
 
 1. Führt **`clh-cloud-host-update.sh`** aus (**`git pull`**, Provisioner, Tenant-Skripte, optional **`--with-zip`**).
 2. Liest **`tenants_root`** aus **`/etc/clh-provisioner/config.json`** (Fallback **`/var/www/clh-tenants`**).
-3. Für **jedes** Unterverzeichnis mit **`composer.json`** und **`artisan`**: **`rsync`** vom **`CLH_REPO_ROOT`** (ohne **`.env`**, **`storage/`**, **`bootstrap/cache/`**), **`chown www-data`**, dann **`scripts/update-application.sh`**.
+3. Für **jedes** Unterverzeichnis mit **`composer.json`** und **`artisan`**: **`rsync`** vom **`CLH_REPO_ROOT`** (ohne **`.env`**, **`storage/`**, **`bootstrap/cache/`**), **`chown www-data`**, dann die **Tenant-Kopie** **`bash /var/www/clh-tenants/<slug>/scripts/update-application.sh`** (nicht die unter **`CLH_REPO_ROOT`** — das Skript leitet **`ROOT`** aus **`BASH_SOURCE`** ab).
 
 ```bash
 sudo /usr/local/bin/clh-rollout-all-tenants.sh

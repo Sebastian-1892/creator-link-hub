@@ -16,6 +16,9 @@
 #
 # Hinweis: .env, storage/ und bootstrap/cache/ pro Tenant werden nicht überschrieben (rsync --exclude).
 #
+# update-application.sh ermittelt das Laravel-ROOT über den Pfad zur Skriptdatei — es muss jeweils die
+# Kopie unter $tenant_dir/scripts/ ausgeführt werden, nicht die unter CLH_REPO_ROOT.
+#
 set -euo pipefail
 
 die() { echo "[clh-rollout] Fehler: $*" >&2; exit 1; }
@@ -70,8 +73,7 @@ fi
 [[ -f "$CLH_REPO_ROOT/composer.json" && -f "$CLH_REPO_ROOT/artisan" ]] || die "Kein Laravel-Projekt unter $CLH_REPO_ROOT"
 [[ -d "$TENANTS_ROOT" ]] || die "tenants_root existiert nicht: $TENANTS_ROOT"
 
-UPDATE_SCRIPT="$CLH_REPO_ROOT/scripts/update-application.sh"
-[[ -f "$UPDATE_SCRIPT" ]] || die "update-application.sh fehlt: $UPDATE_SCRIPT"
+[[ -f "$CLH_REPO_ROOT/scripts/update-application.sh" ]] || die "update-application.sh fehlt im Repo: $CLH_REPO_ROOT/scripts/update-application.sh"
 
 log "Schritt 2/2: Tenants unter $TENANTS_ROOT …"
 
@@ -102,8 +104,11 @@ for tenant_dir in "${tenant_dirs[@]}"; do
 
   chown -R www-data:www-data "$tenant_dir"
 
-  log "update-application.sh …"
-  ( cd "$tenant_dir" && bash "$UPDATE_SCRIPT" ) || die "update-application.sh fehlgeschlagen für Tenant: $slug"
+  tenant_update="$tenant_dir/scripts/update-application.sh"
+  [[ -f "$tenant_update" ]] || die "update-application.sh fehlt nach rsync: $tenant_update"
+
+  log "update-application.sh (Tenant-ROOT über Skriptpfad) …"
+  ( cd "$tenant_dir" && bash "$tenant_update" ) || die "update-application.sh fehlgeschlagen für Tenant: $slug"
 
   count=$((count + 1))
 done
