@@ -92,6 +92,42 @@ function clhProvisionerScriptErrorDetail(string $stderr, string $stdout, int $ma
     return '… (nur letzte '.$maxLen.' von '.strlen($merged).' Zeichen) …'."\n".substr($merged, -$maxLen);
 }
 
+/**
+ * Tenant-Skripte sollen bei Erfolg genau eine JSON-Zeile auf stdout ausgeben. Composer/Laravel Artisan
+ * können jedoch noch Text/Zeilen davor oder (selten) dazwischen ausgeben — dann schlägt json_decode(trim)
+ * auf dem Gesamtbuffer fehl. Wir nehmen zuerst den ganzen Puffer; sonst die letzte Zeile, die mit `{`
+ * beginnt und gültiges JSON ist.
+ *
+ * @return array<string, mixed>|null
+ */
+function clhProvisionerDecodeScriptStdout(string $stdout): ?array
+{
+    $trim = trim($stdout);
+    if ($trim === '') {
+        return null;
+    }
+    $first = json_decode($trim, true);
+    if (is_array($first)) {
+        return $first;
+    }
+    $lines = preg_split('/\r\n|\n|\r/', $trim);
+    if (! is_array($lines)) {
+        return null;
+    }
+    for ($i = count($lines) - 1; $i >= 0; $i--) {
+        $line = trim((string) $lines[$i]);
+        if ($line === '' || $line[0] !== '{') {
+            continue;
+        }
+        $decoded = json_decode($line, true);
+        if (is_array($decoded)) {
+            return $decoded;
+        }
+    }
+
+    return null;
+}
+
 function clhProvisionerClientSignature(): string
 {
     $s = strtolower(trim((string) ($_SERVER['HTTP_X_CLH_SIGNATURE'] ?? '')));
@@ -296,7 +332,7 @@ if ($exit !== 0) {
 }
 
 $trim = trim((string) $stdout);
-$out = json_decode($trim, true);
+$out = clhProvisionerDecodeScriptStdout($trim);
 if (! is_array($out)) {
     clhProvisionerJson(['error' => 'invalid script JSON', 'raw' => substr($trim, 0, 200)], 500);
 }

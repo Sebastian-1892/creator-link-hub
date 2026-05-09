@@ -179,22 +179,22 @@ mkdir -p \
 export COMPOSER_ALLOW_SUPERUSER=1
 export COMPOSER_MEMORY_LIMIT="${COMPOSER_MEMORY_LIMIT:--1}"
 log "composer install (COMPOSER_MEMORY_LIMIT=${COMPOSER_MEMORY_LIMIT})"
-composer install --no-dev --no-interaction --optimize-autoloader --no-ansi
+composer install --no-dev --no-interaction --optimize-autoloader --no-ansi >/dev/stderr
 log "artisan"
-php artisan key:generate --force
-php artisan migrate --force
-php artisan db:seed --class=Database\\Seeders\\ThemeSeeder --force
+php artisan key:generate --force --no-interaction --no-ansi -q >/dev/stderr
+php artisan migrate --force --no-interaction --no-ansi -q >/dev/stderr
+php artisan db:seed --class=Database\\Seeders\\ThemeSeeder --force --no-interaction --no-ansi -q >/dev/stderr
 ADMIN_PW="$(openssl rand -hex 12)"
 # Wie install-server.sh: Variablen direkt am Artisan-Prozess — zuverlässiger als nur export (Laravel/.env).
 CLH_ADMIN_EMAIL="$ADMIN_EMAIL" CLH_ADMIN_PASSWORD="$ADMIN_PW" CLH_ADMIN_NAME="$ADMIN_NAME" \
-  php artisan db:seed --class=Database\\Seeders\\InstallAdminSeeder --force
+  php artisan db:seed --class=Database\\Seeders\\InstallAdminSeeder --force --no-interaction --no-ansi -q >/dev/stderr
 
-php artisan storage:link --force || true
+php artisan storage:link --force --no-interaction --no-ansi -q >/dev/stderr || true
 chown -R www-data:www-data "$INSTALL_DIR/storage" "$INSTALL_DIR/bootstrap/cache" 2>/dev/null || chown -R www-data:www-data storage bootstrap/cache
 chmod -R ug+rwx storage bootstrap/cache 2>/dev/null || true
-php artisan config:cache
-php artisan route:cache
-php artisan view:cache
+php artisan config:cache --no-interaction --no-ansi -q >/dev/stderr
+php artisan route:cache --no-interaction --no-ansi -q >/dev/stderr
+php artisan view:cache --no-interaction --no-ansi -q >/dev/stderr
 
 log "nginx $SITE_AVAIL"
 cat >"$SITE_AVAIL" <<NGX
@@ -224,8 +224,8 @@ server {
 }
 NGX
 ln -sf "$SITE_AVAIL" "$SITE_EN"
-nginx -t
-systemctl reload nginx
+nginx -t >/dev/stderr
+systemctl reload nginx >/dev/stderr
 
 if [[ "$ENABLE_TLS" -eq 1 ]]; then
   ACME_EMAIL="${CLH_ACME_EMAIL:-$CLH_DEFAULT_ACME_EMAIL}"
@@ -243,6 +243,7 @@ if [[ "$ENABLE_TLS" -eq 1 ]]; then
     --agree-tos \
     -m "$ACME_EMAIL" \
     --preferred-challenges http \
+    >/dev/stderr \
     || die_json "certbot fehlgeschlagen für ${DOMAIN} — LE-Status https://letsencrypt.status.io/ · Log /var/log/letsencrypt/letsencrypt.log · oder DNS/Port 80 · Alternative: --no-tls"
 
   NG_DH_LINE=""
@@ -291,14 +292,14 @@ ${NG_DH_LINE}    root ${INSTALL_DIR}/public;
     location ~ /\\.(?!well-known).* { deny all; }
 }
 NGX
-  nginx -t
-  systemctl reload nginx
+  nginx -t >/dev/stderr
+  systemctl reload nginx >/dev/stderr
 
   APP_URL="https://${DOMAIN}"
   sed -i "s|^APP_URL=.*|APP_URL=${APP_URL}|" "$INSTALL_DIR/.env" || die_json "APP_URL in .env konnte nicht auf https gesetzt werden"
   cd "$INSTALL_DIR"
-  php artisan config:clear --no-ansi
-  php artisan config:cache --no-ansi
+  php artisan config:clear --no-interaction --no-ansi -q >/dev/stderr
+  php artisan config:cache --no-interaction --no-ansi -q >/dev/stderr
   log "TLS aktiv — APP_URL=${APP_URL}"
 else
   log "TLS übersprungen (--no-tls). APP_URL bleibt http."
