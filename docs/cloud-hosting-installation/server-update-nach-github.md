@@ -8,17 +8,7 @@ How-to für **Betreiber** eines Multi-Tenant-**App-VPS**: Nach einem Push/Releas
 
 ## Konsole: VPS nach GitHub aktualisieren
 
-Nach einem **Push zu GitHub** hängen die exakten Befehle davon ab, **welche Installation** auf dem VPS läuft. Orientierung:
-
-| Auf dem Server vorhanden? | Betriebsmodell | Weiter unten |
-|---------------------------|----------------|--------------|
-| Datei **`/usr/local/bin/clh-cloud-host-update.sh`** | **Cloud-Host** (Provisioner + Tenant-Verzeichnisse) | Abschnitt **Cloud-Host** |
-| Nur **ein** Ordner mit **`artisan`** und Git (kein `clh-*`-Skript) | **Self-Host mit Git-Klon** | Abschnitt **Self-Host mit Git** |
-| Installation nur aus **ZIP**, kein `git` im App-Ordner | **Self-Host klassisch** | [`docs/self-host-installation/README.md`](../self-host-installation/README.md#5-updates-ohne-git) und [`docs/deployment.md`](../deployment.md) |
-
 Branch und Klon-Pfad für den Cloud-Host stehen in **`/etc/clh-provisioner/install-paths.env`** (`CLH_REPO_ROOT`, optional `CLH_GIT_REF`, Standard **`main`**). Bei **privatem GitHub-Repo** braucht der User, der `git pull` ausführt (oft **root** beim Update-Skript), einen **Deploy-Key** oder andere Credentials — sonst schlägt das Update fehl.
-
-### Cloud-Host (Multi-Tenant)
 
 Per SSH auf dem VPS einloggen, dann:
 
@@ -48,26 +38,13 @@ sudo /usr/local/bin/clh-rollout-all-tenants.sh --skip-host-update
 
 **Hinweis:** Ohne Schritt 3 bleiben Ordner unter **`/var/www/clh-tenants/<slug>/`** auf der alten Version; nur der Host-Klon und der Provisioner sind dann neu.
 
-### Self-Host mit Git-Klon
-
-Ein Mandant, Projekt z. B. unter `/var/www/creator-link-hub`, läuft direkt aus einem **Git-Clone**. Ersetze **`main`** durch euren Branch, **`/pfad/...`** durch den echten Projektroot:
-
-```bash
-cd /pfad/zu/creator-link-hub
-sudo -u www-data git fetch origin
-sudo -u www-data git pull --ff-only origin main
-sudo -u www-data bash scripts/update-application.sh
-```
-
-Wenn du als Deploy-User arbeitest (nicht `www-data`), kannst du dieselben drei Schritte ohne `sudo -u www-data` ausführen — wichtig ist, dass **dasselbe Konto** wie PHP-FPM/Webserver schreiben darf oder danach die Rechte passen.
-
 ---
 
 ## Voraussetzungen
 
 | Voraussetzung | Typisch |
 |---------------|---------|
-| Repo auf dem VPS | Git-Clone des Repos (z. B. unter `/opt/creator-link-hub-src/creator-link-hub`), Remote **`origin`** zeigt auf GitHub |
+| Repo auf dem VPS | Git-Clone des Repos (z. B. unter `/opt/creator-link-hub-src/creator-link-hub`), Remote **`origin`** zeigt auf GitHub |
 | Konfiguration | `/etc/clh-provisioner/install-paths.env` mit **`CLH_REPO_ROOT`** (Pfad zum Klon) und optional **`CLH_GIT_REF`** (Branch oder Tag, Standard **`main`**) |
 | Rechte | Update-Skript **als root** ([`scripts/clh-cloud-host-update.sh`](../../scripts/clh-cloud-host-update.sh) liegt nach Bootstrap als `/usr/local/bin/clh-cloud-host-update.sh`) |
 | Privates GitHub-Repo | Deploy-Key oder Credential für den User, mit dem auf dem Server **`git fetch`/`git pull`** läuft (**root** hat oft keine GitHub-Credentials — dann Deploy-Key für den Kloneigentümer oder `sudo -u git-user …`) |
@@ -121,7 +98,7 @@ Kunden arbeiten in **ihrer** Instanz unter **`/var/www/clh-tenants/<slug>/`**. D
 
 1. **Neue App-Dateien** in den Tenant-Ordner bringen — gleicher Inhalt wie im Release (entpacktes Release-ZIP oder **`rsync`** vom Host-Klon unter Ausschluss von **`.env`**, **`storage/`** und **`bootstrap/cache`** nach Bedarf).  
 2. **Besitzer:** nach Deploy **`chown -R www-data:www-data`** auf das Tenantroot (siehe [Cloud-Hosting README — Rechte & Dashboard-Update](./README.md#anwendungs-update-im-dashboard-composer--update-applicationsh)).  
-3. **Abhängigkeiten & Migrationen** ausführen — im **Filament-Admin** („Abhängigkeiten & Migrationen“) oder per SSH:
+3. **Abhängigkeiten & Migrationen** ausführen — im **Filament-Admin** („Anwendungs-Update“) oder per SSH:
    ```bash
    cd /var/www/clh-tenants/SLUG
    sudo -u www-data bash scripts/update-application.sh
@@ -157,7 +134,6 @@ Verzeichnisse ohne Laravel (kein **`composer.json`/`artisan`**) werden überspru
 2. **App-VPS:** `sudo /usr/local/bin/clh-cloud-host-update.sh --with-zip` (oder ohne ZIP, wenn ihr **`current.zip`** anders pflegt).
 3. **Provisioner/Marketing:** bei Änderungen an **`provisioner.php`** ist Schritt 2 ausreichend; Marketing-URL/HMAC unverändert lassen, sofern ihr nichts am Vertrag ändert.
 4. **Bestehende Tenants:** Rollout planen — Dateien + `update-application.sh` pro Instanz (oder zeitversetzt).
-5. Optional **Manifest / „installierte Version“:** [`config/creator.php`](../../config/creator.php) **`CLH_INSTALLED_VERSION`** bzw. **`CLH_UPDATE_MANIFEST_URL`** für das Dashboard-Widget anpassen, damit Kunden im Admin eine konsistente Versionsanzeige haben.
 
 ---
 
@@ -165,7 +141,7 @@ Verzeichnisse ohne Laravel (kein **`composer.json`/`artisan`**) werden überspru
 
 | Dokument | Inhalt |
 |----------|--------|
-| [README.md — Cloud-Multi-Tenant](../../README.md#cloud-multi-tenant-marketing-server--app-vps) | Schnelleinstieg Installer |
+| [README.md — Cloud-Index](../../README.md) | Schnelleinstieg Installer |
 | [Cloud-Hosting README](README.md) | Gesamtinstallation, DNS, Provisioner, ZIP |
 | [VPS-Komponenten](../vps-components.md) | Pfade und Komponenten auf dem VPS |
 | [deployment.md](../deployment.md) | `update-application.sh` im Überblick |

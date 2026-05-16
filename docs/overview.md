@@ -1,6 +1,6 @@
 # Projektüberblick — Creator Link Hub
 
-Link-in-Bio-SaaS mit **Laravel 11**, **Livewire/Volt**, **Filament Admin**, **PostgreSQL** (empfohlen) / SQLite (lokal), **Redis** (optional), **Stripe** (Laravel Cashier).
+Link-in-Bio-SaaS mit **Laravel 11**, **Livewire/Volt**, **Filament Admin**, **PostgreSQL** (lokal/dev) bzw. **MariaDB** (Cloud-Tenants), **Redis** (optional), **Stripe** (Laravel Cashier).
 
 Detaillierte Implementierungsschritte im Repo: [`plan/steps/00-overview.md`](../plan/steps/00-overview.md).
 
@@ -40,9 +40,9 @@ php artisan serve
 
 ---
 
-## Cloud-Multi-Tenant (Marketing + App-VPS)
+## Cloud-Multi-Tenant (App-VPS)
 
-Kurzüberblick: Ein **App-Host** bedient viele Installationen unter `/var/www/clh-tenants/{slug}`. Ausführliche Anleitungen:
+Ein **App-Host** bedient viele Installationen unter `/var/www/clh-tenants/{slug}`. Ausführliche Anleitungen:
 
 - [Cloud-Hosting — Installation & Betrieb](cloud-hosting-installation/README.md)
 - [Server-Update nach GitHub](cloud-hosting-installation/server-update-nach-github.md)
@@ -69,32 +69,22 @@ php artisan test
 
 ---
 
-## Server-Installation (ein Mandant, Debian/Ubuntu)
+## Tenant-Updates
 
-Ziel: **Nginx**, **PHP-FPM**, **PostgreSQL oder MariaDB**, optional **Redis**, **Composer**, **Node/npm** (Vite), Migrationen, optional **Certbot**.
+**Aus dem Cloud-Host** (alle Tenants in einem Lauf): `sudo /usr/local/bin/clh-rollout-all-tenants.sh` — siehe [Server-Update nach GitHub](cloud-hosting-installation/server-update-nach-github.md).
 
-**Kunden:** Release-ZIP mit Lizenzprüfung — siehe [distribution-license.md](distribution-license.md).
-
-**Manuell:** ZIP nach z. B. `/var/www/creator-link-hub`, dann:
+**Pro Tenant** (Filament-Admin → „Anwendungs-Update“ oder per SSH):
 
 ```bash
-sudo bash scripts/install-server.sh
-```
-
-Details: [Self-Host-Installation](self-host-installation/README.md), danach [deployment.md](deployment.md) und [launch-runbook.md](launch-runbook.md).
-
-**Updates** (ohne Git): Dateien ersetzen, dann:
-
-```bash
-cd /pfad/zur/installation
-bash scripts/update-application.sh
+cd /var/www/clh-tenants/<slug>
+sudo -u www-data bash scripts/update-application.sh
 ```
 
 ---
 
 ## Umgebungsvariablen
 
-Siehe [`.env.example`](../.env.example) — u. a. `STRIPE_*`, Price-IDs, Webhook `STRIPE_WEBHOOK_SECRET`.
+Siehe [`.env.example`](../.env.example) — u. a. `STRIPE_*`, Price-IDs, Webhook `STRIPE_WEBHOOK_SECRET`.
 
 ---
 
@@ -112,4 +102,4 @@ Proprietär / nach Bedarf — Projekt-MVP.
 
 ## Externe Repos (optional)
 
-Marketing-Site / Provisioner-Doku kann in einem separaten Repository liegen (z. B. **creatorlinkhub.eu**) — dort eigene `deployment/cloud-host/`-Doku parallel zu diesem Repo pflegen.
+Marketing-Site / Provisioner-Doku kann in einem separaten Repository liegen (z. B. **creatorlinkhub.eu**) — dort eigene `deployment/cloud-host/`-Doku parallel zu diesem Repo pflegen.

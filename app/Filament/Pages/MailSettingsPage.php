@@ -66,11 +66,6 @@ class MailSettingsPage extends Page
         $this->fillForm();
     }
 
-    protected function isCloudDeployment(): bool
-    {
-        return config('creator.deployment') === 'cloud';
-    }
-
     protected function effectiveCloudTransportMode(): string
     {
         $pick = $this->data['mail_cloud_transport'] ?? null;
@@ -78,21 +73,17 @@ class MailSettingsPage extends Page
             return $pick;
         }
 
-        $settings = app(SettingsService::class);
-
-        return $settings->resolveCloudMailTransportMode($this->isCloudDeployment()) ?? 'provider';
+        return app(SettingsService::class)->resolveCloudMailTransportMode();
     }
 
     protected function smtpFieldsLocked(): bool
     {
-        return $this->isCloudDeployment() && $this->effectiveCloudTransportMode() !== 'custom_smtp';
+        return $this->effectiveCloudTransportMode() !== 'custom_smtp';
     }
 
     protected function fillForm(): void
     {
-        $settings = app(SettingsService::class);
-        $isCloud = $this->isCloudDeployment();
-        $resolvedCloudMode = $settings->resolveCloudMailTransportMode($isCloud) ?? 'provider';
+        $resolvedCloudMode = app(SettingsService::class)->resolveCloudMailTransportMode();
 
         $mask = __('admin_settings.mail.masked_placeholder');
         $dash = __('admin_settings.mail.placeholder_not_applicable');
@@ -102,12 +93,12 @@ class MailSettingsPage extends Page
         $smtpScheme = config('mail.mailers.smtp.scheme') ?? '';
         $smtpUsername = (string) (config('mail.mailers.smtp.username') ?? '');
 
-        if ($isCloud && $resolvedCloudMode === 'provider') {
+        if ($resolvedCloudMode === 'provider') {
             $smtpHost = $mask;
             $smtpPort = $mask;
             $smtpScheme = '';
             $smtpUsername = $mask;
-        } elseif ($isCloud && $resolvedCloudMode === 'sendmail') {
+        } elseif ($resolvedCloudMode === 'sendmail') {
             $smtpHost = $dash;
             $smtpPort = $dash;
             $smtpScheme = '';
@@ -116,7 +107,6 @@ class MailSettingsPage extends Page
 
         $this->form->fill([
             'mail_cloud_transport' => $resolvedCloudMode,
-            'mail_default' => config('mail.default'),
             'smtp_host' => $smtpHost,
             'smtp_port' => $smtpPort,
             'smtp_scheme' => $smtpScheme,
@@ -140,7 +130,6 @@ class MailSettingsPage extends Page
         return $schema
             ->components([
                 Section::make(__('admin_settings.mail.section_cloud_transport'))
-                    ->visible(fn (): bool => $this->isCloudDeployment())
                     ->components([
                         Select::make('mail_cloud_transport')
                             ->label(__('admin_settings.mail.field_cloud_transport'))
@@ -153,9 +142,6 @@ class MailSettingsPage extends Page
                             ->required()
                             ->live()
                             ->afterStateUpdated(function (?string $state, Set $set): void {
-                                if (! $this->isCloudDeployment()) {
-                                    return;
-                                }
                                 $mask = __('admin_settings.mail.masked_placeholder');
                                 $dash = __('admin_settings.mail.placeholder_not_applicable');
                                 if ($state === 'provider') {
@@ -185,20 +171,6 @@ class MailSettingsPage extends Page
                                 }
                             })
                             ->helperText(__('admin_settings.mail.cloud_transport_help')),
-                    ]),
-                Section::make(__('admin_settings.mail.section_mailer'))
-                    ->visible(fn (): bool => ! $this->isCloudDeployment())
-                    ->components([
-                        Select::make('mail_default')
-                            ->label(__('admin_settings.mail.field_mailer'))
-                            ->options([
-                                'smtp' => 'SMTP',
-                                'sendmail' => 'Sendmail',
-                                'log' => 'Log',
-                            ])
-                            ->native(false)
-                            ->required()
-                            ->helperText(fn () => $this->nonSecretHint('mail.default')),
                     ]),
                 Section::make(__('admin_settings.mail.section_smtp'))
                     ->components([
@@ -240,7 +212,7 @@ class MailSettingsPage extends Page
                             ->label(__('admin_settings.mail.action_clear_password'))
                             ->color('danger')
                             ->link()
-                            ->visible(fn (): bool => ! $this->isCloudDeployment() || $this->effectiveCloudTransportMode() === 'custom_smtp')
+                            ->visible(fn (): bool => $this->effectiveCloudTransportMode() === 'custom_smtp')
                             ->action(function () use ($settings): void {
                                 $settings->forget('mail.mailers.smtp.password');
                                 $settings->flushCache();
@@ -325,56 +297,40 @@ class MailSettingsPage extends Page
         $data = $this->form->getState();
         $settings = app(SettingsService::class);
 
-        if ($this->isCloudDeployment()) {
-            $mode = (string) ($data['mail_cloud_transport'] ?? 'provider');
-            if (! in_array($mode, ['provider', 'sendmail', 'custom_smtp'], true)) {
-                $mode = 'provider';
-            }
-            $settings->set(SettingsService::MAIL_CLOUD_TRANSPORT_MODE_KEY, $mode, encrypted: false);
+        $mode = (string) ($data['mail_cloud_transport'] ?? 'provider');
+        if (! in_array($mode, ['provider', 'sendmail', 'custom_smtp'], true)) {
+            $mode = 'provider';
+        }
+        $settings->set(SettingsService::MAIL_CLOUD_TRANSPORT_MODE_KEY, $mode, encrypted: false);
 
-            if ($mode !== 'custom_smtp') {
-                $this->forgetTenantSmtpOverrides($settings);
-            } else {
-                $host = $this->nullableString($data['smtp_host'] ?? null, acceptSmtpInput: true);
-                $mask = __('admin_settings.mail.masked_placeholder');
-                $dash = __('admin_settings.mail.placeholder_not_applicable');
-                if ($host === null || $host === '' || $host === $mask || $host === $dash) {
-                    Notification::make()
-                        ->title(__('admin_settings.mail.notify_custom_smtp_host_required'))
-                        ->danger()
-                        ->send();
-
-                    return;
-                }
-
-                $settings->set('mail.mailers.smtp.host', $host);
-                $settings->set('mail.mailers.smtp.port', $this->nullableString($data['smtp_port'] ?? null, acceptSmtpInput: true), encrypted: false);
-
-                $scheme = isset($data['smtp_scheme']) ? (string) $data['smtp_scheme'] : '';
-                $settings->set('mail.mailers.smtp.scheme', $scheme === '' ? null : $scheme);
-
-                $settings->set('mail.mailers.smtp.username', $this->nullableString($data['smtp_username'] ?? null, acceptSmtpInput: true));
-
-                if (! empty($data['smtp_password'])) {
-                    $settings->set('mail.mailers.smtp.password', (string) $data['smtp_password'], true);
-                }
-
-                $settings->set('mail.default', 'smtp', encrypted: false);
-            }
+        if ($mode !== 'custom_smtp') {
+            $this->forgetTenantSmtpOverrides($settings);
         } else {
-            $settings->set('mail.default', isset($data['mail_default']) ? (string) $data['mail_default'] : null);
+            $host = $this->nullableString($data['smtp_host'] ?? null, acceptSmtpInput: true);
+            $mask = __('admin_settings.mail.masked_placeholder');
+            $dash = __('admin_settings.mail.placeholder_not_applicable');
+            if ($host === null || $host === '' || $host === $mask || $host === $dash) {
+                Notification::make()
+                    ->title(__('admin_settings.mail.notify_custom_smtp_host_required'))
+                    ->danger()
+                    ->send();
 
-            $settings->set('mail.mailers.smtp.host', $this->nullableString($data['smtp_host'] ?? null));
-            $settings->set('mail.mailers.smtp.port', $this->nullableString($data['smtp_port'] ?? null), encrypted: false);
+                return;
+            }
+
+            $settings->set('mail.mailers.smtp.host', $host);
+            $settings->set('mail.mailers.smtp.port', $this->nullableString($data['smtp_port'] ?? null, acceptSmtpInput: true), encrypted: false);
 
             $scheme = isset($data['smtp_scheme']) ? (string) $data['smtp_scheme'] : '';
             $settings->set('mail.mailers.smtp.scheme', $scheme === '' ? null : $scheme);
 
-            $settings->set('mail.mailers.smtp.username', $this->nullableString($data['smtp_username'] ?? null));
+            $settings->set('mail.mailers.smtp.username', $this->nullableString($data['smtp_username'] ?? null, acceptSmtpInput: true));
 
             if (! empty($data['smtp_password'])) {
                 $settings->set('mail.mailers.smtp.password', (string) $data['smtp_password'], true);
             }
+
+            $settings->set('mail.default', 'smtp', encrypted: false);
         }
 
         $settings->set('mail.from.address', $this->nullableString($data['from_address'] ?? null));

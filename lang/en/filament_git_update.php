@@ -1,30 +1,15 @@
 <?php
 
 return [
-    'title' => 'Deployment & updates',
-    'intro' => 'Release channel: public versions.json (pCloud). The button below does **not** download a new version from GitHub — it only refreshes dependencies and builds for files **already** on disk. Deploy the new version first (ZIP/deploy), then run “Run dependencies & migrations”. No Git.',
+    'title' => 'Application update',
+    'intro' => 'The button below does **not** download a new application version — it only refreshes dependencies, frontend builds and database migrations for the files **already** present in this tenant directory. New application versions are rolled out centrally from the cloud host (`clh-rollout-all-tenants.sh`).',
 
-    'manifest_section' => 'Release channel (versions.json)',
-    'manifest_url_label' => 'Manifest URL',
-    'manifest_installed' => 'Installed (this app)',
-    'manifest_latest' => 'Latest (manifest)',
-    'manifest_min_php' => 'Minimum PHP (manifest)',
-    'manifest_open_changelog' => 'Changelog',
-    'manifest_open_download' => 'Download ZIP',
-    'manifest_update_available' => 'A newer release is published in the manifest.',
-    'manifest_up_to_date' => 'This installation matches the latest manifest version.',
-    'manifest_check_failed' => 'Could not load the release manifest.',
-    'manifest_not_loaded' => 'Manifest not loaded yet — use Check.',
-
-    'shell_section' => 'Server update (no Git)',
-    'shell_intro' => 'For a new version: deploy the ZIP from the manifest (replace files), then run “Run dependencies & migrations” here or via SSH. Git is not used.',
+    'shell_section' => 'Dependencies & migrations',
+    'shell_intro' => 'Re-run Composer, npm/Vite build, migrations and caches for this tenant installation.',
 
     'script_missing' => 'The script scripts/update-application.sh was not found.',
     'script_ready' => 'Update script found',
-    'path_label' => 'Install path (CLH_APP_ROOT)',
-
-    'check' => 'Check (release manifest)',
-    'checking' => 'Checking…',
+    'path_label' => 'Install path (tenant)',
 
     'apply' => 'Run dependencies & migrations',
     'applying' => 'Running update…',
@@ -35,5 +20,5 @@ return [
 
     'output_truncated_middle' => '[… middle of console output omitted …]',
 
-    'output_hint' => 'Full log: storage/logs/laravel.log. This step does **not** pull from GitHub — only composer/npm/migrations for the current folder. To upgrade **application code**, deploy the release ZIP/files first, then run again.',
+    'output_hint' => 'Full log: storage/logs/laravel.log. This step does **not** pull a new application version — only composer/npm/migrations for the current folder. For a newer version, roll out from the cloud host.',
 ];

@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 use RuntimeException;
 
 /**
- * Wird von scripts/install-server.sh per Umgebungsvariablen aufgerufen:
+ * Wird von scripts/clh-provision-tenant.sh per Umgebungsvariablen aufgerufen:
  * CLH_ADMIN_EMAIL, CLH_ADMIN_PASSWORD, optional CLH_ADMIN_NAME.
  */
 class InstallAdminSeeder extends Seeder

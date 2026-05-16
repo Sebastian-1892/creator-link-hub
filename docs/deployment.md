@@ -1,46 +1,43 @@
-# Deployment (Kurz-Runbook)
+# Deployment (Kurz-Runbook, Cloud-Multi-Tenant)
 
-## Zwei Betriebsmodelle
+Creator Link Hub wird als **Cloud-Multi-Tenant**-App betrieben: ein App-VPS, viele Tenant-Installationen unter `/var/www/clh-tenants/<slug>/`.
 
-| Modell | Einstieg | Doku |
-|--------|----------|------|
-| **Ein Mandant (Self-Host)** | ZIP + [`scripts/install-server.sh`](../scripts/install-server.sh) | [`docs/self-host-installation/README.md`](self-host-installation/README.md) |
-| **Multi-Tenant Cloud-VPS** | [`scripts/bootstrap-cloud-host.sh`](../scripts/bootstrap-cloud-host.sh) | [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md) und [VPS-Komponenten](vps-components.md) (Komponentenübersicht) |
-
-Die folgenden Absätze gelten primär für die **klassische Einzelinstallation** (eine App, eine DB).
+| Bereich | Einstieg |
+|---------|----------|
+| App-VPS einrichten | [`scripts/bootstrap-cloud-host.sh`](../scripts/bootstrap-cloud-host.sh) bzw. [`scripts/install-cloud-host-interactive.sh`](../scripts/install-cloud-host-interactive.sh) |
+| Vollständige Anleitung | [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md) |
+| Komponenten- & Pfadübersicht | [`docs/vps-components.md`](vps-components.md) |
 
 ---
 
-**Interaktive Debian-/Ubuntu-Installation (Skript, fragt alle wichtigen Einstellungen ab):** [`../scripts/install-server.sh`](../scripts/install-server.sh)  
-Ausführung auf dem Server als root: `sudo bash scripts/install-server.sh` im **entpackten** Projektordner (Release-ZIP oder Kunden-`install.sh`). Es gibt **keinen Git-Clone** mehr. PHP kommt **nur aus den offiziellen Paketquellen** der Distribution (kein PPA). Das Skript legt nach den Migrationen optional einen **Filament-Administrator** an (E-Mail, Anzeigename, Passwort) und lädt zuvor die **Themes** per `ThemeSeeder`.
+## App-VPS — Basisstack
 
-## Server (Self-Host / klassisch)
+- PHP **8.2–8.4** + Extensions: `pdo_mysql`, `mbstring`, `openssl`, `curl`, `redis`, `intl`, `bcmath`
+- **MariaDB** (eine Datenbank pro Tenant: `clh_<slug>`), Redis 7 optional
+- Nginx → je Tenant eigene Site auf `…/public/index.php`
+- **Postfix** (`/usr/sbin/sendmail`) für Tenant-Mail (`MAIL_MAILER=sendmail`), optional SMTP-Relay
+- Provisioner (PHP Built-in Server) auf `127.0.0.1:9100`, signierte HTTP-API für Marketing → Tenant-Anlage/Löschung
 
-- PHP **8.2–8.4** (Projekt-Lock richtet sich nach Plattform **8.3** in `composer.json`; 8.4 auf dem Server ist unkritisch) + Extensions: `pdo_pgsql` bzw. `mysql`, `mbstring`, `openssl`, `curl`, `redis`, `intl`, `bcmath`
-- PostgreSQL 16, Redis 7
-- Nginx → `public/index.php`
-- Supervisor: `php artisan queue:work`
-- Cron: `* * * * * php /path/artisan schedule:run`
+Tenant-Installationen werden vom Provisioner aus einem Release-ZIP unter `/opt/clh-releases/current.zip` ausgerollt (siehe [`scripts/build-cloud-release-zip.sh`](../scripts/build-cloud-release-zip.sh)).
 
-**Cloud-App-Host (viele Tenants):** typisch **MariaDB**, Tenant-Datenbanken und Nginx-Sites werden von den `clh-*.sh`-Skripten angelegt — siehe [`docs/cloud-hosting-installation/README.md`](cloud-hosting-installation/README.md).
+---
 
-## Updates (bestehende Installation)
+## Tenant-Update (bestehende Installation)
 
-Skript: [`scripts/update-application.sh`](../scripts/update-application.sh) — führt `composer install`, `npm ci`/`npm run build`, `php artisan migrate --force`, Caches und optional Supervisor-Neustart aus (ohne Git). Zuvor die App-Dateien aus dem **neuen Release-ZIP** ersetzen. **`.env` und Datenbankinhalte** werden nicht angepasst; nur ausstehende **Migrationen** werden angewendet.
+Skript: [`scripts/update-application.sh`](../scripts/update-application.sh) — führt `composer install`, `npm ci`/`npm run build`, `php artisan migrate --force`, Caches und optional Supervisor-Neustart aus (ohne Git). Wird vom **Filament-Admin** („Anwendungs-Update“) und vom **Tenant-Rollout** ausgeführt; **`.env` und Datenbankinhalte** werden nicht angepasst, nur ausstehende **Migrationen** angewendet.
 
 ```bash
-cd /pfad/zu/creator-link-hub
-bash scripts/update-application.sh
+cd /var/www/clh-tenants/<slug>
+sudo -u www-data bash scripts/update-application.sh
 ```
 
 Für Entwicklungs-Dependencies: `bash scripts/update-application.sh --dev`.
 
-**Nach GitHub-Push — welche Konsole-Befehle?**
+**Nach GitHub-Push — welche Konsole-Befehle?** Kopierreferenz in [`docs/cloud-hosting-installation/server-update-nach-github.md`](cloud-hosting-installation/server-update-nach-github.md#konsole-vps-nach-github-aktualisieren) (`clh-cloud-host-update.sh`, optional `clh-rollout-all-tenants.sh`).
 
-- **Cloud-Host (Multi-Tenant):** Kopierreferenz in [`docs/cloud-hosting-installation/server-update-nach-github.md`](cloud-hosting-installation/server-update-nach-github.md#konsole-vps-nach-github-aktualisieren) (`clh-cloud-host-update.sh`, optional `clh-rollout-all-tenants.sh`).
-- **Self-Host mit Git-Klon:** `git pull` im Projektroot, danach wie oben `bash scripts/update-application.sh` (Details: [`docs/self-host-installation/README.md`](self-host-installation/README.md#updates-mit-git-auf-dem-server)).
+---
 
-## Nach dem Deploy
+## Nach dem Deploy (pro Tenant)
 
 ```bash
 php artisan migrate --force
@@ -48,15 +45,21 @@ php artisan optimize
 php artisan storage:link
 ```
 
+`scripts/ensure-laravel-storage.sh` wird automatisch von `update-application.sh` und `clh-provision-tenant.sh` aufgerufen.
+
+---
+
 ## Stripe
 
-- Live-Keys in `.env`
+- Live-Keys in `.env` oder im Filament-Admin unter `/admin/stripe-settings`
 - Webhook-Endpoint: `{APP_URL}/stripe/webhook` (Cashier-Standardpfad)
 - `STRIPE_WEBHOOK_SECRET` setzen
 
+---
+
 ## Backups
 
-- Täglich PostgreSQL Dump auf Object Storage / Storage Box
+- Täglich MariaDB-Dump pro Tenant-DB auf Object Storage / Storage Box
 
 ## Monitoring
 

@@ -163,7 +163,6 @@ updates = {
     "APP_DEBUG": "false",
     "APP_URL": esc(os.environ["PY_APP_URL"]),
     "CLH_APP_ROOT": esc(os.environ["PY_INSTALL_DIR"]),
-    "CLH_DEPLOYMENT": esc("cloud"),
     "DB_CONNECTION": "mysql",
     "DB_HOST": "127.0.0.1",
     "DB_PORT": "3306",
@@ -212,7 +211,7 @@ php artisan key:generate --force --no-interaction --no-ansi -q >/dev/stderr
 php artisan migrate --force --no-interaction --no-ansi -q >/dev/stderr
 php artisan db:seed --class=Database\\Seeders\\ThemeSeeder --force --no-interaction --no-ansi -q >/dev/stderr
 ADMIN_PW="$(openssl rand -hex 12)"
-# Wie install-server.sh: Variablen direkt am Artisan-Prozess — zuverlässiger als nur export (Laravel/.env).
+# Variablen direkt am Artisan-Prozess setzen — zuverlässiger als nur export (Laravel/.env).
 CLH_ADMIN_EMAIL="$ADMIN_EMAIL" CLH_ADMIN_PASSWORD="$ADMIN_PW" CLH_ADMIN_NAME="$ADMIN_NAME" \
   php artisan db:seed --class=Database\\Seeders\\InstallAdminSeeder --force --no-interaction --no-ansi -q >/dev/stderr
 

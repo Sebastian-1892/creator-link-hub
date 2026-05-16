@@ -4,7 +4,6 @@ use App\Filament\Pages\MailSettingsPage;
 use App\Models\Setting;
 use App\Models\User;
 use App\Services\SettingsService;
-use Illuminate\Support\Facades\Config;
 use Livewire\Livewire;
 
 test('guest is redirected to login for mail settings', function () {
@@ -28,35 +27,7 @@ test('admin can open mail settings page', function () {
         ->assertOk();
 });
 
-test('admin can save smtp host and runtime config updates', function () {
-    $admin = User::factory()->create(['is_admin' => true]);
-
-    Livewire::actingAs($admin)
-        ->test(MailSettingsPage::class)
-        ->set('data.mail_default', 'smtp')
-        ->set('data.smtp_host', 'mail.example.test')
-        ->set('data.smtp_port', '587')
-        ->set('data.smtp_scheme', 'smtp')
-        ->set('data.smtp_username', 'user')
-        ->set('data.from_address', 'from@example.test')
-        ->set('data.from_name', 'Test')
-        ->call('save')
-        ->assertHasNoErrors();
-
-    $row = Setting::query()->where('key', 'mail.mailers.smtp.host')->first();
-    expect($row)->not->toBeNull()
-        ->and($row->value)->toBe('mail.example.test');
-
-    app(SettingsService::class)->flushCache();
-    app(SettingsService::class)->applyRuntimeConfigOverrides();
-
-    expect(config('mail.mailers.smtp.host'))->toBe('mail.example.test')
-        ->and(config('mail.default'))->toBe('smtp');
-});
-
 test('cloud deployment saves custom smtp and applies runtime config', function () {
-    Config::set('creator.deployment', 'cloud');
-
     $admin = User::factory()->create(['is_admin' => true]);
 
     Livewire::actingAs($admin)
@@ -82,8 +53,6 @@ test('cloud deployment saves custom smtp and applies runtime config', function (
 });
 
 test('cloud provider mode removes tenant smtp overrides and uses sendmail', function () {
-    Config::set('creator.deployment', 'cloud');
-
     Setting::query()->updateOrInsert(
         ['key' => 'mail.mailers.smtp.host'],
         ['value' => 'old.example.test', 'is_encrypted' => false, 'updated_at' => now()],

@@ -1,30 +1,15 @@
 <?php
 
 return [
-    'title' => 'Deployment & Updates',
-    'intro' => 'Release-Kanal: öffentliche versions.json (pCloud). Der Button unten lädt **keine** neue Version von GitHub — er aktualisiert nur Abhängigkeiten und Builds für die Dateien, die **bereits** im Installationsordner liegen. Neue Version zuerst einspielen (ZIP/Deploy), dann „Abhängigkeiten & Migrationen“. Ohne Git.',
+    'title' => 'Anwendungs-Update',
+    'intro' => 'Die Schaltfläche unten lädt **keine** neue Programmversion — sie aktualisiert nur Abhängigkeiten, Frontend-Builds und Datenbank-Migrationen für die Dateien, die **bereits** im Tenant-Verzeichnis liegen. Eine neue Version wird zentral vom Cloud-Host ausgerollt (`clh-rollout-all-tenants.sh`).',
 
-    'manifest_section' => 'Release-Kanal (versions.json)',
-    'manifest_url_label' => 'Manifest-URL',
-    'manifest_installed' => 'Installiert (diese App)',
-    'manifest_latest' => 'Neueste Version (Manifest)',
-    'manifest_min_php' => 'Mindest-PHP (Manifest)',
-    'manifest_open_changelog' => 'Changelog',
-    'manifest_open_download' => 'ZIP herunterladen',
-    'manifest_update_available' => 'Im Manifest liegt eine neuere Release-Version vor.',
-    'manifest_up_to_date' => 'Diese Installation entspricht der neuesten Version im Manifest.',
-    'manifest_check_failed' => 'Das Release-Manifest konnte nicht geladen werden.',
-    'manifest_not_loaded' => 'Manifest noch nicht geladen — bitte „Prüfen“.',
-
-    'shell_section' => 'Server-Update (ohne Git)',
-    'shell_intro' => 'Neue Version: ZIP aus dem Manifest einspielen (Dateien ersetzen), dann hier oder per SSH „Abhängigkeiten & Migrationen ausführen“ starten. Es wird kein Git verwendet.',
+    'shell_section' => 'Abhängigkeiten & Migrationen',
+    'shell_intro' => 'Composer, npm/Vite-Build, Migrationen und Caches für diese Tenant-Installation neu ausführen.',
 
     'script_missing' => 'Das Skript scripts/update-application.sh wurde nicht gefunden.',
     'script_ready' => 'Update-Skript gefunden',
-    'path_label' => 'Installationspfad (CLH_APP_ROOT)',
-
-    'check' => 'Prüfen (Release-Manifest)',
-    'checking' => 'Prüfe…',
+    'path_label' => 'Installationspfad (Tenant)',
 
     'apply' => 'Abhängigkeiten & Migrationen ausführen',
     'applying' => 'Update läuft…',
@@ -35,5 +20,5 @@ return [
 
     'output_truncated_middle' => '[… Mitte der Konsolen-Ausgabe wurde gekürzt …]',
 
-    'output_hint' => 'Vollständiges Log: storage/logs/laravel.log. Dieser Schritt holt **nichts** von GitHub — nur Composer/npm/Migrationen für den aktuellen Ordner. Für eine neuere **Programmversion** zuerst Release-ZIP/Dateien deployen, dann erneut ausführen.',
+    'output_hint' => 'Vollständiges Log: storage/logs/laravel.log. Dieser Schritt holt **keine** neue Programmversion — nur Composer/npm/Migrationen für den aktuellen Ordner. Für eine neuere Version den Cloud-Host ausrollen lassen.',
 ];

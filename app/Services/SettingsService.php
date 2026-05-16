@@ -84,19 +84,14 @@ class SettingsService
      */
     public function applyRuntimeConfigOverrides(): void
     {
-        $isCloud = config('creator.deployment') === 'cloud';
-        $cloudMode = $this->resolveCloudMailTransportMode($isCloud);
+        $cloudMode = $this->resolveCloudMailTransportMode();
 
-        if ($isCloud && in_array($cloudMode, ['provider', 'sendmail'], true)) {
+        if (in_array($cloudMode, ['provider', 'sendmail'], true)) {
             config(['mail.default' => 'sendmail']);
-            $this->applyMailFromConfigOverrides();
-            $this->applyCashierConfigOverrides();
-            $this->applyStripePricesConfigOverrides();
-
-            return;
+        } else {
+            $this->applySmtpMailerOverrides();
         }
 
-        $this->applySmtpMailerOverrides();
         $this->applyMailFromConfigOverrides();
         $this->applyCashierConfigOverrides();
         $this->applyStripePricesConfigOverrides();
@@ -105,12 +100,8 @@ class SettingsService
     /**
      * Effektiver Cloud-Mailmodus (auch ohne gesetzten DB-Schlüssel, Legacy: SMTP-Host in DB).
      */
-    public function resolveCloudMailTransportMode(bool $isCloud): ?string
+    public function resolveCloudMailTransportMode(): string
     {
-        if (! $isCloud) {
-            return null;
-        }
-
         $mode = $this->getStored(self::MAIL_CLOUD_TRANSPORT_MODE_KEY);
         if (in_array($mode, ['provider', 'sendmail', 'custom_smtp'], true)) {
             return $mode;

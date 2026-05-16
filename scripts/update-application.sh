@@ -56,7 +56,7 @@ for arg in "$@"; do
     -h|--help)
       echo "Nutzen: bash scripts/update-application.sh [--dev]"
       echo "  --dev   Composer ohne --no-dev (Entwicklung)"
-      echo "  (Auf dem Server muss CLH_APP_ROOT in .env zum aktuellen Projektroot passen — siehe install-server.sh.)"
+      echo "  (Im Tenant muss CLH_APP_ROOT in .env zum aktuellen Projektroot passen — wird von clh-provision-tenant.sh gesetzt.)"
       exit 0
       ;;
   esac

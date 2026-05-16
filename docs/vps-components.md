@@ -88,13 +88,3 @@ curl -fsS http://127.0.0.1:9100/health
 sudo tail -n 100 /var/log/clh-provisioner.log
 ```
 
----
-
-## Self-Host vs. Cloud-VPS
-
-| | Self-Host (ein Mandant) | Cloud-VPS (Multi-Tenant) |
-|---|-------------------------|---------------------------|
-| Einstieg | `scripts/install-server.sh` | `scripts/bootstrap-cloud-host.sh` |
-| Instanzanzahl | eine | viele unter `tenants_root` |
-
-Diese Seite beschreibt den **Cloud-VPS**.

@@ -1,30 +1,15 @@
 <?php
 
 return [
-    'title' => 'Déploiement et mises à jour',
-    'intro' => 'Le bouton ci-dessous ne télécharge **pas** une nouvelle version depuis GitHub — il met à jour uniquement les dépendances pour les fichiers **déjà** présents. Déployez d’abord la nouvelle version (ZIP/déploiement), puis « Exécuter dépendances et migrations ». Sans Git.',
+    'title' => 'Mise à jour de l’application',
+    'intro' => 'Le bouton ci-dessous ne télécharge **pas** une nouvelle version de l’application — il met à jour uniquement les dépendances, les builds front-end et les migrations pour les fichiers **déjà** présents dans ce répertoire de tenant. Les nouvelles versions sont déployées depuis le cloud-host (`clh-rollout-all-tenants.sh`).',
 
-    'manifest_section' => 'Canal de publication (versions.json)',
-    'manifest_url_label' => 'URL du manifeste',
-    'manifest_installed' => 'Version installée (cette app)',
-    'manifest_latest' => 'Dernière version (manifeste)',
-    'manifest_min_php' => 'PHP minimum (manifeste)',
-    'manifest_open_changelog' => 'Journal des modifications',
-    'manifest_open_download' => 'Télécharger le ZIP',
-    'manifest_update_available' => 'Une version plus récente est publiée dans le manifeste.',
-    'manifest_up_to_date' => 'Cette installation correspond à la dernière version du manifeste.',
-    'manifest_check_failed' => 'Impossible de charger le manifeste de publication.',
-    'manifest_not_loaded' => 'Manifeste non chargé — utilisez Vérifier.',
-
-    'shell_section' => 'Mise à jour serveur (sans Git)',
-    'shell_intro' => 'Pour une nouvelle version : déployer le ZIP du manifeste (remplacer les fichiers), puis lancer « Exécuter dépendances et migrations » ici ou en SSH. Git n’est pas utilisé.',
+    'shell_section' => 'Dépendances et migrations',
+    'shell_intro' => 'Relancer Composer, npm/Vite build, migrations et caches pour cette installation de tenant.',
 
     'script_missing' => 'Le script scripts/update-application.sh est introuvable.',
     'script_ready' => 'Script de mise à jour trouvé',
-    'path_label' => 'Chemin d’installation (CLH_APP_ROOT)',
-
-    'check' => 'Vérifier (manifeste de publication)',
-    'checking' => 'Vérification…',
+    'path_label' => 'Chemin d’installation (tenant)',
 
     'apply' => 'Exécuter dépendances et migrations',
     'applying' => 'Mise à jour…',
@@ -35,5 +20,5 @@ return [
 
     'output_truncated_middle' => '[… partie centrale de la sortie omise …]',
 
-    'output_hint' => 'Journal complet : storage/logs/laravel.log. Aucun téléchargement GitHub — seulement composer/npm/migrations pour le dossier actuel. Pour du **code** plus récent : déployer le ZIP d’abord, puis relancer.',
+    'output_hint' => 'Journal complet : storage/logs/laravel.log. Aucune version nouvelle n’est téléchargée — uniquement composer/npm/migrations pour le dossier actuel. Pour une version plus récente, déployer depuis le cloud-host.',
 ];

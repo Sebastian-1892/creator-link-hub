@@ -47,7 +47,6 @@ APIs
 
 Hosting
 - SaaS: Cloud-Hosting mit CDN, Object Storage, Managed DB
-- Self-hosted denkbar als Enterprise-Variante, aber initial nicht notwendig
 - Public pages über CDN ausliefern
 - Analytics ingestion über separate Event-Pipeline
 

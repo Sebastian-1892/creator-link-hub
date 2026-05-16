@@ -4,7 +4,7 @@
 
 Diese Anleitung ist für **dich als Betreiber** eines **Multi-Tenant-App-Hosts**: ein VPS mit MariaDB, Nginx, Tenant-Verzeichnissen und einem kleinen **HTTP-Provisioner** (signierte API → `sudo` → `clh-provision-tenant.sh`). Dein **Marketing-Backend** (z. B. **creatorlinkhub.eu**, separates Repo) löst später Bestellungen aus und ruft diesen Provisioner auf.
 
-> **Nicht** dasselbe wie Self-Host (eine Installation mit `install-server.sh`). Hier entstehen **viele** Laravel-Instanzen unter `/var/www/clh-tenants/{slug}`.
+> Hier entstehen **viele** Laravel-Instanzen unter `/var/www/clh-tenants/{slug}`. Creator Link Hub wird ausschließlich in dieser Multi-Tenant-Konstellation betrieben.
 
 **Betrieb nach Releases auf GitHub:** [`server-update-nach-github.md`](server-update-nach-github.md) — Host mit `clh-cloud-host-update.sh` aktualisieren, Release-ZIP optional (`--with-zip`), Rollout für **bestehende** Tenant-Ordner separat planen.
 
@@ -132,7 +132,7 @@ sudo chmod 644 /opt/clh-releases/current.zip
 
 ### 5. Spätere Updates
 
-**Ausführliche Befehlsübersicht** (Cloud-Host vs. Self-Host mit Git, Tenant-Rollout, private Repos): [**Server-Update nach GitHub**](server-update-nach-github.md#konsole-vps-nach-github-aktualisieren).
+**Ausführliche Befehlsübersicht** (Host-Update, Tenant-Rollout, private Repos): [**Server-Update nach GitHub**](server-update-nach-github.md#konsole-vps-nach-github-aktualisieren).
 
 **Empfohlen (nach Bootstrap):** Auf dem VPS als root:
 
@@ -460,7 +460,7 @@ Nach dem Deployment der App (Migration **`settings`** ausgeführt: `php artisan 
 
 | Seite | Pfad | Inhalt |
 |-------|------|--------|
-| **E-Mail (SMTP)** | `/admin/mail-settings` | **Cloud-Tenants** (`CLH_DEPLOYMENT=cloud`): Versandart **Betriebs-Versand** / **Sendmail** / **eigener SMTP**; SMTP-Zugangsdaten des Betreibers sind verborgen. Sonst: Mailer (SMTP/Sendmail/Log), SMTP und Absender; optional **Test-Mail** |
+| **E-Mail (SMTP)** | `/admin/mail-settings` | Versandart **Betriebs-Versand** / **Sendmail** / **eigener SMTP**; SMTP-Zugangsdaten des Betreibers sind verborgen, eigener SMTP-Server kann pro Tenant hinterlegt werden; optional **Test-Mail** |
 | **Stripe & Pläne** | `/admin/stripe-settings` | Stripe Publishable/Secret/Webhook-Secret sowie **Price-IDs** je Plan (`free` / `starter` / `pro`), passend zu den Produkten im Stripe-Dashboard |
 
 **Persistenz:** Die Werte liegen in der Tabelle **`settings`** (sensible Felder verschlüsselt mit **`APP_KEY`**). **`RuntimeConfigServiceProvider`** überschreibt zur Laufzeit `config('mail.*')`, `config('cashier.*')` und `config('creator.stripe_prices.*')` — Laravel Mail, Cashier (Checkout/Webhook) und die bestehende Billing-UI nutzen dieselben Konfig-Pfade wie bei Installation über **`.env`**.
@@ -471,7 +471,7 @@ Nach dem Deployment der App (Migration **`settings`** ausgeführt: `php artisan 
 
 ### Anwendungs-Update im Dashboard (`composer` / `update-application.sh`)
 
-**Storage, Symlink und Rechte (Logo-Upload, Logs, Cache):** Das Repo enthält [`scripts/ensure-laravel-storage.sh`](../../scripts/ensure-laravel-storage.sh). Es wird automatisch von **`update-application.sh`**, **`install-server.sh`** und **`clh-provision-tenant.sh`** aufgerufen: legt die **`storage/`**-Unterverzeichnisse an, erzeugt **`public/storage`** (wie `php artisan storage:link`) und setzt **`chown`/`chmod`** für **`www-data`** auf **`storage/`** und **`bootstrap/cache/`**. Rollst du eine Instanz **ohne** diese Skripte aus (reiner Git-Klon), einmal ausführen: `sudo bash scripts/ensure-laravel-storage.sh /pfad/zur/app`.
+**Storage, Symlink und Rechte (Logo-Upload, Logs, Cache):** Das Repo enthält [`scripts/ensure-laravel-storage.sh`](../../scripts/ensure-laravel-storage.sh). Es wird automatisch von **`update-application.sh`** und **`clh-provision-tenant.sh`** aufgerufen: legt die **`storage/`**-Unterverzeichnisse an, erzeugt **`public/storage`** (wie `php artisan storage:link`) und setzt **`chown`/`chmod`** für **`www-data`** auf **`storage/`** und **`bootstrap/cache/`**. Rollst du eine Instanz **ohne** diese Skripte aus (reiner Git-Klon), einmal ausführen: `sudo bash scripts/ensure-laravel-storage.sh /pfad/zur/app`.
 
 Das Dashboard startet [`scripts/update-application.sh`](../../scripts/update-application.sh) im Tenant-Verzeichnis. **PHP-FPM** läuft dabei als **`www-data`**. Schlägt **Composer** mit **`Permission denied`** bei **`vendor/composer/…`** fehl, gehören **`vendor/`** und andere Ordner oft noch **`root:root`** — beim Provisioning wurde **`composer install`** zuvor als **root** ausgeführt, ohne abschließende **`chown`** für die gesamte Installation.
 
@@ -512,15 +512,12 @@ Kunden-Cloud-Instanzen erhalten bei der Erstellung **keine** SMTP-Zugangsdaten a
 | Variable | Bedeutung |
 |----------|-----------|
 | `MAIL_MAILER` | `sendmail` — Laravel übergibt an **`/usr/sbin/sendmail`** (Symfony/Laravel-Transport) |
-| `CLH_DEPLOYMENT` | `cloud` — aktiviert die Cloud-Mail-Einstellungen im Filament-Admin |
 | `MAIL_FROM_ADDRESS` | `noreply@<Tenant-Hostname>` (z. B. `noreply@test.app.creatorlinkhub.eu`) |
 | `MAIL_FROM_NAME` | `Creator Link Hub` |
 
 **Host / MTA:** Tenant-Mail braucht **`/usr/sbin/sendmail`**. Beim **ersten neuen Tenant** installiert **`clh-provision-tenant.sh`** fehlendes **Postfix** selbst (`apt-get install`, debconf non-interactive, „Internet Site“, `mailname` = FQDN oder `hostname`). Schlägt das fehl, bricht das Provisioning mit Fehler ab — kein nur noch halb nutzbarer Mail-Stack ohne MTA.
 
 **Bootstrap:** **`scripts/bootstrap-cloud-host.sh`** installiert **Postfix** ebenfalls, damit frisch eingerichtete Hosts den MTA schon haben, bevor der erste Tenant angelegt wird (doppeltes `apt-get install postfix` ist harmlos). Anschließend fragt das Skript optional nach einem **SMTP-Relay** und ruft [`scripts/configure-postfix-smtp-relay.sh`](../../scripts/configure-postfix-smtp-relay.sh) auf — Authentifizierung liegt nur in **`/etc/postfix/sasl_passwd`** auf dem Host (nicht in Tenant-`.env`). Nicht-interaktiv per Umgebung: **`CLH_SMTP_RELAY_HOST`**, **`CLH_SMTP_RELAY_PORT`** (Standard **587**), **`CLH_SMTP_RELAY_USER`**, **`CLH_SMTP_RELAY_PASSWORD`**. Erneut ausführen: **`sudo /usr/local/bin/configure-postfix-smtp-relay.sh`** (wird beim Bootstrap nach `/usr/local/bin` kopiert).
-
-**Tenant-Kennzeichnung:** **`clh-provision-tenant.sh`** setzt **`CLH_DEPLOYMENT=cloud`** in der Tenant-**.env**, damit **`/admin/mail-settings`** die Cloud-Oberfläche mit **Betriebs-Versand** (maskierte SMTP-Felder) nutzt.
 
 **Zustellbarkeit:** Direktversand vom VPS funktioniert je nach Ruf des Servers, DNS (SPF/PTR) und Empfänger-Policy; manche Postfächer sortieren streng. Mit **SMTP-Relay** (siehe oben) oder **eigenem SMTP** im Admin (**`/admin/mail-settings`**, Persistenz in **`settings`**) verbessert sich die Ausgangszustellung typischerweise. Alternativ weiterhin nur Tenant-**`.env`** (`MAIL_MAILER=smtp`, …) oder Support-Anpassung.
 
@@ -615,22 +612,11 @@ Skripte (nur per `sudo` vom User `clh-provisioner`):
 | Dokument | Inhalt |
 |----------|--------|
 | [`server-update-nach-github.md`](server-update-nach-github.md) | **Nach GitHub-Release:** Host-VPS (`git pull`, Provisioner, optional ZIP), Rollout zu bestehenden Tenants |
-| [`README.md`](../../README.md) (Projektroot) | MVP-Features, Verweis Cloud vs. Self-Host |
+| [`README.md`](../../README.md) (Projektroot) | MVP-Features, Cloud-Index |
 | [VPS-Komponenten](../vps-components.md) | Komponenten- und Pfadübersicht App-VPS |
-| [`docs/deployment.md`](../deployment.md) | Laravel-Betrieb allgemein; Tabelle Self-Host / Cloud |
-| [`docs/launch-runbook.md`](../launch-runbook.md) | Go-Live-Checkliste (ein Produkt) |
-| [`docs/self-host-installation/README.md`](../self-host-installation/README.md) | **Eine** Installation — nicht die Cloud-Route |
+| [`docs/deployment.md`](../deployment.md) | Laravel-Betrieb (Cloud-Pfad) |
+| [`docs/launch-runbook.md`](../launch-runbook.md) | Go-Live-Checkliste |
 | Marketing-Repo (optional) | `deployment/cloud-host/README.md` |
-
----
-
-## Self-Host vs. Cloud
-
-| | Self-Host | Cloud App-Host |
-|---|-----------|----------------|
-| Einstieg | `install-server.sh` | `bootstrap-cloud-host.sh` |
-| DB-Produkt | Postgres oder MariaDB (interaktiv) | MariaDB / Tenant-Skript |
-| Instanzen | eine | viele unter `tenants_root` |
 
 ---
 
