@@ -171,7 +171,7 @@ chown clh-provisioner:clh-provisioner /opt/clh-provisioner /var/lib/clh-provisio
 info "Verzeichnisse und Benutzer fertig."
 
 step 6 "$STEPS" "Tenant-Skripte nach /usr/local/bin kopieren …"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh configure-postfix-smtp-relay.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh clh-tenant-available-landing.sh configure-postfix-smtp-relay.sh; do
   install -m 0755 "${SCRIPT_DIR}/${s}" "/usr/local/bin/${s}"
 done
 SUSP_PAGE="${REPO_ROOT}/distribution/clh-suspended/index.html"
@@ -179,6 +179,13 @@ SUSP_PAGE="${REPO_ROOT}/distribution/clh-suspended/index.html"
 install -d -m 0755 /var/www/clh-suspended
 install -m 0644 "$SUSP_PAGE" /var/www/clh-suspended/index.html
 info "Maintenance-Seite: /var/www/clh-suspended/index.html (überschreibbar via CLH_SUSPENDED_ROOT)"
+
+AVAIL_PAGE="${REPO_ROOT}/distribution/clh-available/index.html"
+[[ -f "$AVAIL_PAGE" ]] || die "distribution/clh-available/index.html fehlt im Repo."
+install -d -m 0755 /var/www/clh-available
+install -m 0644 "$AVAIL_PAGE" /var/www/clh-available/index.html
+mkdir -p /var/www/clh-available/.well-known/acme-challenge
+info "Frei-Landingpage: /var/www/clh-available/index.html (überschreibbar via CLH_AVAILABLE_ROOT)"
 info "Skripte installiert: clh-provision-tenant, delete, suspend, resume, tenant-enable-tls, configure-postfix-smtp-relay (.sh)"
 
 step 7 "$STEPS" "Provisioner-PHP (provisioner.php + router.php) nach /opt/clh-provisioner …"

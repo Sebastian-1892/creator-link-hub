@@ -87,6 +87,10 @@ if [[ -d "$INSTALL_DIR" ]]; then
   die_json "tenant directory already exists: $INSTALL_DIR"
 fi
 
+# Alte Park-/Suspend-vHosts entfernen (z. B. nach Delete + Neu-Provision gleicher Subdomain)
+rm -f "/etc/nginx/sites-enabled/clh-${SLUG}-available.conf" 2>/dev/null || true
+rm -f "/etc/nginx/sites-enabled/clh-${SLUG}-suspended.conf" 2>/dev/null || true
+
 ensure_postfix_for_cloud_mail
 
 TMP=$(mktemp -d)

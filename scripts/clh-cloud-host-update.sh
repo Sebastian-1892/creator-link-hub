@@ -91,7 +91,7 @@ else
 fi
 
 log "Tenant-Skripte → /usr/local/bin/"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh clh-tenant-available-landing.sh; do
   [[ -f "$CLH_REPO_ROOT/scripts/$s" ]] || die "Skript fehlt: scripts/$s"
   install -m 0755 "$CLH_REPO_ROOT/scripts/$s" "/usr/local/bin/$s"
 done
@@ -101,6 +101,13 @@ SUSP_PAGE="$CLH_REPO_ROOT/distribution/clh-suspended/index.html"
 install -d -m 0755 /var/www/clh-suspended
 install -m 0644 "$SUSP_PAGE" /var/www/clh-suspended/index.html
 log "Maintenance-Seite aktualisiert: /var/www/clh-suspended/index.html"
+
+AVAIL_PAGE="$CLH_REPO_ROOT/distribution/clh-available/index.html"
+[[ -f "$AVAIL_PAGE" ]] || die "distribution/clh-available/index.html fehlt"
+install -d -m 0755 /var/www/clh-available
+install -m 0644 "$AVAIL_PAGE" /var/www/clh-available/index.html
+mkdir -p /var/www/clh-available/.well-known/acme-challenge
+log "Frei-Landingpage aktualisiert: /var/www/clh-available/index.html"
 
 SELF="$CLH_REPO_ROOT/scripts/clh-cloud-host-update.sh"
 [[ -f "$SELF" ]] || die "Skript fehlt: scripts/clh-cloud-host-update.sh"

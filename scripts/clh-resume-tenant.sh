@@ -34,7 +34,9 @@ SITE_EN="/etc/nginx/sites-enabled/${SITE_NAME}"
 [[ -f "$SITE_AVAIL" ]] || die_json "missing nginx site ${SITE_AVAIL} (tenant not provisioned or files removed?)"
 
 SUSP_EN="/etc/nginx/sites-enabled/clh-${SLUG}-suspended.conf"
+AVAIL_EN="/etc/nginx/sites-enabled/clh-${SLUG}-available.conf"
 rm -f "$SUSP_EN" 2>/dev/null || true
+rm -f "$AVAIL_EN" 2>/dev/null || true
 
 ln -sf "$SITE_AVAIL" "$SITE_EN"
 if ! nginx -t 2>/dev/null; then
