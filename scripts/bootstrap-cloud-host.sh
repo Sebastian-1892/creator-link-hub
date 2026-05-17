@@ -174,6 +174,11 @@ step 6 "$STEPS" "Tenant-Skripte nach /usr/local/bin kopieren …"
 for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh configure-postfix-smtp-relay.sh; do
   install -m 0755 "${SCRIPT_DIR}/${s}" "/usr/local/bin/${s}"
 done
+SUSP_PAGE="${REPO_ROOT}/distribution/clh-suspended/index.html"
+[[ -f "$SUSP_PAGE" ]] || die "distribution/clh-suspended/index.html fehlt im Repo."
+install -d -m 0755 /var/www/clh-suspended
+install -m 0644 "$SUSP_PAGE" /var/www/clh-suspended/index.html
+info "Maintenance-Seite: /var/www/clh-suspended/index.html (überschreibbar via CLH_SUSPENDED_ROOT)"
 info "Skripte installiert: clh-provision-tenant, delete, suspend, resume, tenant-enable-tls, configure-postfix-smtp-relay (.sh)"
 
 step 7 "$STEPS" "Provisioner-PHP (provisioner.php + router.php) nach /opt/clh-provisioner …"

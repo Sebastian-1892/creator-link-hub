@@ -56,6 +56,8 @@ Konkrete PHP-Minor-Versionen richten sich nach Bootstrap und Distribution (z. 
 | Alle Tenant-Verzeichnisse | `/var/www/clh-tenants/<slug>/` (`tenants_root` in `config.json`). |
 | Release-Artefakt für neue Instanzen | `/opt/clh-releases/current.zip` |
 | Nginx Tenant-Sites | `/etc/nginx/sites-available/clh-<slug>.conf` |
+| Maintenance-Seite (Suspend) | `/var/www/clh-suspended/index.html` |
+| Nginx Suspend-vhost | `/etc/nginx/sites-enabled/clh-<slug>-suspended.conf` (nur während Suspend) |
 
 ---
 
@@ -67,7 +69,8 @@ Konkrete PHP-Minor-Versionen richten sich nach Bootstrap und Distribution (z. 
 | [`scripts/clh-cloud-host-update.sh`](../scripts/clh-cloud-host-update.sh) | `/usr/local/bin/clh-cloud-host-update.sh` | `git pull`, Provisioner + Skripte, optional `--with-zip`. |
 | [`scripts/clh-rollout-all-tenants.sh`](../scripts/clh-rollout-all-tenants.sh) | `/usr/local/bin/clh-rollout-all-tenants.sh` | Host-Update + alle Tenants ([How-to](cloud-hosting-installation/server-update-nach-github.md)). |
 | `scripts/clh-delete-tenant.sh` | `/usr/local/bin/clh-delete-tenant.sh` | Tenant entfernen. |
-| `scripts/clh-suspend-tenant.sh` / `clh-resume-tenant.sh` | `/usr/local/bin/` | Site deaktivieren / aktivieren. |
+| `scripts/clh-suspend-tenant.sh` / `clh-resume-tenant.sh` | `/usr/local/bin/` | Suspend: Maintenance-vhost + HTTPS; Resume: Original-Symlink wieder aktivieren. |
+| `distribution/clh-suspended/index.html` | `/var/www/clh-suspended/index.html` | Statische „Account deaktiviert“-Seite (via bootstrap/update). |
 
 **Release-ZIP bauen:** [`scripts/build-cloud-release-zip.sh`](../scripts/build-cloud-release-zip.sh).
 

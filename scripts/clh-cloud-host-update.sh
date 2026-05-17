@@ -96,6 +96,12 @@ for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-
   install -m 0755 "$CLH_REPO_ROOT/scripts/$s" "/usr/local/bin/$s"
 done
 
+SUSP_PAGE="$CLH_REPO_ROOT/distribution/clh-suspended/index.html"
+[[ -f "$SUSP_PAGE" ]] || die "distribution/clh-suspended/index.html fehlt"
+install -d -m 0755 /var/www/clh-suspended
+install -m 0644 "$SUSP_PAGE" /var/www/clh-suspended/index.html
+log "Maintenance-Seite aktualisiert: /var/www/clh-suspended/index.html"
+
 SELF="$CLH_REPO_ROOT/scripts/clh-cloud-host-update.sh"
 [[ -f "$SELF" ]] || die "Skript fehlt: scripts/clh-cloud-host-update.sh"
 install -m 0755 "$SELF" /usr/local/bin/clh-cloud-host-update.sh

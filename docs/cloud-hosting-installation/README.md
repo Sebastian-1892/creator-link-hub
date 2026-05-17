@@ -602,8 +602,8 @@ Skripte (nur per `sudo` vom User `clh-provisioner`):
 |--------|--------|
 | `clh-provision-tenant.sh` | Neuer Tenant: ZIP, `.env`, Composer/Artisan, Nginx + **Let’s Encrypt** (`certonly --webroot`), finale HTTP/HTTPS‑Sites im Repo‑Format, `chmod 755` Tenantroot, `APP_URL=https://…` (**`--no-tls`** möglich) |
 | `clh-delete-tenant.sh` | Tenant entfernen (DB, Dateien, Nginx) |
-| `clh-suspend-tenant.sh` | Tenant Site aus `sites-enabled` nehmen |
-| `clh-resume-tenant.sh` | Tenant Site wieder aktivieren (`sites-available` → `sites-enabled`, Nginx reload) |
+| `clh-suspend-tenant.sh` | Suspend: Original-Symlink aus `sites-enabled`, Maintenance-vhost `clh-<slug>-suspended.conf` (HTTPS + `/var/www/clh-suspended/`) |
+| `clh-resume-tenant.sh` | Resume: Suspend-vhost entfernen, Original aus `sites-available` → `sites-enabled`, Nginx reload |
 
 ---
 
