@@ -38,11 +38,18 @@ INSTALL_DIR="${TENANT_ROOT%/}/${SLUG}"
 SITE_NAME="clh-${SLUG}.conf"
 SITE_AVAIL="/etc/nginx/sites-available/${SITE_NAME}"
 SITE_EN="/etc/nginx/sites-enabled/${SITE_NAME}"
+SUSP_EN="/etc/nginx/sites-enabled/clh-${SLUG}-suspended.conf"
 
-log "remove nginx"
+log "remove nginx (tenant + suspend vhost)"
 rm -f "$SITE_EN" 2>/dev/null || true
 rm -f "$SITE_AVAIL" 2>/dev/null || true
+rm -f "$SUSP_EN" 2>/dev/null || true
 nginx -t 2>/dev/null && systemctl reload nginx || true
+
+if [[ -n "$DOMAIN" ]] && command -v certbot &>/dev/null; then
+  log "remove letsencrypt cert for ${DOMAIN} (optional)"
+  certbot delete --cert-name "$DOMAIN" --non-interactive 2>/dev/null || true
+fi
 
 log "drop mysql $DB_NAME"
 mysql -u root <<EOSQL || true
