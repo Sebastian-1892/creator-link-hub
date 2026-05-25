@@ -257,6 +257,7 @@ $script = match ($action) {
     'delete' => '/usr/local/bin/clh-delete-tenant.sh',
     'suspend' => '/usr/local/bin/clh-suspend-tenant.sh',
     'resume' => '/usr/local/bin/clh-resume-tenant.sh',
+    'custom_domain', 'remove_custom_domain' => '/usr/local/bin/clh-tenant-custom-domain.sh',
     default => '',
 };
 if ($script === '' || ! is_executable($script)) {
@@ -269,13 +270,35 @@ $tenantRoot = (string) ($config['tenants_root'] ?? '/var/www/clh-tenants');
 $releaseZip = (string) ($config['release_zip'] ?? '');
 $dbDriver = (string) ($config['db_driver'] ?? 'mysql');
 
-$cmd = [
-    'sudo', '-n', $script,
-    '--slug', $slug,
-    '--domain', $domain,
-    '--tenant-root', $tenantRoot,
-    '--db-driver', $dbDriver,
-];
+$hostPattern = '/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+[a-z]{2,63}$/';
+
+if (in_array($action, ['custom_domain', 'remove_custom_domain'], true)) {
+    $custom = strtolower(rtrim((string) ($data['custom_domain'] ?? ''), '.'));
+    if ($custom === '' || ! preg_match($hostPattern, $custom)) {
+        clhProvisionerJson(['error' => 'invalid custom_domain'], 400);
+    }
+    $canonical = strtolower(rtrim((string) ($data['canonical_domain'] ?? $domain), '.'));
+    if ($canonical === '' || ! preg_match($hostPattern, $canonical)) {
+        clhProvisionerJson(['error' => 'invalid canonical_domain'], 400);
+    }
+    $mode = $action === 'remove_custom_domain' ? 'remove' : 'add';
+    $cmd = [
+        'sudo', '-n', $script,
+        '--slug', $slug,
+        '--custom-domain', $custom,
+        '--canonical-domain', $canonical,
+        '--mode', $mode,
+        '--tenant-root', $tenantRoot,
+    ];
+} else {
+    $cmd = [
+        'sudo', '-n', $script,
+        '--slug', $slug,
+        '--domain', $domain,
+        '--tenant-root', $tenantRoot,
+        '--db-driver', $dbDriver,
+    ];
+}
 if ($action === 'create') {
     if ($releaseZip === '') {
         clhProvisionerJson(['error' => 'release_zip not configured (empty path in config)'], 500);

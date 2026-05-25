@@ -91,7 +91,7 @@ else
 fi
 
 log "Tenant-Skripte → /usr/local/bin/"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh clh-tenant-available-landing.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-custom-domain.sh clh-tenant-enable-tls.sh clh-tenant-available-landing.sh; do
   [[ -f "$CLH_REPO_ROOT/scripts/$s" ]] || die "Skript fehlt: scripts/$s"
   install -m 0755 "$CLH_REPO_ROOT/scripts/$s" "/usr/local/bin/$s"
 done

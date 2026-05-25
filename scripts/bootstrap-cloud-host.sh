@@ -171,7 +171,7 @@ chown clh-provisioner:clh-provisioner /opt/clh-provisioner /var/lib/clh-provisio
 info "Verzeichnisse und Benutzer fertig."
 
 step 6 "$STEPS" "Tenant-Skripte nach /usr/local/bin kopieren …"
-for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-enable-tls.sh clh-tenant-available-landing.sh configure-postfix-smtp-relay.sh; do
+for s in clh-provision-tenant.sh clh-delete-tenant.sh clh-suspend-tenant.sh clh-resume-tenant.sh clh-tenant-custom-domain.sh clh-tenant-enable-tls.sh clh-tenant-available-landing.sh configure-postfix-smtp-relay.sh; do
   install -m 0755 "${SCRIPT_DIR}/${s}" "/usr/local/bin/${s}"
 done
 SUSP_PAGE="${REPO_ROOT}/distribution/clh-suspended/index.html"
@@ -255,7 +255,7 @@ info "Secret und Konfiguration gesetzt (bestehende Dateien werden nicht übersch
 step 9 "$STEPS" "sudoers-Regel für clh-provisioner (NOPASSWD für die Tenant-Skripte) …"
 cat >/etc/sudoers.d/clh-provisioner <<'SUDO'
 Defaults:clh-provisioner secure_path=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
-clh-provisioner ALL=(root) NOPASSWD: /usr/local/bin/clh-provision-tenant.sh, /usr/local/bin/clh-delete-tenant.sh, /usr/local/bin/clh-suspend-tenant.sh, /usr/local/bin/clh-resume-tenant.sh, /usr/local/bin/clh-tenant-enable-tls.sh
+clh-provisioner ALL=(root) NOPASSWD: /usr/local/bin/clh-provision-tenant.sh, /usr/local/bin/clh-delete-tenant.sh, /usr/local/bin/clh-suspend-tenant.sh, /usr/local/bin/clh-resume-tenant.sh, /usr/local/bin/clh-tenant-custom-domain.sh, /usr/local/bin/clh-tenant-enable-tls.sh
 SUDO
 chmod 0440 /etc/sudoers.d/clh-provisioner
 visudo -c -f /etc/sudoers.d/clh-provisioner
