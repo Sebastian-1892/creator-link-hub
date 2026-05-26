@@ -147,7 +147,12 @@ custom_domain_has_https_vhost() {
     $0 ~ ("server_name " host ";") { in_srv = 1 }
     in_srv && /listen[[:space:]]+443/ { found = 1; exit }
     in_srv && /^[[:space:]]*}[[:space:]]*$/ { in_srv = 0 }
-    END { exit(found ? 0 : 1 }
+    END {
+      if (found) {
+        exit 0
+      }
+      exit 1
+    }
   ' "$SITE_AVAIL"
 }
 
