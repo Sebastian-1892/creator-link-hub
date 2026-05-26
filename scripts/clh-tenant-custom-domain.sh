@@ -142,6 +142,15 @@ ${MARKER_END}
 NGX
 }
 
+custom_domain_has_https_vhost() {
+  awk -v host="$CUSTOM" '
+    $0 ~ ("server_name " host ";") { in_srv = 1 }
+    in_srv && /listen[[:space:]]+443/ { found = 1; exit }
+    in_srv && /^[[:space:]]*}[[:space:]]*$/ { in_srv = 0 }
+    END { exit(found ? 0 : 1 }
+  ' "$SITE_AVAIL"
+}
+
 append_full_custom_vhosts() {
   NG_DH_LINE=""
   [[ -f /etc/letsencrypt/ssl-dhparams.pem ]] && NG_DH_LINE=$'    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;\n'
@@ -218,7 +227,7 @@ if [[ ! -f "/etc/letsencrypt/live/${CUSTOM}/fullchain.pem" ]]; then
     || die_json "certbot failed for ${CUSTOM}"
 fi
 
-if ! grep -qF "$MARKER_BEGIN" "$SITE_AVAIL" 2>/dev/null || ! grep -q "listen 443 ssl" "$SITE_AVAIL" 2>/dev/null; then
+if [[ -f "/etc/letsencrypt/live/${CUSTOM}/fullchain.pem" ]] && ! custom_domain_has_https_vhost; then
   log "write full HTTP/HTTPS vHosts for ${CUSTOM}"
   remove_custom_blocks
   append_full_custom_vhosts
