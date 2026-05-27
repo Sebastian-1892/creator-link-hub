@@ -3,6 +3,7 @@
 use App\Http\Controllers\FilamentLocaleController;
 use App\Http\Controllers\LinkRedirectController;
 use App\Http\Controllers\MarketingController;
+use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\SitemapController;
 use App\Livewire\AnalyticsDashboard;
@@ -40,6 +41,7 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
     Route::view('dashboard', 'dashboard')->name('dashboard');
     Route::get('hub/links', LinkManager::class)->name('links.manage');
     Route::get('hub/bio', BioPageEditor::class)->name('bio.edit');
+    Route::post('hub/bio/avatar', [ProfileAvatarController::class, 'store'])->name('bio.avatar.store');
     Route::get('hub/analytics', AnalyticsDashboard::class)->name('analytics');
     Route::get('hub/billing', BillingPortal::class)->name('billing');
     Route::view('profile', 'profile')->name('profile');

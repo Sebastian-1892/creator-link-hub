@@ -14,6 +14,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Blade;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\RateLimiter;
+use Illuminate\Support\Facades\URL;
 use Illuminate\Support\Facades\View;
 use Illuminate\Support\ServiceProvider;
 
@@ -28,7 +29,12 @@ class AppServiceProvider extends ServiceProvider
     {
         $appUrl = config('app.url');
         if (is_string($appUrl) && $appUrl !== '') {
-            config(['app.url' => rtrim($appUrl, '/')]);
+            $appUrl = rtrim($appUrl, '/');
+            config(['app.url' => $appUrl]);
+            URL::forceRootUrl($appUrl);
+            if (str_starts_with($appUrl, 'https://')) {
+                URL::forceScheme('https');
+            }
         }
 
         Profile::observe(ProfileObserver::class);

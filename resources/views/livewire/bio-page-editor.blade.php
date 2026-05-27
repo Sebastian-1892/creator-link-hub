@@ -37,39 +37,47 @@
             </div>
         @endif
 
-        <form wire:submit="save" class="bg-white shadow sm:rounded-lg p-6 space-y-6">
-            <div>
-                <x-input-label for="avatar" :value="__('Profilbild')" />
-                <input
-                    wire:model="avatar"
-                    id="avatar"
-                    type="file"
-                    accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
-                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
-                />
-                <p class="mt-1 text-xs text-gray-500">
-                    {{ __('JPG, PNG, GIF oder WebP (bis 8 MB). Das Bild wird beim Speichern automatisch auf Profilgröße verkleinert und komprimiert — auch große PNGs.') }}
-                </p>
-                @if ($profile->avatar_path)
-                    <img
-                        src="{{ \Illuminate\Support\Facades\Storage::url($profile->avatar_path) }}"
-                        alt=""
-                        class="mt-3 h-20 w-20 rounded-full object-cover ring-2 ring-gray-200"
-                        width="80"
-                        height="80"
-                    />
-                @endif
-                <div wire:loading wire:target="avatar" class="mt-2 text-sm text-indigo-600">
-                    {{ __('Bild wird hochgeladen …') }}
-                </div>
-                @unless ($avatarUploadStorageReady)
-                    <p class="mt-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2" role="alert">
-                        {{ __('Upload derzeit nicht möglich (Server-Speicher). Bitte den Support kontaktieren.') }}
-                    </p>
-                @endunless
-                <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
+        @if (session('avatar_notice'))
+            <div class="rounded-xl border-2 border-green-500 bg-green-50 px-5 py-4 text-green-900 shadow-sm" role="status">
+                <p class="text-base font-semibold">{{ session('avatar_notice') }}</p>
             </div>
+        @endif
 
+        <div class="bg-white shadow sm:rounded-lg p-6 space-y-4">
+            <h2 class="text-lg font-medium text-gray-900">{{ __('Profilbild') }}</h2>
+            @if ($profile->avatar_path)
+                <img
+                    src="{{ \Illuminate\Support\Facades\Storage::url($profile->avatar_path) }}"
+                    alt=""
+                    class="h-20 w-20 rounded-full object-cover ring-2 ring-gray-200"
+                    width="80"
+                    height="80"
+                />
+            @endif
+            <form action="{{ route('bio.avatar.store') }}" method="post" enctype="multipart/form-data" class="space-y-3">
+                @csrf
+                <div>
+                    <x-input-label for="avatar" :value="__('Neues Profilbild')" />
+                    <input
+                        id="avatar"
+                        name="avatar"
+                        type="file"
+                        required
+                        accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
+                        class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                    />
+                    <p class="mt-1 text-xs text-gray-500">
+                        {{ __('JPG, PNG, GIF oder WebP (bis 8 MB). Nach dem Klick auf „Profilbild hochladen“ wird das Bild automatisch verkleinert.') }}
+                    </p>
+                    <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
+                </div>
+                <x-primary-button type="submit">
+                    {{ __('Profilbild hochladen') }}
+                </x-primary-button>
+            </form>
+        </div>
+
+        <form wire:submit="save" class="bg-white shadow sm:rounded-lg p-6 space-y-6">
             <div>
                 <x-input-label for="display_name" :value="__('Anzeigename')" />
                 <x-text-input wire:model="display_name" id="display_name" class="block mt-1 w-full" />
