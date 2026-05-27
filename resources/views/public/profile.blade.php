@@ -33,14 +33,23 @@
                     $href = $link->tracking_enabled ? route('links.redirect', $link) : $link->url;
                     $target = $link->opens_in_new_tab ? '_blank' : '_self';
                     $rel = $link->opens_in_new_tab ? 'noopener noreferrer' : null;
+                    $brandColor = $link->brandColor();
                 @endphp
                 <a
                     href="{{ $href }}"
                     target="{{ $target }}"
                     @if ($rel) rel="{{ $rel }}" @endif
-                    class="{{ $clh['link_class'] }} shadow-md hover:shadow-xl"
+                    class="{{ $clh['link_class'] }} shadow-md hover:shadow-xl {{ $link->show_icon ? 'pl-4 pr-12' : '' }}"
                     style="{{ $clh['link_style'] }}"
                 >
+                    @if ($link->show_icon)
+                        <span
+                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                            style="background-color: {{ $brandColor }}22; color: {{ $brandColor }};"
+                        >
+                            <x-brand-icon :name="$link->iconName()" class="h-5 w-5" />
+                        </span>
+                    @endif
                     <span class="flex-1 text-center">{{ $link->title }}</span>
                     <span class="absolute right-4 text-lg opacity-0 transition group-hover:opacity-100" style="color: var(--clh-accent);" aria-hidden="true">→</span>
                 </a>

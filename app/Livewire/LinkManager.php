@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Link;
 use App\Models\Profile;
 use App\Services\PlanService;
+use App\Support\LinkPresetHelper;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -22,6 +23,12 @@ class LinkManager extends Component
 
     public string $newUrl = '';
 
+    /** @var array<int, string> */
+    public array $linkTitles = [];
+
+    /** @var array<int, bool> */
+    public array $linkShowIcons = [];
+
     public function mount(): void
     {
         $workspace = auth()->user()?->currentWorkspace();
@@ -29,11 +36,12 @@ class LinkManager extends Component
 
         $this->profile = $workspace->profile->load('links');
         $this->authorize('update', $this->profile);
+        $this->syncLinkFormState();
     }
 
     public function selectPreset(string $key): void
     {
-        abort_unless(array_key_exists($key, config('link-presets', [])), 404);
+        abort_unless(array_key_exists($key, LinkPresetHelper::presets()), 404);
 
         $this->presetKey = $key;
         $this->reset('presetValue', 'newTitle', 'newUrl');
@@ -47,21 +55,32 @@ class LinkManager extends Component
         $this->resetErrorBag();
     }
 
+    public function closeAddModal(): void
+    {
+        $this->clearPreset();
+        $this->dispatch('close-modal', 'add-link');
+    }
+
     public function addPresetLink(PlanService $plans): void
     {
         if ($this->presetKey === null) {
             return;
         }
 
-        $preset = config('link-presets.'.$this->presetKey);
+        $preset = LinkPresetHelper::preset($this->presetKey);
 
-        if (! is_array($preset)) {
+        if ($preset === null) {
             return;
         }
 
         [$title, $url] = $this->resolvePresetTitleAndUrl($preset);
 
-        $this->createLinkFromInput($title, $url, $plans);
+        $this->createLinkFromInput(
+            $title,
+            $url,
+            $plans,
+            $this->presetKey === 'custom' ? null : $this->presetKey,
+        );
         $this->resetAfterAdd();
     }
 
@@ -72,8 +91,42 @@ class LinkManager extends Component
             'newUrl' => ['required', 'string', 'max:2048', 'url'],
         ]);
 
-        $this->createLinkFromInput($this->newTitle, $this->newUrl, $plans);
+        $this->createLinkFromInput($this->newTitle, $this->newUrl, $plans, 'custom');
         $this->resetAfterAdd();
+    }
+
+    public function updatedLinkTitles(mixed $value, string $key): void
+    {
+        $linkId = (int) $key;
+        $link = Link::query()->where('profile_id', $this->profile->id)->find($linkId);
+
+        if (! $link) {
+            return;
+        }
+
+        $this->authorize('update', $link);
+
+        $validated = $this->validate([
+            "linkTitles.{$linkId}" => ['required', 'string', 'max:120'],
+        ]);
+
+        $link->update(['title' => $validated['linkTitles'][$linkId]]);
+        $this->profile->refresh()->load('links');
+    }
+
+    public function updatedLinkShowIcons(mixed $value, string $key): void
+    {
+        $linkId = (int) $key;
+        $link = Link::query()->where('profile_id', $this->profile->id)->find($linkId);
+
+        if (! $link) {
+            return;
+        }
+
+        $this->authorize('update', $link);
+
+        $link->update(['show_icon' => (bool) $value]);
+        $this->profile->refresh()->load('links');
     }
 
     public function deleteLink(int $linkId): void
@@ -82,6 +135,7 @@ class LinkManager extends Component
         $this->authorize('delete', $link);
         $link->delete();
         $this->profile->refresh()->load('links');
+        $this->syncLinkFormState();
     }
 
     public function move(int $linkId, string $direction): void
@@ -115,8 +169,19 @@ class LinkManager extends Component
     {
         return view('livewire.link-manager', [
             'links' => $this->profile->links()->orderBy('position')->get(),
-            'linkPresets' => config('link-presets', []),
+            'linkPresets' => LinkPresetHelper::presets(),
         ]);
+    }
+
+    protected function syncLinkFormState(): void
+    {
+        $this->linkTitles = [];
+        $this->linkShowIcons = [];
+
+        foreach ($this->profile->links as $link) {
+            $this->linkTitles[$link->id] = $link->title;
+            $this->linkShowIcons[$link->id] = $link->show_icon;
+        }
     }
 
     /**
@@ -166,11 +231,19 @@ class LinkManager extends Component
         $template = $preset['url_template'] ?? '{value}';
         $url = str_replace('{value}', $value, $template);
 
-        return [$preset['label'] ?? __('Link'), $url];
+        $defaultLabel = $preset['label'] ?? __('Link');
+        $title = trim($this->newTitle) !== '' ? trim($this->newTitle) : $defaultLabel;
+
+        return [$title, $url];
     }
 
-    protected function createLinkFromInput(string $title, string $url, PlanService $plans): void
-    {
+    protected function createLinkFromInput(
+        string $title,
+        string $url,
+        PlanService $plans,
+        ?string $presetKey = null,
+        bool $showIcon = true,
+    ): void {
         $workspace = $this->profile->workspace;
 
         if (! $plans->canAddLink($workspace, $this->profile)) {
@@ -180,12 +253,16 @@ class LinkManager extends Component
             return;
         }
 
+        $resolvedPreset = $presetKey ?? LinkPresetHelper::detectFromUrl($url);
+
         $maxPos = (int) $this->profile->links()->max('position');
 
         Link::query()->create([
             'profile_id' => $this->profile->id,
             'title' => $title,
             'url' => $url,
+            'preset_key' => $resolvedPreset,
+            'show_icon' => $showIcon,
             'position' => $maxPos + 1,
             'is_active' => true,
             'opens_in_new_tab' => true,
@@ -193,12 +270,12 @@ class LinkManager extends Component
         ]);
 
         $this->profile->refresh()->load('links');
+        $this->syncLinkFormState();
     }
 
     protected function resetAfterAdd(): void
     {
-        $this->reset('presetKey', 'presetValue', 'newTitle', 'newUrl');
-        $this->resetErrorBag();
+        $this->clearPreset();
         $this->dispatch('close-modal', 'add-link');
     }
 }

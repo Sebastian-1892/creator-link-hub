@@ -4,6 +4,7 @@ return [
     'instagram' => [
         'label' => 'Instagram',
         'icon' => 'instagram',
+        'color' => '#E4405F',
         'type' => 'username',
         'prefix' => '@',
         'placeholder' => 'creator',
@@ -12,6 +13,7 @@ return [
     'tiktok' => [
         'label' => 'TikTok',
         'icon' => 'tiktok',
+        'color' => '#000000',
         'type' => 'username',
         'prefix' => '@',
         'placeholder' => 'creator',
@@ -20,6 +22,7 @@ return [
     'youtube' => [
         'label' => 'YouTube',
         'icon' => 'youtube',
+        'color' => '#FF0000',
         'type' => 'username',
         'prefix' => '@',
         'placeholder' => 'kanal',
@@ -28,6 +31,7 @@ return [
     'x' => [
         'label' => 'X',
         'icon' => 'x',
+        'color' => '#000000',
         'type' => 'username',
         'prefix' => '@',
         'placeholder' => 'creator',
@@ -36,6 +40,7 @@ return [
     'spotify' => [
         'label' => 'Spotify',
         'icon' => 'spotify',
+        'color' => '#1DB954',
         'type' => 'url',
         'placeholder' => 'https://open.spotify.com/artist/…',
         'url_template' => '{value}',
@@ -43,6 +48,7 @@ return [
     'github' => [
         'label' => 'GitHub',
         'icon' => 'github',
+        'color' => '#181717',
         'type' => 'username',
         'prefix' => '@',
         'placeholder' => 'username',
@@ -51,6 +57,7 @@ return [
     'linkedin' => [
         'label' => 'LinkedIn',
         'icon' => 'linkedin',
+        'color' => '#0A66C2',
         'type' => 'username',
         'placeholder' => 'username',
         'url_template' => 'https://www.linkedin.com/in/{value}',
@@ -58,6 +65,7 @@ return [
     'facebook' => [
         'label' => 'Facebook',
         'icon' => 'facebook',
+        'color' => '#1877F2',
         'type' => 'username',
         'placeholder' => 'seite',
         'url_template' => 'https://facebook.com/{value}',
@@ -65,6 +73,7 @@ return [
     'threads' => [
         'label' => 'Threads',
         'icon' => 'threads',
+        'color' => '#000000',
         'type' => 'username',
         'prefix' => '@',
         'placeholder' => 'creator',
@@ -73,6 +82,7 @@ return [
     'email' => [
         'label' => 'E-Mail',
         'icon' => 'email',
+        'color' => '#6366f1',
         'type' => 'email',
         'placeholder' => 'hallo@beispiel.de',
         'url_template' => 'mailto:{value}',
@@ -80,6 +90,7 @@ return [
     'whatsapp' => [
         'label' => 'WhatsApp',
         'icon' => 'whatsapp',
+        'color' => '#25D366',
         'type' => 'phone',
         'prefix' => '+',
         'placeholder' => '491234567890',
@@ -88,6 +99,7 @@ return [
     'custom' => [
         'label' => 'Eigener Link',
         'icon' => 'link',
+        'color' => '#6366f1',
         'type' => 'custom',
     ],
 ];

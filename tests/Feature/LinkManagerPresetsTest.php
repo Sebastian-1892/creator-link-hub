@@ -22,7 +22,36 @@ test('instagram preset creates link with built url', function () {
     $link = Link::query()->where('profile_id', $profile->id)->first();
     expect($link)->not->toBeNull()
         ->and($link->title)->toBe('Instagram')
-        ->and($link->url)->toBe('https://instagram.com/creator');
+        ->and($link->url)->toBe('https://instagram.com/creator')
+        ->and($link->preset_key)->toBe('instagram')
+        ->and($link->show_icon)->toBeTrue();
+});
+
+test('preset link accepts custom display title', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(LinkManager::class)
+        ->call('selectPreset', 'youtube')
+        ->set('presetValue', 'NazaledTV')
+        ->set('newTitle', 'Mein Kanal')
+        ->call('addPresetLink')
+        ->assertHasNoErrors();
+
+    $link = Link::query()->where('profile_id', $user->currentWorkspace()->profile->id)->first();
+    expect($link->title)->toBe('Mein Kanal')
+        ->and($link->preset_key)->toBe('youtube');
+});
+
+test('close add modal resets preset selection', function () {
+    $user = User::factory()->create();
+
+    Livewire::actingAs($user)
+        ->test(LinkManager::class)
+        ->call('selectPreset', 'instagram')
+        ->call('closeAddModal')
+        ->assertSet('presetKey', null)
+        ->assertDispatched('close-modal', 'add-link');
 });
 
 test('invalid username is rejected', function () {
