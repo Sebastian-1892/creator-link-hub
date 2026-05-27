@@ -16,182 +16,182 @@ return [
     ],
 
     'marketing' => [
-        'eyebrow' => 'Link-in-bio for creators',
-        'headline' => 'One link. Every channel. More reach.',
-        'subline' => 'Build a clear bio page in minutes with measurable clicks — control themes and copy in one place.',
-        'cta_primary' => 'Start for free',
-        'cta_secondary' => 'View pricing',
-        'footer_tagline' => 'Bio pages for creators & brands — fast, measurable, low-friction.',
-        'trust_strip' => 'Share everywhere your community hangs out',
-        'trust_count' => '12,000+',
-        'trust_count_label' => 'bio pages live — from podcasts to brands',
-        'home_templates_title' => 'Free templates',
-        'home_templates_subline' => 'Pick a layout and palette — your page looks polished instantly.',
-        'final_cta_title' => 'Ready for your link-in-bio moment?',
-        'final_cta_subline' => 'Sign up, pick a theme, share one URL everywhere.',
-        'final_cta_button' => 'Get started',
+        'eyebrow' => 'Link-in-bio pour les créateurs',
+        'headline' => 'Un lien. Tous les canaux. Plus de portée.',
+        'subline' => 'Créez une page bio claire en quelques minutes avec des clics mesurables — thèmes et textes au même endroit.',
+        'cta_primary' => 'Commencer gratuitement',
+        'cta_secondary' => 'Voir les tarifs',
+        'footer_tagline' => 'Pages bio pour créateurs et marques — rapides, mesurables, sans friction.',
+        'trust_strip' => 'Partagez partout où vit votre communauté',
+        'trust_count' => '12 000+',
+        'trust_count_label' => 'pages bio en ligne — du podcast à la marque',
+        'home_templates_title' => 'Modèles gratuits',
+        'home_templates_subline' => 'Choisissez une mise en page et une palette — votre page a tout de suite un look pro.',
+        'final_cta_title' => 'Prêt pour votre moment link-in-bio ?',
+        'final_cta_subline' => 'Inscrivez-vous, choisissez un thème, partagez une URL partout.',
+        'final_cta_button' => 'Commencer',
 
         'steps' => [
             '1' => [
-                'title' => 'Create',
-                'text' => 'Manage links, avatar, and bio in one dashboard.',
+                'title' => 'Créer',
+                'text' => 'Gérez liens, avatar et bio dans un seul tableau de bord.',
             ],
             '2' => [
-                'title' => 'Style',
-                'text' => 'Tune themes and layouts — light, dark, or bold.',
+                'title' => 'Styliser',
+                'text' => 'Ajustez thèmes et mises en page — clair, sombre ou audacieux.',
             ],
             '3' => [
-                'title' => 'Share',
-                'text' => 'One URL for Instagram, TikTok, YouTube & more — updates go live instantly.',
+                'title' => 'Partager',
+                'text' => 'Une URL pour Instagram, TikTok, YouTube et plus — les mises à jour sont instantanées.',
             ],
         ],
 
         'features' => [
             '1' => [
-                'title' => 'Smart links',
-                'text' => 'Optional click tracking with a clean overview of what converts.',
+                'title' => 'Liens intelligents',
+                'text' => 'Suivi des clics en option avec une vue claire de ce qui convertit.',
             ],
             '2' => [
-                'title' => 'Themes',
-                'text' => 'Dozens of presets plus real layout styles: buttons, cards, backgrounds.',
+                'title' => 'Thèmes',
+                'text' => 'Des dizaines de presets et de vrais styles : boutons, cartes, arrière-plans.',
             ],
             '3' => [
-                'title' => 'Built to scale',
-                'text' => 'Stripe billing, analytics, and admin settings — SaaS-ready.',
+                'title' => 'Évolutif',
+                'text' => 'Facturation Stripe, analytics et réglages admin — prêt pour le SaaS.',
             ],
         ],
 
         'cards' => [
             '1' => [
-                'title' => 'Create',
-                'text' => 'Build your bio page fast: avatar, copy, buttons — done.',
+                'title' => 'Créer',
+                'text' => 'Construisez votre page bio vite : avatar, textes, boutons — c’est fait.',
                 'icon' => '✦',
             ],
             '2' => [
-                'title' => 'Integrate',
-                'text' => 'Shop, newsletter, podcast, socials — all behind one link.',
+                'title' => 'Intégrer',
+                'text' => 'Boutique, newsletter, podcast, réseaux — tout derrière un lien.',
                 'icon' => '🔗',
             ],
             '3' => [
-                'title' => 'Share',
-                'text' => 'A short URL for bios, stories, and campaigns — updates in seconds.',
+                'title' => 'Partager',
+                'text' => 'Une URL courte pour bio, stories et campagnes — mises à jour en secondes.',
                 'icon' => '🚀',
             ],
         ],
     ],
 
     'bio' => [
-        'cta_label_default' => 'Open',
-        'platform_credit' => 'Built with',
-        'platform_url_label' => 'Home',
-        'cookie_text' => 'We use essential cookies for login, security, and analytics. See the privacy policy for details.',
-        'cookie_button' => 'Got it',
+        'cta_label_default' => 'Ouvrir',
+        'platform_credit' => 'Créé avec',
+        'platform_url_label' => 'Accueil',
+        'cookie_text' => 'Nous utilisons des cookies essentiels pour la connexion, la sécurité et les analytics. Voir la politique de confidentialité.',
+        'cookie_button' => 'Compris',
     ],
 
     'footer' => [
-        'brand_label' => 'About',
+        'brand_label' => 'À propos',
         'nav_label' => 'Navigation',
-        'legal_label' => 'Legal',
+        'legal_label' => 'Mentions légales',
     ],
 
     'faq' => [
         'title' => 'FAQ',
         'items' => [
             [
-                'question' => 'How does click tracking work?',
-                'answer' => 'Visitors tap a smart link that routes through a tracking URL. We count the click (no raw IP storage) and redirect.',
+                'question' => 'Comment fonctionne le suivi des clics ?',
+                'answer' => 'Les visiteurs cliquent sur un lien intelligent qui passe par une URL de suivi. Nous comptons le clic (sans stocker l’IP en clair) et redirigeons.',
             ],
             [
-                'question' => 'Can I upgrade later?',
-                'answer' => 'Yes — billing runs through Stripe Checkout and the customer portal.',
+                'question' => 'Puis-je passer à une offre supérieure plus tard ?',
+                'answer' => 'Oui — la facturation passe par Stripe Checkout et le portail client.',
             ],
             [
-                'question' => 'Where do I get help?',
-                'answer' => 'Use the Help page or the dashboard sections for Links, Bio page, and Analytics.',
+                'question' => 'Où trouver de l’aide ?',
+                'answer' => 'Utilisez la page Aide ou les sections Liens, Page bio et Analytique du tableau de bord.',
             ],
         ],
     ],
 
     'help' => [
-        'title' => 'Help & support',
-        'intro' => 'Quick answers for common tasks in the hub.',
+        'title' => 'Aide et support',
+        'intro' => 'Réponses rapides aux tâches courantes dans le hub.',
         'sections' => [
             [
-                'heading' => 'Getting started',
-                'body' => 'After sign-up, open Bio page to set avatar, copy, and links. Save and publish — your public URL is ready.',
+                'heading' => 'Premiers pas',
+                'body' => 'Après inscription, ouvrez Page bio pour définir avatar, texte et liens. Enregistrez et publiez — votre URL publique est prête.',
             ],
             [
-                'heading' => 'Links & tracking',
-                'body' => 'Under Links you can enable smart links with tracking. Analytics shows clicks at a glance.',
+                'heading' => 'Liens et suivi',
+                'body' => 'Sous Liens, activez les liens intelligents avec suivi. Analytique affiche les clics en un coup d’œil.',
             ],
             [
                 'heading' => 'Support',
-                'body' => 'Operators can add support email and channels in admin settings.',
+                'body' => 'Les opérateurs peuvent ajouter e-mail et canaux de support dans les réglages admin.',
             ],
         ],
     ],
 
     'pricing' => [
-        'title' => 'Simple pricing',
-        'subline' => 'Start free — upgrade when you need more.',
+        'title' => 'Tarifs simples',
+        'subline' => 'Commencez gratuitement — passez au niveau supérieur quand vous en avez besoin.',
         'plans' => [
             'free' => [
-                'name' => 'Free',
-                'price' => '€0',
+                'name' => 'Gratuit',
+                'price' => '0 €',
                 'period' => '',
                 'features' => [
-                    '1 profile',
-                    'Up to 10 links',
-                    'Basic analytics',
-                    'Platform branding',
+                    '1 profil',
+                    'Jusqu’à 10 liens',
+                    'Analytics de base',
+                    'Branding plateforme',
                 ],
-                'cta' => 'Get started',
+                'cta' => 'Commencer',
             ],
             'starter' => [
                 'name' => 'Starter',
-                'price' => '€9',
-                'period' => 'month',
+                'price' => '9 €',
+                'period' => 'mois',
                 'features' => [
-                    'Unlimited links',
-                    'No platform branding',
-                    'Custom domain (roadmap)',
+                    'Liens illimités',
+                    'Sans branding plateforme',
+                    'Domaine personnalisé (feuille de route)',
                 ],
-                'cta' => 'Upgrade in dashboard',
+                'cta' => 'Mettre à niveau dans le tableau de bord',
             ],
             'pro' => [
                 'name' => 'Pro',
-                'price' => '€24',
-                'period' => 'month',
+                'price' => '24 €',
+                'period' => 'mois',
                 'features' => [
-                    'Everything in Starter',
-                    'Referrals & rewards (roadmap)',
-                    'UTM & conversion (roadmap)',
+                    'Tout Starter',
+                    'Parrainage et récompenses (feuille de route)',
+                    'UTM et conversion (feuille de route)',
                 ],
-                'cta' => 'Upgrade in dashboard',
+                'cta' => 'Mettre à niveau dans le tableau de bord',
             ],
         ],
     ],
 
     'legal' => [
         'impressum_html' => <<<'MD'
-## Legal notice
+## Mentions légales
 
-Placeholder information under applicable law — **replace** with legal entity, address, and contact before production (Admin → Branding → Legal).
+Informations selon la loi applicable — **à remplacer** par la raison sociale, l’adresse et les contacts avant la mise en production (Admin → Branding → Juridique).
 
-- **Name:** …
-- **Address:** …
-- **Email:** …
-- **VAT ID:** …
+- **Nom :** …
+- **Adresse :** …
+- **E-mail :** …
+- **N° TVA :** …
 MD,
         'datenschutz_html' => <<<'MD'
-## Privacy policy
+## Politique de confidentialité
 
-**Placeholder.** Describe processing of personal data, cookies, hosting, and data subject rights — replace before production (Admin → Branding → Legal).
+**Placeholder.** Décrivez le traitement des données personnelles, les cookies, l’hébergement et les droits des personnes — à remplacer avant la production (Admin → Branding → Juridique).
 MD,
         'agb_html' => <<<'MD'
-## Terms of service
+## Conditions générales
 
-**Placeholder.** Scope, services, payment, termination — replace with compliant terms before production (Admin → Branding → Legal).
+**Placeholder.** Objet, prestations, paiement, résiliation — à remplacer par des CGU conformes avant la production (Admin → Branding → Juridique).
 MD,
     ],
 ];

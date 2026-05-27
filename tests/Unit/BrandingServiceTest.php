@@ -3,6 +3,7 @@
 use App\Models\Setting;
 use App\Services\BrandingService;
 use App\Services\SettingsService;
+use App\Services\TranslationService;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Tests\TestCase;
@@ -19,6 +20,7 @@ test('text falls back to translation when no database override', function () {
 });
 
 test('payload cache is invalidated after flushPayloadCache', function () {
+    app()->setLocale(TranslationService::tenantDefaultLocale());
     Cache::flush();
     app(SettingsService::class)->flushCache();
 

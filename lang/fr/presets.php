@@ -10,7 +10,7 @@ return [
     'linkedin' => 'LinkedIn',
     'facebook' => 'Facebook',
     'threads' => 'Threads',
-    'email' => 'Email',
+    'email' => 'E-mail',
     'whatsapp' => 'WhatsApp',
-    'custom' => 'Custom link',
+    'custom' => 'Lien personnalisé',
 ];

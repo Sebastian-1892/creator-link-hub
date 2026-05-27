@@ -1,21 +1,21 @@
 <?php
 
 return [
-    'required' => 'Das Feld :attribute ist erforderlich.',
-    'email' => ':attribute muss eine gültige E-Mail-Adresse sein.',
-    'url' => ':attribute muss eine gültige URL sein.',
-    'regex' => 'Das Format von :attribute ist ungültig.',
+    'required' => 'Il campo :attribute è obbligatorio.',
+    'email' => ':attribute deve essere un indirizzo e-mail valido.',
+    'url' => ':attribute deve essere un URL valido.',
+    'regex' => 'Il formato di :attribute non è valido.',
     'max' => [
-        'file' => ':attribute darf maximal :max Kilobyte groß sein.',
-        'string' => ':attribute darf maximal :max Zeichen haben.',
+        'file' => ':attribute non può superare :max kilobyte.',
+        'string' => ':attribute non può superare :max caratteri.',
     ],
-    'image' => ':attribute muss ein Bild sein.',
-    'mimes' => ':attribute muss eine Datei vom Typ: :values sein.',
-    'uploaded' => ':attribute konnte nicht hochgeladen werden.',
-    'unique' => ':attribute ist bereits vergeben.',
-    'confirmed' => ':attribute stimmt nicht mit der Bestätigung überein.',
+    'image' => ':attribute deve essere un’immagine.',
+    'mimes' => ':attribute deve essere un file di tipo: :values.',
+    'uploaded' => 'Impossibile caricare :attribute.',
+    'unique' => ':attribute è già in uso.',
+    'confirmed' => ':attribute non corrisponde alla conferma.',
     'min' => [
-        'string' => ':attribute muss mindestens :min Zeichen haben.',
+        'string' => ':attribute deve contenere almeno :min caratteri.',
     ],
     'attributes' => [],
 ];

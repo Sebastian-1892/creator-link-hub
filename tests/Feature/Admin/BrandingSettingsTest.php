@@ -6,6 +6,7 @@ use App\Models\TranslationString;
 use App\Models\User;
 use App\Services\BrandingService;
 use App\Services\SettingsService;
+use App\Services\TranslationService;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
 use Livewire\Livewire;
@@ -27,6 +28,7 @@ test('admin can save marketing headline', function () {
         ->call('save')
         ->assertHasNoErrors();
 
+    app()->setLocale(TranslationService::tenantDefaultLocale());
     app(SettingsService::class)->flushCache();
     app(BrandingService::class)->flushPayloadCache();
 
@@ -71,6 +73,7 @@ test('faq repeater is stored as json and readable via branding payload', functio
         ->call('save')
         ->assertHasNoErrors();
 
+    app()->setLocale(TranslationService::tenantDefaultLocale());
     app(SettingsService::class)->flushCache();
     app(BrandingService::class)->flushPayloadCache();
 
