@@ -3,6 +3,7 @@
 use App\Http\Middleware\EnsureOnboardingCompleted;
 use App\Http\Middleware\NormalizeRequestPath;
 use App\Http\Middleware\SetHubLocale;
+use App\Http\Middleware\SetMarketingLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -17,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->prepend(NormalizeRequestPath::class);
         $middleware->web(append: [
             SetHubLocale::class,
+            SetMarketingLocale::class,
         ]);
 
         $middleware->alias([

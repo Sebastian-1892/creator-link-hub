@@ -2,6 +2,7 @@
 
 use App\Filament\Pages\BrandingSettingsPage;
 use App\Models\Setting;
+use App\Models\TranslationString;
 use App\Models\User;
 use App\Services\BrandingService;
 use App\Services\SettingsService;
@@ -29,7 +30,10 @@ test('admin can save marketing headline', function () {
     app(SettingsService::class)->flushCache();
     app(BrandingService::class)->flushPayloadCache();
 
-    expect(Setting::query()->where('key', 'branding.marketing.headline')->value('value'))->toBe('Unique Headline XYZ 123');
+    expect(TranslationString::query()
+        ->where('locale', 'de')
+        ->where('key', 'marketing.headline')
+        ->value('value'))->toBe('Unique Headline XYZ 123');
     expect(brand('marketing.headline'))->toBe('Unique Headline XYZ 123');
 });
 
@@ -70,7 +74,10 @@ test('faq repeater is stored as json and readable via branding payload', functio
     app(SettingsService::class)->flushCache();
     app(BrandingService::class)->flushPayloadCache();
 
-    $stored = Setting::query()->where('key', 'branding.faq.items')->value('value');
+    $stored = TranslationString::query()
+        ->where('locale', 'de')
+        ->where('key', 'faq.items')
+        ->value('value');
     expect($stored)->toBeString();
     expect(app(BrandingService::class)->payload()['faq']['items'][0]['question'] ?? null)->toBe('Q Custom?');
 });

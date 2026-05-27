@@ -20,7 +20,11 @@ class LinkPresetHelper
 
         $preset = self::presets()[$key] ?? null;
 
-        return is_array($preset) ? $preset : null;
+        if (! is_array($preset)) {
+            return null;
+        }
+
+        return array_merge($preset, ['key' => $key]);
     }
 
     public static function detectFromUrl(string $url): ?string

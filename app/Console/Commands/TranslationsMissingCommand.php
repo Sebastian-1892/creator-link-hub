@@ -2,6 +2,7 @@
 
 namespace App\Console\Commands;
 
+use App\Services\TranslationService;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 use Symfony\Component\Finder\Finder;
@@ -19,7 +20,7 @@ class TranslationsMissingCommand extends Command
 
     public function handle(): int
     {
-        $locales = $this->option('locale') ?: ['de', 'en'];
+        $locales = $this->option('locale') ?: TranslationService::platformLocales();
         $pathsOption = (string) ($this->option('paths') ?: self::DEFAULT_SCAN_PATHS);
         $paths = array_values(array_filter(array_map('trim', explode(';', $pathsOption))));
 

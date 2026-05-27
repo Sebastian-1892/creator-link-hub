@@ -25,7 +25,8 @@ class BrandingService
     ];
 
     public function __construct(
-        protected SettingsService $settings
+        protected SettingsService $settings,
+        protected TranslationService $translations
     ) {}
 
     /**
@@ -128,10 +129,11 @@ class BrandingService
 
     public function flushPayloadCache(): void
     {
-        foreach (array_keys(config('creator.hub_locales', ['de' => [], 'en' => []])) as $locale) {
-            Cache::forget(self::cacheKeyForLocale((string) $locale));
+        foreach (TranslationService::platformLocales() as $locale) {
+            Cache::forget(self::cacheKeyForLocale($locale));
         }
         Cache::forget('branding.payload_v2');
+        $this->translations->flushAll();
     }
 
     /**
@@ -156,27 +158,9 @@ class BrandingService
 
     public function text(string $dotKey, ?string $default = null): string
     {
-        $suffix = self::textKeyToSettingSuffix()[$dotKey] ?? null;
-        if ($suffix === null) {
-            $suffix = $dotKey;
-        }
+        $suffix = self::textKeyToSettingSuffix()[$dotKey] ?? $dotKey;
 
-        $fullKey = 'branding.'.$suffix;
-        $stored = $this->settings->getStored($fullKey);
-        if (is_string($stored) && $stored !== '') {
-            return $stored;
-        }
-
-        if ($default !== null) {
-            return $default;
-        }
-
-        $translated = Lang::get('branding.'.$suffix);
-        if (is_string($translated)) {
-            return $translated;
-        }
-
-        return '';
+        return $this->translations->text($suffix, null, $default);
     }
 
     /**
@@ -184,18 +168,7 @@ class BrandingService
      */
     public function html(string $dotKey): string
     {
-        $fullKey = 'branding.'.$dotKey;
-        $stored = $this->settings->getStored($fullKey);
-        if (is_string($stored) && $stored !== '') {
-            return $stored;
-        }
-
-        $translated = Lang::get('branding.'.$dotKey);
-        if (is_string($translated)) {
-            return $translated;
-        }
-
-        return '';
+        return $this->translations->html($dotKey);
     }
 
     /**
@@ -205,23 +178,7 @@ class BrandingService
      */
     public function list(string $dotKey): array
     {
-        $fullKey = 'branding.'.$dotKey;
-        $stored = $this->settings->getStored($fullKey);
-        if (is_string($stored) && $stored !== '') {
-            $decoded = json_decode($stored, true);
-            if (is_array($decoded)) {
-                /** @var list<array<string, mixed>> $decoded */
-                return array_values(array_filter($decoded, 'is_array'));
-            }
-        }
-
-        $fallback = Lang::get('branding.'.$dotKey);
-        if (is_array($fallback)) {
-            /** @var list<array<string, mixed>> $fallback */
-            return array_values(array_filter($fallback, 'is_array'));
-        }
-
-        return [];
+        return $this->translations->list($dotKey);
     }
 
     /**
@@ -231,17 +188,17 @@ class BrandingService
      */
     public function pricingPlans(): array
     {
-        $stored = $this->settings->getStored('branding.pricing.plans');
+        $raw = $this->translations->text('pricing.plans');
         $defaults = Lang::get('branding.pricing.plans');
         if (! is_array($defaults)) {
             $defaults = [];
         }
 
-        if (! is_string($stored) || $stored === '') {
+        if ($raw === '') {
             return $this->normalizePricingPlans($defaults);
         }
 
-        $decoded = json_decode($stored, true);
+        $decoded = json_decode($raw, true);
         if (! is_array($decoded)) {
             return $this->normalizePricingPlans($defaults);
         }
@@ -287,9 +244,9 @@ class BrandingService
 
     public function brandName(): string
     {
-        $stored = $this->settings->getStored('branding.brand_name');
-        if (is_string($stored) && $stored !== '') {
-            return $stored;
+        $name = $this->translations->text('brand_name');
+        if ($name !== '') {
+            return $name;
         }
 
         return (string) Lang::get('branding.brand_name');

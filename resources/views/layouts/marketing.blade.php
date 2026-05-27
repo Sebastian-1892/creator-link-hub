@@ -12,6 +12,9 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    @if ($clhInlineEditing ?? false)
+        @livewireStyles
+    @endif
     <style>
         :root {
             @foreach ($brandCss as $prop => $val)
@@ -31,6 +34,19 @@
                 <span>{{ $branding['brand_name'] }}</span>
             </a>
             <nav class="flex flex-wrap items-center gap-2 text-sm font-medium" style="color: var(--brand-text-muted);">
+                <div class="flex items-center gap-0.5 rounded-full border border-black/10 bg-white/80 p-0.5 me-1" role="group" aria-label="{{ __('Sprache') }}">
+                    @foreach (config('creator.platform_locales', []) as $code => $meta)
+                        <a
+                            href="{{ route('marketing.locale', ['locale' => $code]) }}"
+                            @class([
+                                'rounded-full px-2 py-1 text-xs font-semibold transition',
+                                'bg-gray-900 text-white' => app()->getLocale() === $code,
+                                'hover:bg-black/[0.06]' => app()->getLocale() !== $code,
+                            ])
+                            aria-current="{{ app()->getLocale() === $code ? 'true' : 'false' }}"
+                        >{{ strtoupper($code) }}</a>
+                    @endforeach
+                </div>
                 <a href="{{ route('pricing') }}" class="rounded-full px-3 py-1.5 transition hover:bg-black/[0.04]" style="color: inherit;">{{ __('Preise') }}</a>
                 <a href="{{ route('faq') }}" class="rounded-full px-3 py-1.5 transition hover:bg-black/[0.04]" style="color: inherit;">FAQ</a>
                 <a href="{{ route('help') }}" class="rounded-full px-3 py-1.5 transition hover:bg-black/[0.04]" style="color: inherit;">{{ __('Hilfe') }}</a>
@@ -83,5 +99,9 @@
             © {{ date('Y') }} {{ $branding['brand_name'] }}
         </div>
     </footer>
+    @if ($clhInlineEditing ?? false)
+        @livewire('translation-inline')
+        @livewireScripts
+    @endif
 </body>
 </html>

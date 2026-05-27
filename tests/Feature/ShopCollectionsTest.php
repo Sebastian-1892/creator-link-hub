@@ -71,7 +71,8 @@ test('empty collection shows helper message on public profile', function () {
         'show_icon' => false,
     ]);
 
-    $this->get(route('public.profile', $profile->slug))
+    $this->withSession(['hub_locale' => 'de'])
+        ->get(route('public.profile', $profile->slug))
         ->assertOk()
         ->assertSee('Diese Collection ist noch leer.', false);
 });

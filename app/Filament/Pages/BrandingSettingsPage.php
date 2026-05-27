@@ -2,13 +2,17 @@
 
 namespace App\Filament\Pages;
 
+use App\Models\TranslationString;
 use App\Services\BrandingService;
 use App\Services\SettingsService;
+use App\Services\TranslationService;
 use BackedEnum;
 use Filament\Actions\Action;
 use Filament\Forms\Components\ColorPicker;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\RichEditor;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\TextInput;
 use Filament\Notifications\Notification;
@@ -77,10 +81,12 @@ class BrandingSettingsPage extends Page
     {
         $branding = app(BrandingService::class);
         $settings = app(SettingsService::class);
+        $locale = $this->formLocale();
 
         $logoPath = $settings->getStored('branding.brand_logo_path');
         $fill = [
-            'brand_name' => $branding->brandName(),
+            'editing_locale' => $locale,
+            'brand_name' => $this->translationFillValue('brand_name', $locale),
             'brand_logo_upload' => (is_string($logoPath) && $logoPath !== '') ? [$logoPath] : [],
         ];
 
@@ -93,20 +99,14 @@ class BrandingSettingsPage extends Page
 
         $simpleTextMap = $this->simpleTextFieldMap();
         foreach ($simpleTextMap as $field => $suffix) {
-            $stored = $settings->getStored('branding.'.$suffix);
-            $fill[$field] = (is_string($stored) && $stored !== '')
-                ? $stored
-                : (string) __('branding.'.$suffix);
+            $fill[$field] = $this->translationFillValue($suffix, $locale);
         }
 
         foreach ([1, 2, 3] as $i) {
             foreach (['title', 'text'] as $part) {
                 $suffix = "marketing.steps.{$i}.{$part}";
                 $field = "marketing_step_{$i}_{$part}";
-                $stored = $settings->getStored('branding.'.$suffix);
-                $fill[$field] = (is_string($stored) && $stored !== '')
-                    ? $stored
-                    : (string) __('branding.'.$suffix);
+                $fill[$field] = $this->translationFillValue($suffix, $locale);
             }
         }
 
@@ -114,10 +114,7 @@ class BrandingSettingsPage extends Page
             foreach (['title', 'text'] as $part) {
                 $suffix = "marketing.features.{$i}.{$part}";
                 $field = "marketing_feature_{$i}_{$part}";
-                $stored = $settings->getStored('branding.'.$suffix);
-                $fill[$field] = (is_string($stored) && $stored !== '')
-                    ? $stored
-                    : (string) __('branding.'.$suffix);
+                $fill[$field] = $this->translationFillValue($suffix, $locale);
             }
         }
 
@@ -125,26 +122,23 @@ class BrandingSettingsPage extends Page
             foreach (['title', 'text', 'icon'] as $part) {
                 $suffix = "marketing.cards.{$i}.{$part}";
                 $field = "marketing_card_{$i}_{$part}";
-                $stored = $settings->getStored('branding.'.$suffix);
-                $fill[$field] = (is_string($stored) && $stored !== '')
-                    ? $stored
-                    : (string) __('branding.'.$suffix);
+                $fill[$field] = $this->translationFillValue($suffix, $locale);
             }
         }
 
         foreach (['impressum_html', 'datenschutz_html', 'agb_html'] as $key) {
             $suffix = 'legal.'.$key;
             $field = 'legal_'.$key;
-            $stored = $settings->getStored('branding.'.$suffix);
-            $fill[$field] = (is_string($stored) && $stored !== '')
-                ? $stored
-                : (string) __('branding.'.$suffix);
+            $fill[$field] = $this->translationFillValue($suffix, $locale);
         }
 
-        $fill['faq_items'] = $branding->list('faq.items');
-        $fill['help_sections'] = $branding->list('help.sections');
+        $fill['faq_items'] = app(TranslationService::class)->list('faq.items', $locale);
+        $fill['help_sections'] = app(TranslationService::class)->list('help.sections', $locale);
 
+        $previousLocale = app()->getLocale();
+        app()->setLocale($locale);
         $plans = $branding->pricingPlans();
+        app()->setLocale($previousLocale);
         foreach (['free', 'starter', 'pro'] as $planKey) {
             $p = $plans[$planKey] ?? [];
             $fill["pricing_{$planKey}_name"] = $p['name'] ?? '';
@@ -245,8 +239,26 @@ class BrandingSettingsPage extends Page
                 ->columns(2);
         }
 
+        $localeOptions = [];
+        foreach (config('creator.platform_locales', []) as $code => $meta) {
+            $localeOptions[$code] = ($meta['flag'] ?? '').' '.($meta['native'] ?? $code);
+        }
+
         return $schema
             ->components([
+                Section::make(__('admin_settings.branding.locale_section'))
+                    ->description(__('admin_settings.branding.locale_section_help'))
+                    ->schema([
+                        Select::make('editing_locale')
+                            ->label(__('admin_settings.branding.editing_locale'))
+                            ->options($localeOptions)
+                            ->required()
+                            ->live()
+                            ->afterStateUpdated(function (): void {
+                                $this->fillForm();
+                            }),
+                    ])
+                    ->columns(1),
                 Grid::make(['default' => 1, 'xl' => 2])
                     ->schema([
                         Tabs::make('brandingTabs')
@@ -414,19 +426,16 @@ class BrandingSettingsPage extends Page
                                     ]),
                                 Tab::make(__('admin_settings.branding.tab_legal'))
                                     ->schema([
-                                        Textarea::make('legal_impressum_html')
+                                        RichEditor::make('legal_impressum_html')
                                             ->label(__('admin_settings.branding.legal_impressum'))
-                                            ->rows(12)
                                             ->helperText(__('admin_settings.branding.legal_helper'))
                                             ->columnSpanFull(),
-                                        Textarea::make('legal_datenschutz_html')
+                                        RichEditor::make('legal_datenschutz_html')
                                             ->label(__('admin_settings.branding.legal_datenschutz'))
-                                            ->rows(12)
                                             ->helperText(__('admin_settings.branding.legal_helper'))
                                             ->columnSpanFull(),
-                                        Textarea::make('legal_agb_html')
+                                        RichEditor::make('legal_agb_html')
                                             ->label(__('admin_settings.branding.legal_agb'))
-                                            ->rows(12)
                                             ->helperText(__('admin_settings.branding.legal_helper'))
                                             ->columnSpanFull(),
                                     ]),
@@ -547,8 +556,10 @@ class BrandingSettingsPage extends Page
 
         $data = $this->form->getState();
         $settings = app(SettingsService::class);
+        $translations = app(TranslationService::class);
+        $locale = $this->formLocale($data);
 
-        $settings->set('branding.brand_name', $this->nullableString($data['brand_name'] ?? null));
+        $translations->set($locale, 'brand_name', $this->nullableString($data['brand_name'] ?? null) ?? '');
 
         $upload = $data['brand_logo_upload'] ?? null;
         $path = null;
@@ -581,14 +592,14 @@ class BrandingSettingsPage extends Page
         }
 
         foreach ($this->simpleTextFieldMap() as $field => $suffix) {
-            $settings->set('branding.'.$suffix, $this->nullableString($data[$field] ?? null));
+            $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
         }
 
         foreach ([1, 2, 3] as $i) {
             foreach (['title', 'text'] as $part) {
                 $suffix = "marketing.steps.{$i}.{$part}";
                 $field = "marketing_step_{$i}_{$part}";
-                $settings->set('branding.'.$suffix, $this->nullableString($data[$field] ?? null));
+                $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
             }
         }
 
@@ -596,7 +607,7 @@ class BrandingSettingsPage extends Page
             foreach (['title', 'text'] as $part) {
                 $suffix = "marketing.features.{$i}.{$part}";
                 $field = "marketing_feature_{$i}_{$part}";
-                $settings->set('branding.'.$suffix, $this->nullableString($data[$field] ?? null));
+                $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
             }
         }
 
@@ -604,20 +615,33 @@ class BrandingSettingsPage extends Page
             foreach (['title', 'text', 'icon'] as $part) {
                 $suffix = "marketing.cards.{$i}.{$part}";
                 $field = "marketing_card_{$i}_{$part}";
-                $settings->set('branding.'.$suffix, $this->nullableString($data[$field] ?? null));
+                $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
             }
         }
 
         foreach (['impressum_html', 'datenschutz_html', 'agb_html'] as $key) {
             $field = 'legal_'.$key;
-            $settings->set('branding.legal.'.$key, $this->nullableString($data[$field] ?? null));
+            $translations->set(
+                $locale,
+                'legal.'.$key,
+                $this->nullableString($data[$field] ?? null) ?? '',
+                TranslationString::FORMAT_MARKDOWN
+            );
         }
 
         $faqItems = $data['faq_items'] ?? [];
-        $settings->set('branding.faq.items', is_array($faqItems) ? json_encode(array_values($faqItems)) : null);
+        $translations->set(
+            $locale,
+            'faq.items',
+            is_array($faqItems) ? json_encode(array_values($faqItems), JSON_UNESCAPED_UNICODE) : ''
+        );
 
         $helpSections = $data['help_sections'] ?? [];
-        $settings->set('branding.help.sections', is_array($helpSections) ? json_encode(array_values($helpSections)) : null);
+        $translations->set(
+            $locale,
+            'help.sections',
+            is_array($helpSections) ? json_encode(array_values($helpSections), JSON_UNESCAPED_UNICODE) : ''
+        );
 
         $plans = [];
         foreach (['free', 'starter', 'pro'] as $planKey) {
@@ -633,7 +657,7 @@ class BrandingSettingsPage extends Page
                 'cta' => $this->nullableString($data["pricing_{$planKey}_cta"] ?? null) ?? '',
             ];
         }
-        $settings->set('branding.pricing.plans', json_encode($plans));
+        $translations->set($locale, 'pricing.plans', json_encode($plans, JSON_UNESCAPED_UNICODE));
 
         $settings->flushCache();
         app(BrandingService::class)->flushPayloadCache();
@@ -656,11 +680,72 @@ class BrandingSettingsPage extends Page
     }
 
     /**
+     * @param  array<string, mixed>|null  $data
+     */
+    protected function formLocale(?array $data = null): string
+    {
+        $data ??= $this->data ?? [];
+        $locale = is_string($data['editing_locale'] ?? null) ? $data['editing_locale'] : TranslationService::tenantDefaultLocale();
+        $allowed = TranslationService::platformLocales();
+
+        return in_array($locale, $allowed, true) ? $locale : TranslationService::tenantDefaultLocale();
+    }
+
+    protected function translationFillValue(string $key, string $locale): string
+    {
+        $stored = app(TranslationService::class)->text($key, $locale);
+        if ($stored !== '') {
+            return $stored;
+        }
+
+        $lang = __('branding.'.$key, [], $locale);
+
+        return is_string($lang) ? $lang : '';
+    }
+
+    /**
      * @return array<Action>
      */
     protected function getHeaderActions(): array
     {
         return [
+            Action::make('editOnSite')
+                ->label(__('admin_settings.branding.action_edit_on_site'))
+                ->url(fn (): string => route('home', ['edit' => 1]))
+                ->openUrlInNewTab()
+                ->visible(fn (): bool => (bool) config('creator.i18n_inline_editor', false)),
+            Action::make('revertLocaleToLang')
+                ->label(__('admin_settings.branding.action_revert_locale'))
+                ->color('warning')
+                ->requiresConfirmation()
+                ->action(function (): void {
+                    $locale = $this->formLocale();
+                    $keys = array_merge(
+                        array_values($this->simpleTextFieldMap()),
+                        ['brand_name', 'faq.items', 'help.sections', 'pricing.plans'],
+                    );
+                    foreach ([1, 2, 3] as $i) {
+                        foreach (['title', 'text'] as $part) {
+                            $keys[] = "marketing.steps.{$i}.{$part}";
+                            $keys[] = "marketing.features.{$i}.{$part}";
+                        }
+                        foreach (['title', 'text', 'icon'] as $part) {
+                            $keys[] = "marketing.cards.{$i}.{$part}";
+                        }
+                    }
+                    foreach (['impressum_html', 'datenschutz_html', 'agb_html'] as $k) {
+                        $keys[] = 'legal.'.$k;
+                    }
+                    $svc = app(TranslationService::class);
+                    foreach (array_unique($keys) as $key) {
+                        $svc->revertToLangDefault($locale, $key);
+                    }
+                    $this->fillForm();
+                    Notification::make()
+                        ->title(__('admin_settings.branding.notify_reverted_locale'))
+                        ->success()
+                        ->send();
+                }),
             Action::make('resetColors')
                 ->label(__('admin_settings.branding.action_reset_colors'))
                 ->color('gray')

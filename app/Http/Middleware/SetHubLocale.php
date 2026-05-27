@@ -15,9 +15,6 @@ class SetHubLocale
         $defaultLocale = (string) config('app.locale', 'de');
 
         if (! $this->usesHubLocale($request)) {
-            // Marketing/Legal: fest Deutsch bis eigene Marketing-i18n (Plan P2).
-            App::setLocale('de');
-
             return $next($request);
         }
 

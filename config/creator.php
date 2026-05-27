@@ -19,11 +19,33 @@ return [
     ],
 
     /**
+     * Tenant-Standard-Sprache (Marketing-Fallback, Übersetzungs-Kette).
+     */
+    'tenant_default_locale' => env('TENANT_DEFAULT_LOCALE', 'de'),
+
+  /**
+   * Inline-Übersetzungseditor auf Marketing-Seiten (?edit=1, nur Admins).
+   */
+    'i18n_inline_editor' => (bool) env('APP_I18N_INLINE_EDITOR', false),
+
+    /**
+     * Plattform-weit aktivierte Sprachen (Marketing, Hub, Branding-DB).
+     */
+    'platform_locales' => [
+        'de' => ['native' => 'Deutsch', 'flag' => '🇩🇪'],
+        'en' => ['native' => 'English', 'flag' => '🇬🇧'],
+        'fr' => ['native' => 'Français', 'flag' => '🇫🇷'],
+        'it' => ['native' => 'Italiano', 'flag' => '🇮🇹'],
+    ],
+
+    /**
      * Creator-Hub (/hub/*, Auth, öffentliche Bio): verfügbare Oberflächensprachen.
      */
     'hub_locales' => [
         'de' => ['native' => 'Deutsch', 'flag' => '🇩🇪'],
         'en' => ['native' => 'English', 'flag' => '🇬🇧'],
+        'fr' => ['native' => 'Français', 'flag' => '🇫🇷'],
+        'it' => ['native' => 'Italiano', 'flag' => '🇮🇹'],
     ],
 
     /**

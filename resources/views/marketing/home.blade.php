@@ -12,9 +12,13 @@
     {{-- Hero --}}
     <section class="max-w-4xl mx-auto px-4 pt-16 pb-10 lg:pt-24 lg:pb-14 text-center">
         <p class="text-sm font-semibold uppercase tracking-widest" style="color: var(--brand-accent);">{{ $m['eyebrow'] }}</p>
-        <h1 class="mt-5 text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08]" style="color: var(--brand-text);">
-            {{ $m['headline'] }}
-        </h1>
+        <x-editable-translation
+            translation-key="marketing.headline"
+            :value="$m['headline']"
+            tag="h1"
+            class="mt-5 text-5xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight leading-[1.08] block w-full"
+            style="color: var(--brand-text);"
+        />
         <p class="mt-8 text-lg sm:text-xl leading-relaxed max-w-2xl mx-auto" style="color: var(--brand-text-muted);">
             {{ $m['subline'] }}
         </p>

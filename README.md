@@ -11,6 +11,7 @@ Dort: Inhaltsverzeichnis mit Verweisen auf Cloud-Hosting-Installation, VPS-Kompo
 - Kurzüberblick Entwickler:innen: [`docs/overview.md`](docs/overview.md)
 - Cloud-Multi-Tenant einrichten: [`docs/cloud-hosting-installation/README.md`](docs/cloud-hosting-installation/README.md)
 - Hub-Sprachen (DE/EN) Rollout: [`../claude_docs/vps/hub-i18n-rollout.md`](../claude_docs/vps/hub-i18n-rollout.md)
+- Plattform-i18n (DE/EN/FR/IT): [`../claude_docs/vps/platform-i18n-rollout.md`](../claude_docs/vps/platform-i18n-rollout.md)
 - Root dieses Repos: Anwendungscode, `scripts/`, `plan/`, `distribution/releases/`
 
 ## Übersetzungen (Hub)

@@ -29,17 +29,16 @@ test('invalid hub locale is rejected', function () {
     $user = User::factory()->create();
 
     $this->actingAs($user)
-        ->get('/set-hub-locale/fr')
+        ->get('/set-hub-locale/xx')
         ->assertNotFound();
 });
 
-test('marketing pages stay on app default locale even with english browser and hub session', function () {
+test('marketing pages use marketing locale cookie over hub session', function () {
     app(BrandingService::class)->flushPayloadCache();
 
-    $this->withSession(['hub_locale' => 'en'])
-        ->withHeaders(['Accept-Language' => 'en-US,en;q=0.9'])
+    $this->withSession(['hub_locale' => 'de'])
+        ->withCookie('clh_marketing_locale', 'en')
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Ein Link. Alle Kanäle', false)
-        ->assertDontSee('One link. Every channel', false);
+        ->assertSee('One link. Every channel', false);
 });

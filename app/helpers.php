@@ -5,6 +5,20 @@ use App\Services\BrandingService;
 use App\Support\ProfileDesignSettings;
 use Illuminate\Support\Facades\Storage;
 
+if (! function_exists('clh_inline_editing_enabled')) {
+    function clh_inline_editing_enabled(): bool
+    {
+        if (! config('creator.i18n_inline_editor', false)) {
+            return false;
+        }
+
+        $user = auth()->user();
+
+        return $user !== null && (bool) $user->is_admin
+            && (request()->boolean('edit') || request()->cookie('clh_inline_edit') === '1');
+    }
+}
+
 if (! function_exists('brand')) {
     /**
      * Übersetzter / gespeicherter Branding-Text (Schlüssel wie „marketing.headline“).
