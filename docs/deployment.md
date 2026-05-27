@@ -47,6 +47,19 @@ php artisan storage:link
 
 `scripts/ensure-laravel-storage.sh` wird automatisch von `update-application.sh` und `clh-provision-tenant.sh` aufgerufen.
 
+**Profilbild-Upload — `413 Request Entity Too Large`:** Nginx-Standard ist oft **1 MB**. Tenant-Sites brauchen `client_max_body_size 8m;` (neue Provisionierung: bereits gesetzt). Bestehende Tenants einmal:
+
+```bash
+sudo bash /var/www/clh-tenants/<slug>/scripts/clh-tenant-patch-upload-limits.sh <slug>
+```
+
+`ensure-laravel-storage.sh` und `php artisan` immer aus dem **Projektroot** (dort liegt `artisan`):
+
+```bash
+sudo bash /var/www/clh-tenants/<slug>/scripts/ensure-laravel-storage.sh /var/www/clh-tenants/<slug>
+cd /var/www/clh-tenants/<slug> && sudo -u www-data php artisan config:cache
+```
+
 ---
 
 ## Stripe

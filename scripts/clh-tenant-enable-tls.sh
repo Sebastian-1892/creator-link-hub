@@ -100,6 +100,7 @@ ${NG_DH_LINE}    root ${INSTALL_DIR}/public;
     add_header X-Content-Type-Options "nosniff";
     index index.php;
     charset utf-8;
+    client_max_body_size 8m;
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }

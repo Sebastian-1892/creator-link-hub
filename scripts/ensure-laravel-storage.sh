@@ -66,3 +66,4 @@ if [[ ! -e "$ROOT/public/storage" ]]; then
 fi
 
 info "Fertig: $ROOT (storage + bootstrap/cache beschreibbar für www-data, public/storage gesetzt)."
+info "Optional danach (im Projektroot, dort liegt artisan): cd \"$ROOT\" && sudo -u www-data php artisan config:cache"

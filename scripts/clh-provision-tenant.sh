@@ -240,6 +240,7 @@ server {
     add_header X-Content-Type-Options "nosniff";
     index index.php;
     charset utf-8;
+    client_max_body_size 8m;
     location ~ ^//+(.*)$ {
         return 301 \$scheme://\$host/\$1\$is_args\$args;
     }
@@ -312,6 +313,7 @@ ${NG_DH_LINE}    root ${INSTALL_DIR}/public;
     add_header X-Content-Type-Options "nosniff";
     index index.php;
     charset utf-8;
+    client_max_body_size 8m;
     location ~ ^//+(.*)$ {
         return 301 \$scheme://\$host/\$1\$is_args\$args;
     }
