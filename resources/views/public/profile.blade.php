@@ -28,11 +28,17 @@
         </header>
 
         @php
-            $topLevelLinks = $profile->links->whereNull('parent_link_id')->values();
-            $productsByCollection = $profile->links->whereNotNull('parent_link_id')->groupBy('parent_link_id');
+            $topLevelLinks = $profile->links
+                ->whereNull('parent_link_id')
+                ->reject(fn ($link) => $link->link_type === 'product')
+                ->values();
+            $productsByCollection = $profile->links
+                ->where('link_type', 'product')
+                ->whereNotNull('parent_link_id')
+                ->groupBy('parent_link_id');
         @endphp
 
-        <div class="mt-12 space-y-3" x-data="{ openCollectionId: null }">
+        <div class="mt-12 space-y-3">
             @foreach ($topLevelLinks as $link)
                 @php
                     $href = $link->tracking_enabled ? route('links.redirect', $link) : $link->url;
@@ -43,13 +49,10 @@
                     $products = $productsByCollection[$link->id] ?? collect();
                 @endphp
                 @if ($isCollection)
-                    <div class="space-y-2">
-                        <button
-                            type="button"
-                            @click="openCollectionId = openCollectionId === {{ $link->id }} ? null : {{ $link->id }}"
-                            class="{{ $clh['link_class'] }} w-full text-left shadow-md hover:shadow-xl px-4"
+                    <details name="clh-shop" class="clh-shop-accordion group">
+                        <summary
+                            class="{{ $clh['link_class'] }} w-full cursor-pointer list-none shadow-md hover:shadow-xl px-4 [&::-webkit-details-marker]:hidden"
                             style="{{ $clh['link_style'] }}"
-                            :aria-expanded="openCollectionId === {{ $link->id }} ? 'true' : 'false'"
                         >
                             <span
                                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
@@ -64,10 +67,10 @@
                             <span class="rounded-full px-2 py-1 text-xs font-semibold" style="background: rgba(99, 102, 241, 0.14); color: var(--clh-accent);">
                                 {{ $products->count() }}
                             </span>
-                            <span class="ml-2 text-lg transition" :class="openCollectionId === {{ $link->id }} ? 'rotate-90' : ''" style="color: var(--clh-accent);" aria-hidden="true">›</span>
-                        </button>
+                            <span class="clh-shop-chevron ml-2 text-lg transition-transform duration-200" style="color: var(--clh-accent);" aria-hidden="true">›</span>
+                        </summary>
 
-                        <div x-cloak x-show="openCollectionId === {{ $link->id }}" x-transition class="space-y-3">
+                        <div class="mt-2 space-y-3">
                             @if ($products->isEmpty())
                                 <div class="rounded-2xl px-4 py-3 text-sm" style="background: rgba(255,255,255,.5); color: var(--clh-text-muted);">
                                     {{ __('Diese Collection ist noch leer.') }}
@@ -103,7 +106,7 @@
                                 </div>
                             @endif
                         </div>
-                    </div>
+                    </details>
                 @else
                     <a
                         href="{{ $href }}"

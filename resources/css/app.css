@@ -5,3 +5,7 @@
 [x-cloak] {
     display: none !important;
 }
+
+details.clh-shop-accordion[open] .clh-shop-chevron {
+    transform: rotate(90deg);
+}
