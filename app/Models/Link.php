@@ -40,8 +40,21 @@ class Link extends Model
         return $this->link_type === 'collection';
     }
 
+    public function isProduct(): bool
+    {
+        return $this->link_type === 'product';
+    }
+
     public function iconName(): string
     {
+        if ($this->isCollection()) {
+            return 'shop';
+        }
+
+        if ($this->isProduct()) {
+            return 'product';
+        }
+
         return LinkPresetHelper::iconName($this->preset_key, $this->url);
     }
 

@@ -32,7 +32,7 @@
             $productsByCollection = $profile->links->whereNotNull('parent_link_id')->groupBy('parent_link_id');
         @endphp
 
-        <div class="mt-12 space-y-3">
+        <div class="mt-12 space-y-3" x-data="{ openCollectionId: null }">
             @foreach ($topLevelLinks as $link)
                 @php
                     $href = $link->tracking_enabled ? route('links.redirect', $link) : $link->url;
@@ -43,40 +43,65 @@
                     $products = $productsByCollection[$link->id] ?? collect();
                 @endphp
                 @if ($isCollection)
-                    <div x-data="{ open: false }" class="space-y-2">
+                    <div class="space-y-2">
                         <button
                             type="button"
-                            @click="open = !open"
-                            class="{{ $clh['link_class'] }} w-full text-left shadow-md hover:shadow-xl pl-4 pr-6"
+                            @click="openCollectionId = openCollectionId === {{ $link->id }} ? null : {{ $link->id }}"
+                            class="{{ $clh['link_class'] }} w-full text-left shadow-md hover:shadow-xl px-4"
                             style="{{ $clh['link_style'] }}"
-                            :aria-expanded="open ? 'true' : 'false'"
+                            :aria-expanded="openCollectionId === {{ $link->id }} ? 'true' : 'false'"
                         >
-                            <span class="flex-1 text-center">{{ $link->title }}</span>
-                            <span class="text-lg transition" :class="open ? 'rotate-90' : ''" style="color: var(--clh-accent);" aria-hidden="true">›</span>
+                            <span
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                                style="background-color: rgba(99, 102, 241, 0.14); color: var(--clh-accent);"
+                            >
+                                <x-brand-icon name="shop" class="h-5 w-5" />
+                            </span>
+                            <span class="flex-1 text-left">
+                                <span class="block text-sm font-semibold">{{ $link->title }}</span>
+                                <span class="block text-xs opacity-75" style="color: var(--clh-text-muted);">{{ __('Shop') }}</span>
+                            </span>
+                            <span class="rounded-full px-2 py-1 text-xs font-semibold" style="background: rgba(99, 102, 241, 0.14); color: var(--clh-accent);">
+                                {{ $products->count() }}
+                            </span>
+                            <span class="ml-2 text-lg transition" :class="openCollectionId === {{ $link->id }} ? 'rotate-90' : ''" style="color: var(--clh-accent);" aria-hidden="true">›</span>
                         </button>
 
-                        <div x-show="open" x-transition class="pl-2 space-y-2">
-                            @foreach ($products as $product)
-                                @php
-                                    $productHref = $product->tracking_enabled ? route('links.redirect', $product) : $product->url;
-                                    $productTarget = $product->opens_in_new_tab ? '_blank' : '_self';
-                                    $productRel = $product->opens_in_new_tab ? 'noopener noreferrer' : null;
-                                @endphp
-                                <a
-                                    href="{{ $productHref }}"
-                                    target="{{ $productTarget }}"
-                                    @if ($productRel) rel="{{ $productRel }}" @endif
-                                    class="group flex items-center gap-3 rounded-2xl border border-white/40 bg-white/70 px-3 py-2 shadow-sm backdrop-blur-sm"
-                                >
-                                    <div class="h-12 w-12 rounded-lg overflow-hidden bg-white/40 shrink-0">
-                                        @if ($product->image_url)
-                                            <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-cover" loading="lazy" />
-                                        @endif
-                                    </div>
-                                    <span class="flex-1 text-sm font-medium">{{ $product->title }}</span>
-                                    <span class="text-base opacity-60 group-hover:opacity-100">→</span>
-                                </a>
-                            @endforeach
+                        <div x-cloak x-show="openCollectionId === {{ $link->id }}" x-transition class="space-y-3">
+                            @if ($products->isEmpty())
+                                <div class="rounded-2xl px-4 py-3 text-sm" style="background: rgba(255,255,255,.5); color: var(--clh-text-muted);">
+                                    {{ __('Diese Collection ist noch leer.') }}
+                                </div>
+                            @else
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                                    @foreach ($products as $product)
+                                        @php
+                                            $productHref = $product->tracking_enabled ? route('links.redirect', $product) : $product->url;
+                                            $productTarget = $product->opens_in_new_tab ? '_blank' : '_self';
+                                            $productRel = $product->opens_in_new_tab ? 'noopener noreferrer' : null;
+                                        @endphp
+                                        <a
+                                            href="{{ $productHref }}"
+                                            target="{{ $productTarget }}"
+                                            @if ($productRel) rel="{{ $productRel }}" @endif
+                                            class="group rounded-2xl border border-white/50 bg-white/75 p-2 shadow-sm transition hover:shadow-md"
+                                        >
+                                            <div class="h-28 rounded-xl overflow-hidden bg-white/40">
+                                                @if ($product->image_url)
+                                                    <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-cover transition duration-300 group-hover:scale-105" loading="lazy" />
+                                                @endif
+                                            </div>
+                                            <div class="mt-2 flex items-center gap-2">
+                                                <span class="flex h-7 w-7 shrink-0 items-center justify-center rounded-full" style="background: rgba(99, 102, 241, 0.14); color: var(--clh-accent);">
+                                                    <x-brand-icon name="product" class="h-4 w-4" />
+                                                </span>
+                                                <span class="flex-1 truncate text-sm font-semibold">{{ $product->title }}</span>
+                                                <span class="text-base opacity-65 group-hover:opacity-100">→</span>
+                                            </div>
+                                        </a>
+                                    @endforeach
+                                </div>
+                            @endif
                         </div>
                     </div>
                 @else

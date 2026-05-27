@@ -34,6 +34,12 @@
     @case('email')
         <svg {{ $attributes->class('h-6 w-6') }} viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M20 4H4c-1.1 0-1.99.9-1.99 2L2 18c0 1.1.9 2 2 2h16c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2zm0 4l-8 5-8-5V6l8 5 8-5v2z"/></svg>
         @break
+    @case('shop')
+        <svg {{ $attributes->class('h-6 w-6') }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M3 9.75h18l-1.2 9a2 2 0 0 1-1.98 1.75H6.18A2 2 0 0 1 4.2 18.75L3 9.75Zm4.5 0V7a4.5 4.5 0 1 1 9 0v2.75"/></svg>
+        @break
+    @case('product')
+        <svg {{ $attributes->class('h-6 w-6') }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="m12 3 8 4.5-8 4.5L4 7.5 12 3Zm8 4.5V16.5L12 21l-8-4.5V7.5m8 4.5V21"/></svg>
+        @break
     @default
         <svg {{ $attributes->class('h-6 w-6') }} viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" d="M13.828 10.172a4 4 0 00-5.656 0l-4 4a4 4 0 105.656 5.656l1.102-1.101m-.758-4.899a4 4 0 005.656 0l4-4a4 4 0 00-5.656-5.656l-1.1 1.1"/></svg>
 @endswitch

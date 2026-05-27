@@ -227,7 +227,7 @@ class LinkManager extends Component
         ]);
 
         $link->update(['title' => $validated['linkTitles'][$linkId]]);
-        $this->profile->refresh()->load('links');
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
     }
 
     public function updatedLinkShowIcons(mixed $value, string $key): void
@@ -242,7 +242,7 @@ class LinkManager extends Component
         $this->authorize('update', $link);
 
         $link->update(['show_icon' => (bool) $value]);
-        $this->profile->refresh()->load('links');
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
     }
 
     public function deleteLink(int $linkId): void
@@ -294,6 +294,8 @@ class LinkManager extends Component
             'links' => $links->whereNull('parent_link_id')->values(),
             'productsByCollection' => $links
                 ->whereNotNull('parent_link_id')
+                ->where('link_type', 'product')
+                ->filter(fn (Link $product): bool => $links->contains('id', $product->parent_link_id))
                 ->groupBy('parent_link_id'),
             'linkPresets' => LinkPresetHelper::presets(),
         ]);

@@ -27,8 +27,17 @@
             <div class="rounded-md bg-red-50 p-4 text-sm text-red-800">{{ session('error') }}</div>
         @endif
 
-        <div class="bg-white shadow sm:rounded-lg overflow-hidden divide-y divide-gray-100">
-            @forelse ($links as $link)
+        @php
+            $collectionLinks = $links->where('link_type', 'collection')->values();
+            $normalLinks = $links->where('link_type', '!=', 'collection')->values();
+        @endphp
+
+        <div class="space-y-6">
+            <section class="bg-white shadow sm:rounded-lg overflow-hidden divide-y divide-gray-100">
+                <div class="px-4 py-3 bg-gray-50 border-b border-gray-100">
+                    <h2 class="text-sm font-semibold text-gray-900">{{ __('Normale Links') }}</h2>
+                </div>
+                @forelse ($normalLinks as $link)
                 @php
                     $brandColor = $link->brandColor();
                     $isCollection = $link->isCollection();
@@ -110,19 +119,79 @@
                         </div>
                     @endif
                 </div>
-            @empty
-                <div class="p-10 text-center">
-                    <p class="text-gray-500">{{ __('Noch keine Links — leg los!') }}</p>
-                    <x-primary-button
-                        type="button"
-                        class="mt-4"
-                        x-data=""
-                        x-on:click="$dispatch('open-modal', 'add-link')"
-                    >
-                        {{ __('+ Link hinzufügen') }}
-                    </x-primary-button>
+                @empty
+                    <div class="p-8 text-center text-sm text-gray-500">{{ __('Noch keine normalen Links vorhanden.') }}</div>
+                @endforelse
+            </section>
+
+            <section class="bg-white shadow sm:rounded-lg overflow-hidden divide-y divide-gray-100">
+                <div class="px-4 py-3 bg-indigo-50 border-b border-indigo-100">
+                    <h2 class="text-sm font-semibold text-indigo-900">{{ __('Shop Collections') }}</h2>
+                    <p class="mt-0.5 text-xs text-indigo-700">{{ __('Collections gruppieren Produkte, die auf externe Shop-URLs verweisen.') }}</p>
                 </div>
-            @endforelse
+                @forelse ($collectionLinks as $link)
+                    @php
+                        $products = $productsByCollection[$link->id] ?? collect();
+                    @endphp
+                    <div class="p-4 space-y-3" wire:key="collection-row-{{ $link->id }}">
+                        <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-indigo-100 text-indigo-700">
+                                <x-brand-icon :name="$link->iconName()" class="h-5 w-5" />
+                            </div>
+
+                            <div class="min-w-0 flex-1 space-y-2">
+                                <div>
+                                    <x-input-label :for="'link-title-'.$link->id" :value="__('Collection-Name')" class="text-xs" />
+                                    <x-text-input
+                                        wire:model.blur="linkTitles.{{ $link->id }}"
+                                        id="link-title-{{ $link->id }}"
+                                        class="block mt-1 w-full"
+                                    />
+                                    <x-input-error :messages="$errors->get('linkTitles.'.$link->id)" class="mt-1" />
+                                </div>
+                                <p class="text-sm text-gray-500">{{ __(':count Produkte', ['count' => $products->count()]) }}</p>
+                            </div>
+
+                            <div class="flex flex-wrap items-center gap-2 sm:shrink-0 sm:pt-6">
+                                <x-secondary-button type="button" wire:click="openProductModal({{ $link->id }})">{{ __('+ Produkt') }}</x-secondary-button>
+                                <x-secondary-button type="button" wire:click="move({{ $link->id }}, 'up')" title="{{ __('Nach oben') }}">{{ __('↑') }}</x-secondary-button>
+                                <x-secondary-button type="button" wire:click="move({{ $link->id }}, 'down')" title="{{ __('Nach unten') }}">{{ __('↓') }}</x-secondary-button>
+                                <x-danger-button type="button" wire:click="deleteLink({{ $link->id }})">{{ __('Löschen') }}</x-danger-button>
+                            </div>
+                        </div>
+
+                        @if ($products->isNotEmpty())
+                            <div class="pl-0 sm:pl-[3.75rem] grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                @foreach ($products as $product)
+                                    <div class="rounded-xl border border-gray-200 bg-gray-50 p-3 flex items-center gap-3" wire:key="product-{{ $product->id }}">
+                                        <div class="h-10 w-10 rounded-md overflow-hidden bg-gray-200 shrink-0">
+                                            @if ($product->image_url)
+                                                <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-cover" loading="lazy" />
+                                            @endif
+                                        </div>
+                                        <div class="min-w-0 flex-1">
+                                            <p class="text-sm font-medium text-gray-900 truncate">{{ $product->title }}</p>
+                                            <p class="text-xs text-gray-500 truncate">{{ $product->url }}</p>
+                                        </div>
+                                        <div class="flex items-center gap-1">
+                                            <x-secondary-button type="button" wire:click="move({{ $product->id }}, 'up')">{{ __('↑') }}</x-secondary-button>
+                                            <x-secondary-button type="button" wire:click="move({{ $product->id }}, 'down')">{{ __('↓') }}</x-secondary-button>
+                                            <x-danger-button type="button" wire:click="deleteLink({{ $product->id }})">{{ __('Löschen') }}</x-danger-button>
+                                        </div>
+                                    </div>
+                                @endforeach
+                            </div>
+                        @endif
+                    </div>
+                @empty
+                    <div class="p-8 text-center">
+                        <p class="text-gray-500">{{ __('Noch keine Collection vorhanden.') }}</p>
+                        <x-secondary-button type="button" class="mt-3" wire:click="openCollectionModal">
+                            {{ __('+ Collection anlegen') }}
+                        </x-secondary-button>
+                    </div>
+                @endforelse
+            </section>
         </div>
     </div>
 

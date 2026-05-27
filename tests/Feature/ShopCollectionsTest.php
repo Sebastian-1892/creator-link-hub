@@ -43,8 +43,37 @@ test('collection with products is rendered on public profile', function () {
 
     $this->get(route('public.profile', $profile->slug))
         ->assertOk()
+        ->assertSee('Shop', false)
+        ->assertSee((string) 1, false)
         ->assertSee('Merch', false)
         ->assertSee('Cap Schwarz', false);
+});
+
+test('empty collection shows helper message on public profile', function () {
+    $user = User::factory()->create();
+    $profile = $user->currentWorkspace()?->profile;
+    expect($profile)->not->toBeNull();
+
+    $profile->update([
+        'slug' => 'empty-shop-'.uniqid(),
+        'is_published' => true,
+    ]);
+
+    Link::query()->create([
+        'profile_id' => $profile->id,
+        'link_type' => 'collection',
+        'title' => 'Merch',
+        'url' => '#',
+        'position' => 1,
+        'is_active' => true,
+        'opens_in_new_tab' => false,
+        'tracking_enabled' => false,
+        'show_icon' => false,
+    ]);
+
+    $this->get(route('public.profile', $profile->slug))
+        ->assertOk()
+        ->assertSee('Diese Collection ist noch leer.', false);
 });
 
 test('link manager can create collection and product', function () {
@@ -83,4 +112,44 @@ test('link manager can create collection and product', function () {
     expect($product)->not->toBeNull()
         ->and($product->parent_link_id)->toBe($collection->id)
         ->and($product->title)->toBe('Cap Schwarz');
+});
+
+test('normal links stay visible beside collections', function () {
+    $user = User::factory()->create();
+    $profile = $user->currentWorkspace()?->profile;
+    expect($profile)->not->toBeNull();
+
+    $profile->update([
+        'slug' => 'mixed-shop-'.uniqid(),
+        'is_published' => true,
+    ]);
+
+    Link::query()->create([
+        'profile_id' => $profile->id,
+        'link_type' => 'link',
+        'title' => 'YouTube',
+        'url' => 'https://youtube.com/@creator',
+        'position' => 0,
+        'is_active' => true,
+        'opens_in_new_tab' => true,
+        'tracking_enabled' => true,
+        'show_icon' => true,
+    ]);
+
+    Link::query()->create([
+        'profile_id' => $profile->id,
+        'link_type' => 'collection',
+        'title' => 'Merch',
+        'url' => '#',
+        'position' => 1,
+        'is_active' => true,
+        'opens_in_new_tab' => false,
+        'tracking_enabled' => false,
+        'show_icon' => false,
+    ]);
+
+    $this->get(route('public.profile', $profile->slug))
+        ->assertOk()
+        ->assertSee('YouTube', false)
+        ->assertSee('Merch', false);
 });
