@@ -240,6 +240,9 @@ server {
     add_header X-Content-Type-Options "nosniff";
     index index.php;
     charset utf-8;
+    location ~ ^//+(.*)$ {
+        return 301 \$scheme://\$host/\$1\$is_args\$args;
+    }
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
@@ -309,6 +312,9 @@ ${NG_DH_LINE}    root ${INSTALL_DIR}/public;
     add_header X-Content-Type-Options "nosniff";
     index index.php;
     charset utf-8;
+    location ~ ^//+(.*)$ {
+        return 301 \$scheme://\$host/\$1\$is_args\$args;
+    }
     location / {
         try_files \$uri \$uri/ /index.php?\$query_string;
     }
@@ -339,7 +345,7 @@ else
 fi
 
 ADMIN_URL="${APP_URL%/}/admin"
-APP_INST="${APP_URL%/}/"
+APP_INST="${APP_URL%/}"
 export ADMIN_PW ADMIN_URL APP_INST
 python3 <<'PY'
 import json, os

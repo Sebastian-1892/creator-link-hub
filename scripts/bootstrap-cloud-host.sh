@@ -192,25 +192,21 @@ step 7 "$STEPS" "Provisioner-PHP (provisioner.php + router.php) nach /opt/clh-pr
 PROV_SRC=""
 ROUTER_SRC=""
 for cand in \
-  "${REPO_ROOT}/deployment/cloud-host/provisioner.php" \
-  "${REPO_ROOT}/../creatorlinkhub.eu/deployment/cloud-host/provisioner.php" \
-  "${SCRIPT_DIR}/../../creatorlinkhub.eu/deployment/cloud-host/provisioner.php"; do
+  "${REPO_ROOT}/deployment/cloud-host/provisioner.php"; do
   if [[ -f "$cand" ]]; then
     PROV_SRC="$cand"
     break
   fi
 done
 for cand in \
-  "${REPO_ROOT}/deployment/cloud-host/router.php" \
-  "${REPO_ROOT}/../creatorlinkhub.eu/deployment/cloud-host/router.php" \
-  "${SCRIPT_DIR}/../../creatorlinkhub.eu/deployment/cloud-host/router.php"; do
+  "${REPO_ROOT}/deployment/cloud-host/router.php"; do
   if [[ -f "$cand" ]]; then
     ROUTER_SRC="$cand"
     break
   fi
 done
 if [[ -z "$PROV_SRC" ]]; then
-  die "provisioner.php nicht gefunden. Repos creator-link-hub und creatorlinkhub.eu nebeneinander legen oder Pfad in diesem Skript setzen."
+  die "provisioner.php nicht gefunden unter ${REPO_ROOT}/deployment/cloud-host/."
 fi
 if [[ -z "$ROUTER_SRC" ]]; then
   die "router.php nicht gefunden (sollte zu provisioner.php im selben deployment/cloud-host/ Ordner liegen)."

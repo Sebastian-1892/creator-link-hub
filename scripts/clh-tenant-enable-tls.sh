@@ -131,4 +131,4 @@ php artisan config:clear --no-ansi
 php artisan config:cache --no-ansi
 
 log "TLS aktiv — https://${DOMAIN}/"
-echo "{\"ok\":true,\"instance_url\":\"${APP_URL}/\"}"
+echo "{\"ok\":true,\"instance_url\":\"${APP_URL%/}\"}"

@@ -14,7 +14,6 @@
  */
 
 declare(strict_types=1);
-
 /**
  * @param array<string, mixed> $data
  */
@@ -60,44 +59,7 @@ function clhProvisionerLog(string $line): void
     @error_log('[clh-provisioner] ' . $line . "\n", 3, $f);
 }
 
-/** Vollständige Skript-Ausgabe für Diagnose (clh-provisioner-User muss schreiben dürfen). */
-function clhProvisionerLastScriptErrorPath(): string
-{
-    return getenv('CLH_LAST_SCRIPT_ERROR_LOG') ?: '/var/lib/clh-provisioner/last-script-error.log';
-}
-
 /**
- * stderr + stdout zusammenführen; bei langem Output das Ende behalten (Composer: viel Log am Anfang, Fehler oft am Schluss).
- */
-function clhProvisionerScriptErrorDetail(string $stderr, string $stdout, int $maxLen = 24000): string
-{
-    $stderr = trim($stderr);
-    $stdout = trim($stdout);
-    $parts = [];
-    if ($stderr !== '') {
-        $parts[] = $stderr;
-    }
-    if ($stdout !== '') {
-        $parts[] = "--- stdout ---\n".$stdout;
-    }
-    $merged = implode("\n\n", $parts);
-
-    if ($merged === '') {
-        return '(keine Ausgabe)';
-    }
-    if (strlen($merged) <= $maxLen) {
-        return $merged;
-    }
-
-    return '… (nur letzte '.$maxLen.' von '.strlen($merged).' Zeichen) …'."\n".substr($merged, -$maxLen);
-}
-
-/**
- * Tenant-Skripte sollen bei Erfolg genau eine JSON-Zeile auf stdout ausgeben. Composer/Laravel Artisan
- * können jedoch noch Text/Zeilen davor oder (selten) dazwischen ausgeben — dann schlägt json_decode(trim)
- * auf dem Gesamtbuffer fehl. Wir nehmen zuerst den ganzen Puffer; sonst die letzte Zeile, die mit `{`
- * beginnt und gültiges JSON ist.
- *
  * @return array<string, mixed>|null
  */
 function clhProvisionerDecodeScriptStdout(string $stdout): ?array
@@ -164,8 +126,7 @@ function clhProvisionerRawBody(): string
 header('X-Content-Type-Options: nosniff');
 
 $secret = clhProvisionerSecret();
-if ($secret === '') {
-    clhProvisionerJson(['error' => 'CLH_PROVISIONER_SECRET not set'], 500);
+if ($secret === '') {    clhProvisionerJson(['error' => 'CLH_PROVISIONER_SECRET not set'], 500);
 }
 
 $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
@@ -178,15 +139,18 @@ if ($method === 'GET') {
             'ok' => true,
             'service' => 'clh-provisioner',
             'checks' => [
-                'release_zip' => [
-                    'path' => $rz,
-                    'exists' => file_exists($rz),
-                    /** Für clh-provisioner; sudo-Skript läuft als root und kann auch root-only-ZIPs lesen */
-                    'readable_by_provisioner_user' => is_readable($rz),
-                ],
+                'release_zip' => ['path' => $rz, 'readable' => is_readable($rz)],
                 'provision_script' => [
                     'path' => '/usr/local/bin/clh-provision-tenant.sh',
                     'executable' => is_executable('/usr/local/bin/clh-provision-tenant.sh'),
+                ],
+                'delete_script' => [
+                    'path' => '/usr/local/bin/clh-delete-tenant.sh',
+                    'executable' => is_executable('/usr/local/bin/clh-delete-tenant.sh'),
+                ],
+                'suspend_script' => [
+                    'path' => '/usr/local/bin/clh-suspend-tenant.sh',
+                    'executable' => is_executable('/usr/local/bin/clh-suspend-tenant.sh'),
                 ],
                 'resume_script' => [
                     'path' => '/usr/local/bin/clh-resume-tenant.sh',
@@ -202,11 +166,11 @@ if ($method !== 'POST') {
     clhProvisionerJson(['error' => 'method not allowed'], 405);
 }
 
+$hadRouterBodyBuffer = array_key_exists('CLH_RAW_HTTP_BODY', $GLOBALS);
 $raw = clhProvisionerRawBody();
 $sig = clhProvisionerClientSignature();
 $expected = hash_hmac('sha256', $raw, $secret);
-if (! hash_equals($expected, $sig)) {
-    clhProvisionerJson(['error' => 'invalid signature'], 401);
+if (! hash_equals($expected, $sig)) {    clhProvisionerJson(['error' => 'invalid signature'], 401);
 }
 
 try {
@@ -219,12 +183,10 @@ if (! is_array($data)) {
 }
 
 $ts = (int) ($data['ts'] ?? 0);
-if ($ts <= 0 || abs(time() - $ts) > 300) {
-    clhProvisionerJson(['error' => 'stale or invalid ts'], 400);
+if ($ts <= 0 || abs(time() - $ts) > 300) {    clhProvisionerJson(['error' => 'stale or invalid ts'], 400);
 }
 $nonce = (string) ($data['nonce'] ?? '');
-if (! preg_match('/^[a-f0-9]{32}$/', $nonce)) {
-    clhProvisionerJson(['error' => 'invalid nonce'], 400);
+if (! preg_match('/^[a-f0-9]{32}$/', $nonce)) {    clhProvisionerJson(['error' => 'invalid nonce'], 400);
 }
 
 $nonceDir = getenv('CLH_NONCE_DIR') ?: '/var/lib/clh-provisioner/nonces';
@@ -232,8 +194,7 @@ if (! is_dir($nonceDir)) {
     @mkdir($nonceDir, 0700, true);
 }
 $nonceFile = $nonceDir . '/' . $nonce;
-if (is_file($nonceFile)) {
-    clhProvisionerJson(['error' => 'replay'], 400);
+if (is_file($nonceFile)) {    clhProvisionerJson(['error' => 'replay'], 400);
 }
 @file_put_contents($nonceFile, (string) (time() + 600));
 foreach (glob($nonceDir . '/*') ?: [] as $f) {
@@ -242,8 +203,7 @@ foreach (glob($nonceDir . '/*') ?: [] as $f) {
     }
 }
 
-$action = (string) ($data['action'] ?? '');
-$slug = (string) ($data['slug'] ?? '');
+$action = (string) ($data['action'] ?? '');$slug = (string) ($data['slug'] ?? '');
 if (! preg_match('/^[a-z0-9](?:[a-z0-9-]{1,30}[a-z0-9])?$/', $slug)) {
     clhProvisionerJson(['error' => 'invalid slug'], 400);
 }
@@ -300,8 +260,7 @@ if (in_array($action, ['custom_domain', 'remove_custom_domain'], true)) {
     ];
 }
 if ($action === 'create') {
-    if ($releaseZip === '') {
-        clhProvisionerJson(['error' => 'release_zip not configured (empty path in config)'], 500);
+    if ($releaseZip === '' || ! is_readable($releaseZip)) {        clhProvisionerJson(['error' => 'release_zip not configured or not readable'], 500);
     }
     $email = strtolower(trim((string) ($data['admin_email'] ?? '')));
     if (! filter_var($email, FILTER_VALIDATE_EMAIL)) {
@@ -336,21 +295,10 @@ fclose($pipes[2]);
 $exit = proc_close($proc);
 
 if ($exit !== 0) {
-    $stderrT = trim($stderr);
-    $stdoutT = trim($stdout);
-    $mergedFull = ($stderrT !== '' ? $stderrT : '').($stderrT !== '' && $stdoutT !== '' ? "\n\n--- stdout ---\n" : '').$stdoutT;
-    $detail = clhProvisionerScriptErrorDetail($stderr, $stdout);
-    $errFile = clhProvisionerLastScriptErrorPath();
-    @file_put_contents(
-        $errFile,
-        gmdate('c')." exit={$exit}\n\n".$mergedFull."\n",
-        LOCK_EX
-    );
-    clhProvisionerLog('script fail exit='.$exit.' detail_len='.strlen($detail).' full_log='.$errFile);
+    clhProvisionerLog("script fail exit={$exit} stderr=" . substr($stderr, 0, 800));
     clhProvisionerJson([
         'error' => 'provision script failed',
-        'detail' => $detail,
-        'full_log_path' => $errFile,
+        'detail' => substr(trim($stderr) !== '' ? $stderr : $stdout, 0, 500),
     ], 500);
 }
 
@@ -360,5 +308,4 @@ if (! is_array($out)) {
     clhProvisionerJson(['error' => 'invalid script JSON', 'raw' => substr($trim, 0, 200)], 500);
 }
 
-clhProvisionerLog("ok action={$action} slug={$slug}");
-clhProvisionerJson($out);
+clhProvisionerLog("ok action={$action} slug={$slug}");clhProvisionerJson($out);

@@ -26,6 +26,11 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        $appUrl = config('app.url');
+        if (is_string($appUrl) && $appUrl !== '') {
+            config(['app.url' => rtrim($appUrl, '/')]);
+        }
+
         Profile::observe(ProfileObserver::class);
         Link::observe(LinkObserver::class);
 

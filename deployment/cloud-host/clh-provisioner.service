@@ -1,0 +1,15 @@
+[Unit]
+Description=Creator Link Hub provisioner (PHP built-in server)
+After=network.target
+
+[Service]
+User=clh-provisioner
+Group=clh-provisioner
+WorkingDirectory=/opt/clh-provisioner
+Environment=CLH_CONFIG=/etc/clh-provisioner/config.json
+ExecStart=/usr/bin/php -S 127.0.0.1:9100 /opt/clh-provisioner/router.php
+Restart=on-failure
+RestartSec=3
+
+[Install]
+WantedBy=multi-user.target
