@@ -59,6 +59,7 @@ class AppServiceProvider extends ServiceProvider
         View::composer(['layouts.marketing', 'layouts.public', 'marketing.*', 'public.*'], function ($view): void {
             $view->with('branding', app(BrandingService::class)->payload());
             $view->with('clhInlineEditing', clh_inline_editing_enabled());
+            $view->with('clhInlineEditorAssets', clh_inline_editor_assets());
         });
 
         Blade::directive('brandText', function (?string $expression): string {

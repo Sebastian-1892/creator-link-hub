@@ -12,7 +12,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="https://fonts.bunny.net/css?family=figtree:400,500,600,700&display=swap" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @if ($clhInlineEditing ?? false)
+    @if ($clhInlineEditorAssets ?? false)
         @livewireStyles
     @endif
     <style>
@@ -99,9 +99,14 @@
             © {{ date('Y') }} {{ $branding['brand_name'] }}
         </div>
     </footer>
-    @if ($clhInlineEditing ?? false)
+    @if ($clhInlineEditorAssets ?? false)
         @livewire('translation-inline')
         @livewireScripts
+    @endif
+    @if ($clhInlineEditing ?? false)
+        <div class="fixed bottom-4 left-4 z-[90] rounded-lg bg-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-lg">
+            {{ __('Inline-Bearbeitung aktiv') }} — {{ __('Hover + ✎ auf markierte Texte') }}
+        </div>
     @endif
 </body>
 </html>

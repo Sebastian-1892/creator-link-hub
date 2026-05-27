@@ -26,7 +26,7 @@ test('text returns stored translation for locale', function () {
     expect(app(TranslationService::class)->text('marketing.headline', 'de'))->toBe('DB Headline DE');
 });
 
-test('text falls back to tenant default locale', function () {
+test('tenant default locale reads stored translation strings', function () {
     Cache::flush();
 
     TranslationString::query()->create([
@@ -38,9 +38,23 @@ test('text falls back to tenant default locale', function () {
     ]);
 
     app(TranslationService::class)->flushLocale('de');
-    app(TranslationService::class)->flushLocale('en');
 
-    expect(app(TranslationService::class)->text('marketing.eyebrow', 'en'))->toBe('Nur Deutsch');
+    expect(app(TranslationService::class)->text('marketing.eyebrow', 'de'))->toBe('Nur Deutsch');
+});
+
+test('english locale uses lang file not german legacy settings', function () {
+    Cache::flush();
+    app(\App\Services\SettingsService::class)->flushCache();
+
+    \App\Models\Setting::query()->updateOrInsert(
+        ['key' => 'branding.marketing.headline'],
+        ['value' => 'Deutsche Headline aus Settings', 'is_encrypted' => false, 'updated_at' => now()]
+    );
+
+    app(TranslationService::class)->flushAll();
+
+    expect(app(TranslationService::class)->text('marketing.headline', 'en'))
+        ->toBe('One link. Every channel. More reach.');
 });
 
 test('revert swaps value and previous_value', function () {

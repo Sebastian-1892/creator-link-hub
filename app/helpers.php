@@ -14,8 +14,31 @@ if (! function_exists('clh_inline_editing_enabled')) {
 
         $user = auth()->user();
 
-        return $user !== null && (bool) $user->is_admin
-            && (request()->boolean('edit') || request()->cookie('clh_inline_edit') === '1');
+        if ($user === null || ! (bool) $user->is_admin) {
+            return false;
+        }
+
+        if (request()->boolean('edit')) {
+            session(['clh_inline_edit' => true]);
+        }
+
+        return request()->boolean('edit')
+            || session('clh_inline_edit') === true
+            || request()->cookie('clh_inline_edit') === '1';
+    }
+}
+
+if (! function_exists('clh_inline_editor_assets')) {
+    /** Livewire-Assets für Inline-Editor (Admin + Feature-Flag). */
+    function clh_inline_editor_assets(): bool
+    {
+        if (! config('creator.i18n_inline_editor', false)) {
+            return false;
+        }
+
+        $user = auth()->user();
+
+        return $user !== null && (bool) $user->is_admin;
     }
 }
 

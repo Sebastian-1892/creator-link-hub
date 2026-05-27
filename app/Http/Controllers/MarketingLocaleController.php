@@ -4,9 +4,9 @@ namespace App\Http\Controllers;
 
 use App\Http\Middleware\SetMarketingLocale;
 use App\Services\TranslationService;
+use App\Services\BrandingService;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Symfony\Component\HttpFoundation\Cookie;
 
 class MarketingLocaleController extends Controller
 {
@@ -16,15 +16,19 @@ class MarketingLocaleController extends Controller
 
         abort_unless(in_array($locale, $allowed, true), 404);
 
+        $request->session()->put(SetMarketingLocale::SESSION_KEY, $locale);
+
+        app(BrandingService::class)->flushPayloadCache();
+
         return redirect()
             ->back()
-            ->withCookie(Cookie::create(
+            ->withCookie(cookie(
                 SetMarketingLocale::COOKIE_NAME,
                 $locale,
                 60 * 24 * 365,
                 '/',
                 null,
-                $request->isSecure(),
+                (bool) config('session.secure'),
                 true,
                 false,
                 'lax'

@@ -39,14 +39,6 @@ class TranslationService
             return $stored;
         }
 
-        $tenantDefault = self::tenantDefaultLocale();
-        if ($locale !== $tenantDefault) {
-            $fallback = $this->storedValue($tenantDefault, $key);
-            if ($fallback !== null && $fallback !== '') {
-                return $fallback;
-            }
-        }
-
         if ($default !== null) {
             return $default;
         }
@@ -56,7 +48,13 @@ class TranslationService
             return $langValue;
         }
 
+        $tenantDefault = self::tenantDefaultLocale();
         if ($locale !== $tenantDefault) {
+            $fallback = $this->storedValue($tenantDefault, $key);
+            if ($fallback !== null && $fallback !== '') {
+                return $fallback;
+            }
+
             $langDefault = $this->langBrandingValue($key, $tenantDefault);
             if ($langDefault !== null && $langDefault !== '') {
                 return $langDefault;
@@ -78,7 +76,14 @@ class TranslationService
     {
         $locale = $locale ?? app()->getLocale();
         $raw = $this->storedValue($locale, $key);
+
         if ($raw === null || $raw === '') {
+            $fallback = Lang::get('branding.'.$key, [], $locale);
+            if (is_array($fallback)) {
+                /** @var list<array<string, mixed>> $fallback */
+                return array_values(array_filter($fallback, 'is_array'));
+            }
+
             $raw = $this->storedValue(self::tenantDefaultLocale(), $key);
         }
 
@@ -208,9 +213,11 @@ class TranslationService
             return $bulk[$key];
         }
 
-        $legacy = $this->legacySettingsValue($key);
-        if ($legacy !== null && $legacy !== '') {
-            return $legacy;
+        if ($locale === self::tenantDefaultLocale()) {
+            $legacy = $this->legacySettingsValue($key);
+            if ($legacy !== null && $legacy !== '') {
+                return $legacy;
+            }
         }
 
         return null;
