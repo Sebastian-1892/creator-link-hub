@@ -44,7 +44,7 @@ class PublicProfileController extends Controller
 
         return view('public.profile', [
             'profile' => $profile,
-            'showPlatformBranding' => $plans->showsPlatformBranding($profile->workspace),
+            'showPlatformBranding' => $plans->showsPlatformBranding($profile->workspace, $profile),
         ]);
     }
 }

@@ -195,9 +195,30 @@
 
                     {{-- Footer --}}
                     <div class="order-4 lg:order-none lg:col-span-2 flex flex-col gap-4 border-t border-gray-100 px-6 py-5 sm:flex-row sm:items-center sm:justify-between">
-                        <div class="flex items-center gap-2">
-                            <input wire:model.boolean="is_published" id="is_published" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
-                            <x-input-label for="is_published" :value="__('Öffentlich veröffentlichen')" class="!mb-0" />
+                        <div class="space-y-3">
+                            <div class="flex items-center gap-2">
+                                <input wire:model.boolean="is_published" id="is_published" type="checkbox" class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500" />
+                                <x-input-label for="is_published" :value="__('Öffentlich veröffentlichen')" class="!mb-0" />
+                            </div>
+                            <div class="flex items-start gap-2">
+                                <input
+                                    wire:model.boolean="show_platform_branding"
+                                    id="show_platform_branding"
+                                    type="checkbox"
+                                    class="mt-0.5 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    @disabled(! $canControlPlatformBranding)
+                                />
+                                <div>
+                                    <x-input-label for="show_platform_branding" :value="__('„Built with …“-Hinweis anzeigen')" class="!mb-0" />
+                                    <p class="text-xs text-gray-500 mt-0.5">
+                                        @if ($canControlPlatformBranding)
+                                            {{ __('Zeigt unten auf deiner Bio-Seite den Hinweis „Built with“ mit Link zur Startseite.') }}
+                                        @else
+                                            {{ __('Im Free-Plan ist dieser Hinweis vorgesehen und kann nicht ausgeblendet werden.') }}
+                                        @endif
+                                    </p>
+                                </div>
+                            </div>
                         </div>
                         <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
                             <p wire:loading wire:target="save" class="text-sm text-indigo-600 font-medium">{{ __('Wird gespeichert…') }}</p>

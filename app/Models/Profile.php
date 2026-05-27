@@ -18,6 +18,7 @@ class Profile extends Model
         'avatar_path',
         'theme_variables',
         'is_published',
+        'show_platform_branding',
         'published_at',
     ];
 
@@ -26,6 +27,7 @@ class Profile extends Model
         return [
             'theme_variables' => 'array',
             'is_published' => 'boolean',
+            'show_platform_branding' => 'boolean',
             'published_at' => 'datetime',
         ];
     }

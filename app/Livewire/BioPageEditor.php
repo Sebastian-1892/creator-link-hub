@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Profile;
 use App\Models\Theme;
+use App\Services\PlanService;
 use App\Services\SlugService;
 use Illuminate\Validation\Rule;
 use Livewire\Attributes\Layout;
@@ -27,6 +28,8 @@ class BioPageEditor extends Component
 
     public bool $is_published = false;
 
+    public bool $show_platform_branding = true;
+
     public ?string $saveNotice = null;
 
     public function mount(): void
@@ -42,6 +45,7 @@ class BioPageEditor extends Component
         $this->bio = (string) $this->profile->bio;
         $this->theme_id = $this->profile->theme_id;
         $this->is_published = $this->profile->is_published;
+        $this->show_platform_branding = $this->profile->show_platform_branding;
     }
 
     public function updatedThemeId(mixed $value): void
@@ -49,8 +53,13 @@ class BioPageEditor extends Component
         $this->theme_id = ($value === '' || $value === null) ? null : (int) $value;
     }
 
-    public function save(SlugService $slugService): void
+    public function save(SlugService $slugService, PlanService $plans): void
     {
+        $workspace = $this->profile->workspace;
+        if ($workspace && ! $plans->canControlPlatformBranding($workspace)) {
+            $this->show_platform_branding = true;
+        }
+
         $this->validate([
             'display_name' => ['required', 'string', 'max:120'],
             'slug' => [
@@ -68,6 +77,7 @@ class BioPageEditor extends Component
             'bio' => ['nullable', 'string', 'max:2000'],
             'theme_id' => ['nullable', 'exists:themes,id'],
             'is_published' => ['boolean'],
+            'show_platform_branding' => ['boolean'],
         ]);
 
         $this->profile->display_name = $this->display_name;
@@ -75,6 +85,7 @@ class BioPageEditor extends Component
         $this->profile->bio = $this->bio;
         $this->profile->theme_id = $this->theme_id;
         $this->profile->is_published = $this->is_published;
+        $this->profile->show_platform_branding = $this->show_platform_branding;
         if ($this->is_published && ! $this->profile->published_at) {
             $this->profile->published_at = now();
         }
@@ -95,7 +106,7 @@ class BioPageEditor extends Component
         $this->saveNotice = null;
     }
 
-    public function render()
+    public function render(PlanService $plans)
     {
         $query = Theme::query()->orderBy('name');
 
@@ -103,8 +114,11 @@ class BioPageEditor extends Component
             $query->where('template_group', $this->theme_filter);
         }
 
+        $workspace = $this->profile->workspace;
+
         return view('livewire.bio-page-editor', [
             'themes' => $query->get(),
+            'canControlPlatformBranding' => $workspace ? $plans->canControlPlatformBranding($workspace) : false,
         ]);
     }
 }

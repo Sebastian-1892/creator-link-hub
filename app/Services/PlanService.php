@@ -27,11 +27,19 @@ class PlanService
         return $profile->links()->count() < $max;
     }
 
-    public function showsPlatformBranding(Workspace $workspace): bool
+    public function showsPlatformBranding(Workspace $workspace, Profile $profile): bool
+    {
+        return (bool) $profile->show_platform_branding;
+    }
+
+    /**
+     * Ob der Kunde den „Built with …“-Hinweis in den Bio-Einstellungen ein-/ausblenden darf.
+     */
+    public function canControlPlatformBranding(Workspace $workspace): bool
     {
         $plan = $workspace->plan;
 
-        return (bool) (config("creator.plans.{$plan}.platform_branding") ?? true);
+        return ! (bool) (config("creator.plans.{$plan}.platform_branding") ?? true);
     }
 
     public function syncWorkspacePlanFromSubscription(Workspace $workspace, string $planKey): void
