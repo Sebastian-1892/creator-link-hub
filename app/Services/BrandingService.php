@@ -9,7 +9,7 @@ use Illuminate\Support\Str;
 
 class BrandingService
 {
-    public const CACHE_KEY = 'branding.payload_v2';
+    public const CACHE_KEY = 'branding.payload_v3';
 
     /** @var list<string> */
     protected const LEGAL_HTML_KEYS = [
@@ -128,7 +128,10 @@ class BrandingService
 
     public function flushPayloadCache(): void
     {
-        Cache::forget(self::CACHE_KEY);
+        foreach (array_keys(config('creator.hub_locales', ['de' => [], 'en' => []])) as $locale) {
+            Cache::forget(self::cacheKeyForLocale((string) $locale));
+        }
+        Cache::forget('branding.payload_v2');
     }
 
     /**
@@ -138,7 +141,17 @@ class BrandingService
      */
     public function payload(): array
     {
-        return Cache::rememberForever(self::CACHE_KEY, fn (): array => $this->buildPayload());
+        $locale = app()->getLocale();
+
+        return Cache::rememberForever(
+            self::cacheKeyForLocale($locale),
+            fn (): array => $this->buildPayload()
+        );
+    }
+
+    protected static function cacheKeyForLocale(string $locale): string
+    {
+        return self::CACHE_KEY.'_'.str_replace(['/', '\\', ':'], '_', $locale);
     }
 
     public function text(string $dotKey, ?string $default = null): string
