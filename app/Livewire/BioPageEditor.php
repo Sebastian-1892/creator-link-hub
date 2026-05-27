@@ -4,6 +4,7 @@ namespace App\Livewire;
 
 use App\Models\Profile;
 use App\Models\Theme;
+use App\Services\AvatarImageProcessor;
 use App\Services\SlugService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
@@ -89,7 +90,7 @@ class BioPageEditor extends Component
         $this->traitUploadErrored($name, $errorsInJson, $isMultiple);
     }
 
-    public function save(SlugService $slugService): void
+    public function save(SlugService $slugService, AvatarImageProcessor $avatarProcessor): void
     {
         $this->validate([
             'display_name' => ['required', 'string', 'max:120'],
@@ -113,12 +114,12 @@ class BioPageEditor extends Component
 
         if ($this->avatar) {
             try {
-                $path = $this->avatar->store('avatars', 'public');
+                $path = $avatarProcessor->storeFromUpload($this->avatar);
             } catch (\Throwable $e) {
                 report($e);
 
                 throw ValidationException::withMessages([
-                    'avatar' => __('Das Profilbild konnte nicht gespeichert werden. Bitte erneut versuchen oder den Support kontaktieren, wenn das Problem bleibt.'),
+                    'avatar' => __('Das Profilbild konnte nicht verarbeitet werden. Bitte ein anderes Bild (JPG oder PNG) versuchen.'),
                 ]);
             }
 
@@ -172,7 +173,9 @@ class BioPageEditor extends Component
      */
     protected function avatarRules(): array
     {
-        return ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'];
+        $maxKb = (int) config('creator.avatar.max_upload_kb', 8192);
+
+        return ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:'.$maxKb];
     }
 
     /**
@@ -183,7 +186,7 @@ class BioPageEditor extends Component
         return [
             'avatar.image' => __('Bitte eine Bilddatei wählen (JPG, PNG, GIF oder WebP). iPhone-Fotos im HEIC-Format werden nicht unterstützt — speichere das Bild zuerst als JPG.'),
             'avatar.mimes' => __('Erlaubte Formate: JPG, PNG, GIF oder WebP.'),
-            'avatar.max' => __('Das Profilbild darf höchstens 2 MB groß sein.'),
+            'avatar.max' => __('Die Datei ist zu groß (maximal 8 MB). Das Bild wird beim Speichern automatisch verkleinert.'),
             'avatar.uploaded' => __('Das Profilbild konnte nicht hochgeladen werden. Bitte Dateigröße und Format prüfen.'),
         ];
     }
@@ -227,7 +230,7 @@ class BioPageEditor extends Component
             return implode(' ', $hints);
         }
 
-        return __('Das Profilbild konnte nicht hochgeladen werden. Erlaubt sind JPG, PNG, GIF oder WebP, maximal 2 MB. Große iPhone-Fotos (HEIC) bitte vorher als JPG exportieren. Bei sehr großen Dateien kann auch die maximale Upload-Größe des Servers greifen — dann ein kleineres Bild verwenden.');
+        return __('Das Profilbild konnte nicht hochgeladen werden. Erlaubt: JPG, PNG, GIF oder WebP (bis 8 MB). Große Bilder werden nach dem Upload automatisch verkleinert. iPhone-HEIC bitte zuerst als JPG speichern.');
     }
 
     protected function livewireTempDirectoryIsWritable(): bool

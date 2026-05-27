@@ -18,6 +18,16 @@ return [
         'it' => ['native' => 'Italiano', 'flag' => '🇮🇹'],
     ],
 
+    /**
+     * Profilbild: großzügiger Upload, Speicherung als verkleinertes WebP/JPEG.
+     */
+    'avatar' => [
+        'max_upload_kb' => 8192,
+        'max_edge_px' => 512,
+        'jpeg_quality' => 85,
+        'webp_quality' => 85,
+    ],
+
     'free_link_limit' => 10,
 
     'stripe_prices' => [

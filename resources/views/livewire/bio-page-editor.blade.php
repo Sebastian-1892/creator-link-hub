@@ -48,8 +48,17 @@
                     class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
                 />
                 <p class="mt-1 text-xs text-gray-500">
-                    {{ __('JPG, PNG, GIF oder WebP, maximal 2 MB. iPhone-HEIC bitte zuerst als JPG speichern.') }}
+                    {{ __('JPG, PNG, GIF oder WebP (bis 8 MB). Das Bild wird beim Speichern automatisch auf Profilgröße verkleinert und komprimiert — auch große PNGs.') }}
                 </p>
+                @if ($profile->avatar_path)
+                    <img
+                        src="{{ \Illuminate\Support\Facades\Storage::url($profile->avatar_path) }}"
+                        alt=""
+                        class="mt-3 h-20 w-20 rounded-full object-cover ring-2 ring-gray-200"
+                        width="80"
+                        height="80"
+                    />
+                @endif
                 <div wire:loading wire:target="avatar" class="mt-2 text-sm text-indigo-600">
                     {{ __('Bild wird hochgeladen …') }}
                 </div>
@@ -59,9 +68,6 @@
                     </p>
                 @endunless
                 <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
-                @if ($profile->avatar_path)
-                    <p class="mt-2 text-xs text-gray-500">{{ __('Aktuell hochgeladen') }}</p>
-                @endif
             </div>
 
             <div>

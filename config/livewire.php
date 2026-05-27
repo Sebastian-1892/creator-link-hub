@@ -20,7 +20,7 @@ return [
     */
     'temporary_file_upload' => [
         'disk' => 'local',
-        'rules' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'],
+        'rules' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:8192'],
         'directory' => 'livewire-tmp',
         'middleware' => null,
         'preview_mimes' => [
