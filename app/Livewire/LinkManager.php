@@ -5,6 +5,7 @@ namespace App\Livewire;
 use App\Models\Link;
 use App\Models\Profile;
 use App\Services\PlanService;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
 
@@ -12,6 +13,10 @@ use Livewire\Component;
 class LinkManager extends Component
 {
     public Profile $profile;
+
+    public ?string $presetKey = null;
+
+    public string $presetValue = '';
 
     public string $newTitle = '';
 
@@ -26,35 +31,49 @@ class LinkManager extends Component
         $this->authorize('update', $this->profile);
     }
 
-    public function addLink(PlanService $plans): void
+    public function selectPreset(string $key): void
     {
-        $workspace = $this->profile->workspace;
+        abort_unless(array_key_exists($key, config('link-presets', [])), 404);
 
-        if (! $plans->canAddLink($workspace, $this->profile)) {
-            session()->flash('error', __('Im Free-Plan sind maximal :n Links möglich.', ['n' => config('creator.free_link_limit')]));
+        $this->presetKey = $key;
+        $this->reset('presetValue', 'newTitle', 'newUrl');
+        $this->resetErrorBag();
+    }
 
+    public function clearPreset(): void
+    {
+        $this->presetKey = null;
+        $this->reset('presetValue', 'newTitle', 'newUrl');
+        $this->resetErrorBag();
+    }
+
+    public function addPresetLink(PlanService $plans): void
+    {
+        if ($this->presetKey === null) {
             return;
         }
 
+        $preset = config('link-presets.'.$this->presetKey);
+
+        if (! is_array($preset)) {
+            return;
+        }
+
+        [$title, $url] = $this->resolvePresetTitleAndUrl($preset);
+
+        $this->createLinkFromInput($title, $url, $plans);
+        $this->resetAfterAdd();
+    }
+
+    public function addLink(PlanService $plans): void
+    {
         $this->validate([
             'newTitle' => ['required', 'string', 'max:120'],
             'newUrl' => ['required', 'string', 'max:2048', 'url'],
         ]);
 
-        $maxPos = (int) $this->profile->links()->max('position');
-
-        Link::query()->create([
-            'profile_id' => $this->profile->id,
-            'title' => $this->newTitle,
-            'url' => $this->newUrl,
-            'position' => $maxPos + 1,
-            'is_active' => true,
-            'opens_in_new_tab' => true,
-            'tracking_enabled' => true,
-        ]);
-
-        $this->reset('newTitle', 'newUrl');
-        $this->profile->refresh()->load('links');
+        $this->createLinkFromInput($this->newTitle, $this->newUrl, $plans);
+        $this->resetAfterAdd();
     }
 
     public function deleteLink(int $linkId): void
@@ -96,6 +115,90 @@ class LinkManager extends Component
     {
         return view('livewire.link-manager', [
             'links' => $this->profile->links()->orderBy('position')->get(),
+            'linkPresets' => config('link-presets', []),
         ]);
+    }
+
+    /**
+     * @param  array<string, mixed>  $preset
+     * @return array{0: string, 1: string}
+     */
+    protected function resolvePresetTitleAndUrl(array $preset): array
+    {
+        $type = $preset['type'] ?? 'custom';
+
+        if ($type === 'custom') {
+            $this->validate([
+                'newTitle' => ['required', 'string', 'max:120'],
+                'newUrl' => ['required', 'string', 'max:2048', 'url'],
+            ]);
+
+            return [$this->newTitle, $this->newUrl];
+        }
+
+        $rules = match ($type) {
+            'username' => ['presetValue' => ['required', 'string', 'regex:/^[A-Za-z0-9._-]{1,64}$/']],
+            'url' => ['presetValue' => ['required', 'string', 'max:2048', 'url']],
+            'email' => ['presetValue' => ['required', 'string', 'email', 'max:255']],
+            'phone' => ['presetValue' => ['required', 'string', 'regex:/^\+?[0-9]{6,20}$/']],
+            default => throw ValidationException::withMessages([
+                'presetValue' => __('Unbekannter Link-Typ.'),
+            ]),
+        };
+
+        $this->validate($rules, [
+            'presetValue.required' => __('Bitte einen Wert eingeben.'),
+            'presetValue.regex' => __('Ungültiges Format — bitte prüfen und erneut versuchen.'),
+            'presetValue.url' => __('Bitte eine gültige URL eingeben.'),
+            'presetValue.email' => __('Bitte eine gültige E-Mail-Adresse eingeben.'),
+        ]);
+
+        $value = trim($this->presetValue);
+
+        if ($type === 'phone') {
+            $value = preg_replace('/\D/', '', $value) ?? $value;
+        }
+
+        if ($type === 'username') {
+            $value = ltrim($value, '@');
+        }
+
+        $template = $preset['url_template'] ?? '{value}';
+        $url = str_replace('{value}', $value, $template);
+
+        return [$preset['label'] ?? __('Link'), $url];
+    }
+
+    protected function createLinkFromInput(string $title, string $url, PlanService $plans): void
+    {
+        $workspace = $this->profile->workspace;
+
+        if (! $plans->canAddLink($workspace, $this->profile)) {
+            session()->flash('error', __('Im Free-Plan sind maximal :n Links möglich.', ['n' => config('creator.free_link_limit')]));
+            $this->dispatch('close-modal', 'add-link');
+
+            return;
+        }
+
+        $maxPos = (int) $this->profile->links()->max('position');
+
+        Link::query()->create([
+            'profile_id' => $this->profile->id,
+            'title' => $title,
+            'url' => $url,
+            'position' => $maxPos + 1,
+            'is_active' => true,
+            'opens_in_new_tab' => true,
+            'tracking_enabled' => true,
+        ]);
+
+        $this->profile->refresh()->load('links');
+    }
+
+    protected function resetAfterAdd(): void
+    {
+        $this->reset('presetKey', 'presetValue', 'newTitle', 'newUrl');
+        $this->resetErrorBag();
+        $this->dispatch('close-modal', 'add-link');
     }
 }
