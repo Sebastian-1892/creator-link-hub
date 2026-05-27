@@ -18,7 +18,6 @@ class PublicProfileController extends Controller
             function () use ($slug) {
                 return Profile::query()
                     ->where('slug', $slug)
-                    ->where('is_published', true)
                     ->with([
                         'theme',
                         'workspace',
@@ -27,6 +26,21 @@ class PublicProfileController extends Controller
                     ->firstOrFail();
             }
         );
+
+        if (! $profile->is_published) {
+            // Kein 404 mehr bei „nicht veröffentlicht“ (Template-Auswahl / Vorschau soll nicht als Fehler wirken).
+            // Inhalte werden bewusst nicht öffentlich gezeigt.
+            $safeProfile = clone $profile;
+            $safeProfile->display_name = 'Seite nicht veröffentlicht';
+            $safeProfile->bio = '';
+            $safeProfile->avatar_path = null;
+            $safeProfile->setRelation('links', collect());
+
+            return view('public.profile-unpublished', [
+                'profile' => $safeProfile,
+                'showPlatformBranding' => false,
+            ]);
+        }
 
         return view('public.profile', [
             'profile' => $profile,

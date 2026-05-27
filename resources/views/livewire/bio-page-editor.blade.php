@@ -127,8 +127,13 @@
         </form>
 
         <div class="text-sm text-gray-600">
-            {{ __('Öffentliche Vorschau') }}:
-            <a class="text-indigo-600 underline" href="{{ route('public.profile', $profile->slug) }}" target="_blank" wire:key="preview-{{ $profile->slug }}">{{ route('public.profile', $profile->slug) }}</a>
+            @if ($profile->is_published)
+                {{ __('Öffentliche Vorschau') }}:
+                <a class="text-indigo-600 underline" href="{{ route('public.profile', $profile->slug) }}" target="_blank" wire:key="preview-{{ $profile->slug }}">{{ route('public.profile', $profile->slug) }}</a>
+            @else
+                {{ __('Öffentliche Vorschau') }}:
+                <span class="text-gray-500">{{ 'Bitte zuerst „Öffentlich veröffentlichen“ aktivieren, um die Vorschau öffentlich aufzurufen.' }}</span>
+            @endif
         </div>
     </div>
 </div>
