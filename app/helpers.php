@@ -2,6 +2,7 @@
 
 use App\Models\Profile;
 use App\Services\BrandingService;
+use App\Support\ProfileDesignSettings;
 
 if (! function_exists('brand')) {
     /**
@@ -53,15 +54,17 @@ if (! function_exists('clh_public_theme')) {
      *     button_style: string,
      *     card_style: string,
      *     background_style: string,
+     *     header_layout: string,
+     *     wallpaper_style: string,
      * }
      */
     function clh_public_theme(Profile $profile): array
     {
+        $settings = ProfileDesignSettings::fromProfile($profile);
         $theme = $profile->theme;
-        $buttonStyle = $theme?->button_style ?? 'pill';
-        $backgroundStyle = $theme?->background_style ?? 'solid';
-        $fontKey = $theme?->font_family ?? 'figtree';
         $cardStyle = $theme?->card_style ?? 'flat';
+        $fontKey = $settings->fontFamily;
+        $headerLayout = $settings->headerLayout;
 
         $fontQueries = [
             'figtree' => 'figtree:400,500,600,700',
@@ -86,50 +89,41 @@ if (! function_exists('clh_public_theme')) {
         $gridSvg = rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="40" height="40"><path d="M40 0H0V40" fill="none" stroke="%23000000" stroke-width="1" opacity="0.07"/></svg>');
         $noiseSvg = rawurlencode('<svg xmlns="http://www.w3.org/2000/svg" width="120" height="120"><filter id="n"><feTurbulence type="fractalNoise" baseFrequency="0.9" numOctaves="4" stitchTiles="stitch"/></filter><rect width="100%" height="100%" filter="url(%23n)" opacity="0.05"/></svg>');
 
-        $bodyStyle = match ($backgroundStyle) {
-            'gradient' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background: linear-gradient(165deg, var(--clh-bg) 0%, color-mix(in srgb, var(--clh-accent) 22%, var(--clh-bg)) 45%, var(--clh-bg-alt) 100%);',
-            'radial-glow' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background: radial-gradient(ellipse 90% 55% at 50% -15%, color-mix(in srgb, var(--clh-accent) 35%, transparent), transparent 55%), linear-gradient(180deg, var(--clh-bg), color-mix(in srgb, var(--clh-bg) 88%, #000));',
-            'pattern-dots' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background-color: var(--clh-bg); background-image: url("data:image/svg+xml,'.$dotSvg.'"); background-size: 28px 28px;',
-            'pattern-grid' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background-color: var(--clh-bg); background-image: url("data:image/svg+xml,'.$gridSvg.'"); background-size: 40px 40px;',
-            'noise' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background-color: var(--clh-bg); background-image: url("data:image/svg+xml,'.$noiseSvg.'");',
-            default => 'font-family: '.$fontFamily.'; color: var(--clh-text); background: radial-gradient(ellipse 90% 55% at 50% -15%, var(--clh-accent-soft), transparent 55%), linear-gradient(180deg, var(--clh-bg), color-mix(in srgb, var(--clh-bg) 92%, #fff));',
+        $bodyStyle = match ($settings->wallpaperStyle) {
+            'gradient' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background: linear-gradient('.$settings->wallpaperGradientAngle.'deg, '.$settings->wallpaperGradientFrom.' 0%, '.$settings->wallpaperGradientTo.' 100%);',
+            'image' => 'font-family: '.$fontFamily.'; color: var(--clh-text); background-color: '.$settings->wallpaperColor.';',
+            default => 'font-family: '.$fontFamily.'; color: var(--clh-text); background-color: '.$settings->wallpaperColor.';',
         };
 
-        $radius = match ($buttonStyle) {
+        $radius = match ($settings->buttonShape) {
             'square' => '6px',
-            'rounded', 'glass', 'shadow' => '16px',
+            'rounded' => '16px',
             default => '9999px',
         };
 
-        $linkStyle = match ($buttonStyle) {
-            'outline' => 'background: transparent; color: var(--clh-accent); border: 2px solid color-mix(in srgb, var(--clh-accent) 85%, transparent); border-radius: '.$radius.';',
-            'glass' => 'background: color-mix(in srgb, var(--clh-card) 45%, transparent); color: var(--clh-text); border: 1px solid color-mix(in srgb, var(--clh-border) 70%, transparent); border-radius: '.$radius.'; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);',
-            'shadow' => 'background: var(--clh-card); color: var(--clh-text); border: 1px solid var(--clh-border); border-radius: '.$radius.'; box-shadow: 0 14px 40px rgba(0,0,0,0.28);',
-            default => 'background: var(--clh-card); color: var(--clh-text); border: 1px solid var(--clh-border); border-radius: '.$radius.';',
-        };
-
-        $cardShadow = match ($cardStyle) {
-            'elevated' => 'box-shadow: 0 16px 42px rgba(0,0,0,0.14);',
-            'glass' => 'backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: color-mix(in srgb, var(--clh-card) 65%, transparent) !important;',
-            'bordered' => 'border-width: 2px;',
-            'pill' => 'border-radius: 28px;',
+        $shadowCss = match ($settings->buttonShadow) {
+            'soft' => 'box-shadow: 0 8px 24px rgba(0,0,0,0.12);',
+            'strong' => 'box-shadow: 0 14px 40px rgba(0,0,0,0.28);',
+            'hard' => 'box-shadow: 4px 4px 0 rgba(0,0,0,0.35);',
             default => '',
         };
 
-        if ($cardShadow !== '' && ! str_contains($linkStyle, 'box-shadow') && $cardStyle === 'elevated') {
-            $linkStyle .= ' '.$cardShadow;
+        $linkStyle = match ($settings->buttonStyle) {
+            'outline' => 'background: transparent; color: var(--clh-button-fg); border: 2px solid color-mix(in srgb, var(--clh-button-bg) 85%, transparent); border-radius: '.$radius.';',
+            'glass' => 'background: color-mix(in srgb, var(--clh-button-bg) 45%, transparent); color: var(--clh-button-fg); border: 1px solid color-mix(in srgb, var(--clh-border) 70%, transparent); border-radius: '.$radius.'; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);',
+            default => 'background: var(--clh-button-bg); color: var(--clh-button-fg); border: 1px solid var(--clh-border); border-radius: '.$radius.';',
+        };
+
+        if ($shadowCss !== '') {
+            $linkStyle .= ' '.$shadowCss;
         }
-        if ($cardStyle === 'glass' && $buttonStyle !== 'glass') {
-            $linkStyle .= ' backdrop-filter: blur(12px); -webkit-backdrop-filter: blur(12px); background: color-mix(in srgb, var(--clh-card) 55%, transparent);';
-        }
+
         if ($cardStyle === 'bordered') {
             $linkStyle .= ' border-width: 2px; border-color: var(--clh-accent);';
         }
-        if ($cardStyle === 'pill') {
-            $linkStyle .= ' border-radius: 28px;';
-        }
 
-        $avatarRadius = $buttonStyle === 'square' ? '12px' : '9999px';
+        $avatarRadius = $settings->buttonShape === 'square' ? '12px' : '9999px';
+        $avatarSize = $headerLayout === 'hero' ? '9rem' : '7rem';
 
         return [
             'font_href' => $fontHref,
@@ -139,12 +133,18 @@ if (! function_exists('clh_public_theme')) {
             'link_class' => 'group relative flex w-full items-center gap-3 px-5 py-4 font-semibold transition duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
             'link_style' => $linkStyle,
             'avatar_class' => 'mx-auto object-cover shadow-xl',
-            'avatar_style' => 'height: 7rem; width: 7rem; border-radius: '.$avatarRadius.'; box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 38%, transparent); border: 3px solid color-mix(in srgb, var(--clh-accent) 60%, transparent);',
-            'placeholder_avatar_class' => 'mx-auto flex h-28 w-28 items-center justify-center font-bold shadow-xl',
-            'placeholder_avatar_style' => 'border-radius: '.$avatarRadius.'; background: color-mix(in srgb, var(--clh-card) 90%, transparent); color: var(--clh-accent); border: 3px solid color-mix(in srgb, var(--clh-accent) 50%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 28%, transparent);',
-            'button_style' => $buttonStyle,
+            'avatar_style' => 'height: '.$avatarSize.'; width: '.$avatarSize.'; border-radius: '.$avatarRadius.'; box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 38%, transparent); border: 3px solid color-mix(in srgb, var(--clh-accent) 60%, transparent);',
+            'placeholder_avatar_class' => 'mx-auto flex items-center justify-center font-bold shadow-xl',
+            'placeholder_avatar_style' => 'height: '.$avatarSize.'; width: '.$avatarSize.'; border-radius: '.$avatarRadius.'; background: color-mix(in srgb, var(--clh-card) 90%, transparent); color: var(--clh-accent); border: 3px solid color-mix(in srgb, var(--clh-accent) 50%, transparent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 28%, transparent);',
+            'button_style' => $settings->buttonStyle,
             'card_style' => $cardStyle,
-            'background_style' => $backgroundStyle,
+            'background_style' => $settings->wallpaperStyle,
+            'header_layout' => $headerLayout,
+            'wallpaper_style' => $settings->wallpaperStyle,
+            'font_title_color' => $settings->fontTitleColor,
+            'font_text_color' => $settings->fontTextColor,
+            'button_bg' => $settings->buttonColor,
+            'button_fg' => $settings->buttonTextColor,
         ];
     }
 }

@@ -113,84 +113,12 @@
                         </div>
                     </div>
 
-                    {{-- Profil-Vorlagen (volle Breite) --}}
-                    <div class="order-3 lg:order-none lg:col-span-2 p-6 pt-0 lg:pt-6 border-t border-gray-100">
-                        <x-input-label :value="__('Profil-Vorlage')" />
-                        <p class="mt-1 text-xs text-gray-500">{{ __('Wähle Layout und Farben — Vorschau mit Avatar und drei Buttons.') }}</p>
-                        <div class="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="{{ __('Filter') }}">
-                            @foreach ([
-                                'all' => __('Alle'),
-                                'light' => __('Hell'),
-                                'dark' => __('Dunkel'),
-                                'colorful' => __('Bunt'),
-                                'minimal' => __('Minimal'),
-                            ] as $key => $label)
-                                <button
-                                    type="button"
-                                    wire:click="$set('theme_filter', '{{ $key }}')"
-                                    @class([
-                                        'rounded-full px-4 py-1.5 text-sm font-medium border transition',
-                                        'border-indigo-600 bg-indigo-50 text-indigo-800' => $theme_filter === $key,
-                                        'border-gray-200 bg-white text-gray-700 hover:border-gray-300' => $theme_filter !== $key,
-                                    ])
-                                >{{ $label }}</button>
-                            @endforeach
-                        </div>
-                        <div class="mt-4 max-h-96 overflow-y-auto rounded-lg border border-gray-200 bg-gray-50/50 p-3" role="radiogroup" aria-label="{{ __('Profil-Vorlage') }}">
-                            <div class="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                                <label @class([
-                                    'flex cursor-pointer flex-col rounded-xl border-2 bg-white p-3 shadow-sm transition',
-                                    'border-indigo-600 ring-2 ring-indigo-100' => blank($theme_id),
-                                    'border-gray-200 hover:border-gray-300' => filled($theme_id),
-                                ])>
-                                    <input type="radio" wire:model.live="theme_id" value="" class="sr-only" />
-                                    <span class="text-sm font-medium text-gray-900">{{ __('Standard (Theme wählen)') }}</span>
-                                    <span class="mt-1 text-xs text-gray-500">{{ __('Später festlegen.') }}</span>
-                                </label>
-                                @foreach ($themes as $theme)
-                                    @php
-                                        $v = is_array($theme->variables) ? $theme->variables : [];
-                                        $bg = $v['bg'] ?? '#e5e7eb';
-                                        $text = $v['text'] ?? '#111827';
-                                        $accent = $v['accent'] ?? '#6366f1';
-                                        $card = $v['card'] ?? '#f3f4f6';
-                                        $btnRadius = match ($theme->button_style ?? 'pill') {
-                                            'square' => '4px',
-                                            'rounded', 'glass', 'shadow' => '12px',
-                                            default => '9999px',
-                                        };
-                                        $glass = ($theme->button_style ?? '') === 'glass';
-                                    @endphp
-                                    <label @class([
-                                        'flex cursor-pointer flex-col rounded-xl border-2 bg-white p-3 shadow-sm transition',
-                                        'border-indigo-600 ring-2 ring-indigo-100' => filled($theme_id) && (int) $theme_id === (int) $theme->id,
-                                        'border-gray-200 hover:border-gray-300' => blank($theme_id) || (int) $theme_id !== (int) $theme->id,
-                                    ])>
-                                        <input type="radio" wire:model.live="theme_id" value="{{ $theme->id }}" class="sr-only" />
-                                        <span class="text-xs font-semibold text-gray-900 truncate">{{ $theme->name }}</span>
-                                        <div class="mt-2 rounded-lg border border-black/10 overflow-hidden" style="background: {{ $bg }};">
-                                            <div class="p-2 flex flex-col items-center gap-1.5">
-                                                <div class="h-7 w-7 rounded-full border-2 shrink-0" style="border-color: {{ $accent }};"></div>
-                                                <div class="h-1 w-16 rounded-full opacity-40" style="background: {{ $text }};"></div>
-                                                @foreach (range(1, 3) as $i)
-                                                    <div
-                                                        class="w-full h-6 text-[9px] font-bold flex items-center justify-center px-1 truncate"
-                                                        style="
-                                                            background: {{ $glass ? 'rgba(255,255,255,0.12)' : $card }};
-                                                            color: {{ $accent }};
-                                                            border-radius: {{ $btnRadius }};
-                                                            border: 1px solid {{ $glass ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.06)' }};
-                                                            {{ $glass ? 'backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px);' : '' }}
-                                                        "
-                                                    >•••</div>
-                                                @endforeach
-                                            </div>
-                                        </div>
-                                    </label>
-                                @endforeach
-                            </div>
-                        </div>
-                        <x-input-error :messages="$errors->get('theme_id')" class="mt-2" />
+                    <div class="order-3 lg:order-none lg:col-span-2 px-6 py-4 border-t border-gray-100 bg-indigo-50/50">
+                        <p class="text-sm text-indigo-900">
+                            {{ __('Theme, Hintergrund, Schrift und Buttons passt du im') }}
+                            <a href="{{ route('design.edit') }}" class="font-semibold underline">{{ __('Design-Tab') }}</a>
+                            {{ __('an.') }}
+                        </p>
                     </div>
 
                     {{-- Footer --}}

@@ -5,25 +5,32 @@
         $clh = clh_public_theme($profile);
     @endphp
     <div class="max-w-md mx-auto px-4 py-12 pb-28">
-        <header class="text-center">
-            @if ($profile->avatar_path)
-                <img
-                    src="{{ \Illuminate\Support\Facades\Storage::url($profile->avatar_path) }}"
-                    alt=""
-                    class="{{ $clh['avatar_class'] }}"
-                    style="{{ $clh['avatar_style'] }}"
-                >
-            @else
+        <header class="@if ($clh['header_layout'] === 'hero') relative mb-8 @else text-center @endif">
+            @if ($clh['header_layout'] === 'banner' && $profile->banner_image_path)
                 <div
-                    class="{{ $clh['placeholder_avatar_class'] }} text-4xl"
-                    style="{{ $clh['placeholder_avatar_style'] }}"
-                >
-                    {{ \Illuminate\Support\Str::substr($profile->display_name, 0, 1) }}
-                </div>
+                    class="-mx-4 mb-6 h-36 sm:h-44 bg-cover bg-center rounded-2xl shadow-lg"
+                    style="background-image: url('{{ \Illuminate\Support\Facades\Storage::url($profile->banner_image_path) }}');"
+                    role="img"
+                    aria-label=""
+                ></div>
             @endif
-            <h1 class="mt-6 text-3xl font-bold tracking-tight">{{ $profile->display_name }}</h1>
-            @if ($profile->bio)
-                <p class="mt-3 text-base leading-relaxed whitespace-pre-line opacity-90" style="color: var(--clh-text-muted);">{{ $profile->bio }}</p>
+
+            @if ($clh['header_layout'] === 'hero')
+                <div class="relative -mx-4 mb-8 overflow-hidden rounded-2xl py-10 px-4" style="background: linear-gradient(180deg, color-mix(in srgb, var(--clh-accent) 25%, transparent), transparent);">
+                    <div class="flex flex-col items-center text-center">
+                        @include('public.partials.profile-avatar', ['profile' => $profile, 'clh' => $clh])
+                        <h1 class="mt-6 text-3xl font-bold tracking-tight" style="color: var(--clh-title);">{{ $profile->display_name }}</h1>
+                        @if ($profile->bio)
+                            <p class="mt-3 max-w-sm text-base leading-relaxed whitespace-pre-line opacity-90" style="color: var(--clh-text-muted);">{{ $profile->bio }}</p>
+                        @endif
+                    </div>
+                </div>
+            @else
+                @include('public.partials.profile-avatar', ['profile' => $profile, 'clh' => $clh])
+                <h1 class="mt-6 text-3xl font-bold tracking-tight" style="color: var(--clh-title);">{{ $profile->display_name }}</h1>
+                @if ($profile->bio)
+                    <p class="mt-3 text-base leading-relaxed whitespace-pre-line opacity-90" style="color: var(--clh-text-muted);">{{ $profile->bio }}</p>
+                @endif
             @endif
         </header>
 

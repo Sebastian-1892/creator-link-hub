@@ -28,6 +28,17 @@ return [
         'webp_quality' => 85,
     ],
 
+    /**
+     * Wallpaper- und Banner-Bilder für den Design-Tab.
+     */
+    'profile_images' => [
+        'max_upload_kb' => 8192,
+        'wallpaper_max_edge_px' => 1920,
+        'banner_max_edge_px' => 1600,
+        'jpeg_quality' => 85,
+        'webp_quality' => 85,
+    ],
+
     'free_link_limit' => 10,
 
     'stripe_prices' => [
