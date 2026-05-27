@@ -3,6 +3,7 @@
 use App\Models\Profile;
 use App\Services\BrandingService;
 use App\Support\ProfileDesignSettings;
+use Illuminate\Support\Facades\Storage;
 
 if (! function_exists('brand')) {
     /**
@@ -145,6 +146,55 @@ if (! function_exists('clh_public_theme')) {
             'font_text_color' => $settings->fontTextColor,
             'button_bg' => $settings->buttonColor,
             'button_fg' => $settings->buttonTextColor,
+        ];
+    }
+}
+
+if (! function_exists('clh_public_presentation')) {
+    /**
+     * CSS-Variablen und Asset-URLs für öffentliche Bio (Layout + Vorschau).
+     *
+     * @return array{
+     *     clh: array<string, mixed>,
+     *     settings: ProfileDesignSettings,
+     *     css_vars: array<string, string>,
+     *     avatar_url: string|null,
+     *     wallpaper_url: string|null,
+     * }
+     */
+    function clh_public_presentation(Profile $profile): array
+    {
+        $clh = clh_public_theme($profile);
+        $settings = ProfileDesignSettings::fromProfile($profile);
+        $fallback = app(BrandingService::class)->profileThemeFallbackVariables();
+        $vars = array_merge(
+            $fallback,
+            $profile->theme?->variables ?? [],
+            is_array($profile->theme_variables) ? $profile->theme_variables : []
+        );
+
+        $accent = (string) ($vars['accent'] ?? $fallback['accent']);
+
+        return [
+            'clh' => $clh,
+            'settings' => $settings,
+            'css_vars' => [
+                '--clh-bg' => $settings->wallpaperColor,
+                '--clh-text' => $settings->fontTextColor,
+                '--clh-title' => $settings->fontTitleColor,
+                '--clh-accent' => $accent,
+                '--clh-card' => $settings->buttonColor,
+                '--clh-border' => (string) ($vars['border'] ?? $fallback['border']),
+                '--clh-button-bg' => $settings->buttonColor,
+                '--clh-button-fg' => $settings->buttonTextColor,
+                '--clh-text-muted' => (string) ($vars['text_muted'] ?? $fallback['text_muted']),
+            ],
+            'avatar_url' => $profile->avatar_path
+                ? Storage::url($profile->avatar_path)
+                : null,
+            'wallpaper_url' => $profile->wallpaper_image_path
+                ? Storage::url($profile->wallpaper_image_path)
+                : null,
         ];
     }
 }

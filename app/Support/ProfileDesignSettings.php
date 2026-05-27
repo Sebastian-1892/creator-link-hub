@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\Profile;
+use App\Models\Theme;
 use App\Services\BrandingService;
 
 class ProfileDesignSettings
@@ -37,6 +38,53 @@ class ProfileDesignSettings
         public string $buttonColor = '#ffffff',
         public string $buttonTextColor = '#0f172a',
     ) {}
+
+    /**
+     * Design-Felder aus einer Theme-Vorlage (für Live-Vorschau nach Theme-Wechsel).
+     */
+    public static function fromTheme(Theme $theme, Profile $profile): self
+    {
+        $v = is_array($theme->variables) ? $theme->variables : [];
+        $bg = (string) ($v['bg'] ?? '#f8fafc');
+        $text = (string) ($v['text'] ?? '#0f172a');
+        $accent = (string) ($v['accent'] ?? '#6366f1');
+        $card = (string) ($v['card'] ?? '#ffffff');
+
+        $wallpaperStyle = self::wallpaperStyleForTheme($theme, $profile);
+        $fontFamily = in_array($theme->font_family, self::FONT_FAMILIES, true)
+            ? $theme->font_family
+            : 'figtree';
+
+        return new self(
+            themeId: $theme->id,
+            headerLayout: (string) ($profile->header_layout ?: 'classic'),
+            wallpaperStyle: $wallpaperStyle,
+            wallpaperColor: $bg,
+            wallpaperGradientFrom: $bg,
+            wallpaperGradientTo: $accent,
+            wallpaperGradientAngle: 165,
+            fontFamily: $fontFamily,
+            fontTextColor: $text,
+            fontTitleColor: $text,
+            buttonStyle: self::mapThemeButtonStyle((string) ($theme->button_style ?? 'solid')),
+            buttonShape: self::mapThemeButtonShape((string) ($theme->button_style ?? 'pill')),
+            buttonShadow: ($theme->button_style ?? '') === 'shadow' ? 'strong' : 'soft',
+            buttonColor: $card,
+            buttonTextColor: $accent,
+        );
+    }
+
+    public static function wallpaperStyleForTheme(Theme $theme, Profile $profile): string
+    {
+        if ($profile->wallpaper_image_path) {
+            return 'image';
+        }
+
+        return match ($theme->background_style) {
+            'gradient', 'radial-glow' => 'gradient',
+            default => 'solid',
+        };
+    }
 
     public static function fromProfile(Profile $profile): self
     {

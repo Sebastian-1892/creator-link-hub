@@ -10,39 +10,21 @@
     <meta property="og:type" content="website">
     <meta property="og:url" content="{{ url()->current() }}">
     @php
-        $clhHead = clh_public_theme($profile);
+        $presentation = clh_public_presentation($profile);
+        $clhHead = $presentation['clh'];
+        $settings = $presentation['settings'];
+        $avatarUrl = $presentation['avatar_url'];
+        $wallpaperUrl = $presentation['wallpaper_url'];
     @endphp
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="{{ $clhHead['font_href'] }}" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
-    @php
-        $settings = \App\Support\ProfileDesignSettings::fromProfile($profile);
-        $fallback = app(\App\Services\BrandingService::class)->profileThemeFallbackVariables();
-        $vars = array_merge(
-            $fallback,
-            $profile->theme?->variables ?? [],
-            is_array($profile->theme_variables) ? $profile->theme_variables : []
-        );
-        $bg = $settings->wallpaperColor;
-        $text = $settings->fontTextColor;
-        $accent = $vars['accent'] ?? $fallback['accent'];
-        $card = $settings->buttonColor;
-        $border = $vars['border'] ?? $fallback['border'];
-        $avatarUrl = $profile->avatar_path ? \Illuminate\Support\Facades\Storage::url($profile->avatar_path) : null;
-        $wallpaperUrl = $profile->wallpaper_image_path ? \Illuminate\Support\Facades\Storage::url($profile->wallpaper_image_path) : null;
-    @endphp
     <style>
         :root {
-            --clh-bg: {{ $bg }};
-            --clh-text: {{ $text }};
-            --clh-title: {{ $settings->fontTitleColor }};
-            --clh-accent: {{ $accent }};
-            --clh-card: {{ $card }};
-            --clh-border: {{ $border }};
-            --clh-button-bg: {{ $settings->buttonColor }};
-            --clh-button-fg: {{ $settings->buttonTextColor }};
-            --clh-accent-soft: color-mix(in srgb, {{ $accent }} 32%, transparent);
-            --clh-text-muted: {{ $vars['text_muted'] ?? $fallback['text_muted'] }};
+            @foreach ($presentation['css_vars'] as $name => $value)
+            {{ $name }}: {{ $value }};
+            @endforeach
+            --clh-accent-soft: color-mix(in srgb, var(--clh-accent) 32%, transparent);
         }
     </style>
 </head>

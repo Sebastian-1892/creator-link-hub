@@ -25,7 +25,7 @@
             <div class="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">{{ session('design_notice') }}</div>
         @endif
 
-        <form wire:submit="save" class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[220px_minmax(0,1fr)_minmax(280px,320px)]">
+        <form wire:submit="save" class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[12rem_minmax(0,1fr)_18.75rem] xl:items-start">
             {{-- Sektions-Navigation --}}
             <nav class="bg-white shadow sm:rounded-lg p-3 h-fit space-y-1" aria-label="{{ __('Design-Bereiche') }}">
                 @foreach ([
@@ -48,29 +48,33 @@
             </nav>
 
             {{-- Einstellungen --}}
-            <div class="bg-white shadow sm:rounded-lg p-6 min-h-[420px]">
+            <div class="bg-white shadow sm:rounded-lg p-6 min-h-[28rem] min-w-0">
                 @if ($activeSection === 'theme')
-                    <h2 class="text-lg font-semibold text-gray-900">{{ __('Theme') }}</h2>
-                    <p class="mt-1 text-sm text-gray-500">{{ __('Wähle eine Vorlage als Basis für Farben und Stil.') }}</p>
-                    <div class="mt-4 flex flex-wrap gap-2">
-                        @foreach (['all' => __('Alle'), 'light' => __('Hell'), 'dark' => __('Dunkel'), 'colorful' => __('Bunt'), 'minimal' => __('Minimal')] as $key => $label)
-                            <button type="button" wire:click="$set('theme_filter', '{{ $key }}')" @class([
-                                'rounded-full px-3 py-1 text-xs font-medium border',
-                                'border-indigo-600 bg-indigo-50 text-indigo-800' => $theme_filter === $key,
-                                'border-gray-200' => $theme_filter !== $key,
-                            ])>{{ $label }}</button>
+                    <h2 class="text-lg font-semibold text-gray-900">{{ __('Profil-Vorlage') }}</h2>
+                    <p class="mt-1 text-sm text-gray-500">{{ __('Wähle Layout und Farben — die Live-Vorschau rechts aktualisiert sich sofort.') }}</p>
+                    <div class="mt-3 flex flex-wrap gap-2" role="tablist" aria-label="{{ __('Filter') }}">
+                        @foreach ([
+                            'all' => __('Alle'),
+                            'light' => __('Hell'),
+                            'dark' => __('Dunkel'),
+                            'colorful' => __('Bunt'),
+                            'minimal' => __('Minimal'),
+                        ] as $key => $label)
+                            <button
+                                type="button"
+                                wire:click="$set('theme_filter', '{{ $key }}')"
+                                @class([
+                                    'rounded-full px-4 py-1.5 text-sm font-medium border transition',
+                                    'border-indigo-600 bg-indigo-50 text-indigo-800' => $theme_filter === $key,
+                                    'border-gray-200 bg-white text-gray-700 hover:border-gray-300' => $theme_filter !== $key,
+                                ])
+                            >{{ $label }}</button>
                         @endforeach
                     </div>
-                    <div class="mt-4 max-h-80 overflow-y-auto grid grid-cols-1 sm:grid-cols-2 gap-3">
-                        @foreach ($themes as $theme)
-                            @php $v = is_array($theme->variables) ? $theme->variables : []; @endphp
-                            <label @class(['cursor-pointer rounded-xl border-2 p-3', 'border-indigo-600' => (int) $theme_id === (int) $theme->id, 'border-gray-200' => (int) $theme_id !== (int) $theme->id])>
-                                <input type="radio" wire:model.live="theme_id" value="{{ $theme->id }}" class="sr-only" />
-                                <span class="text-sm font-medium">{{ $theme->name }}</span>
-                                <div class="mt-2 h-16 rounded-lg border" style="background: {{ $v['bg'] ?? '#eee' }};"></div>
-                            </label>
-                        @endforeach
+                    <div class="mt-4">
+                        @include('livewire.partials.theme-picker-cards', ['themes' => $themes, 'theme_id' => $theme_id])
                     </div>
+                    <x-input-error :messages="$errors->get('theme_id')" class="mt-2" />
                 @endif
 
                 @if ($activeSection === 'header')
@@ -119,18 +123,18 @@
                     @if ($wallpaper_style === 'solid')
                         <div class="mt-4">
                             <x-input-label for="wallpaper_color" :value="__('Hintergrundfarbe')" />
-                            <input type="color" wire:model.live="wallpaper_color" id="wallpaper_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                            <input type="color" wire:model.live.debounce.150ms="wallpaper_color" id="wallpaper_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                         </div>
                     @endif
                     @if ($wallpaper_style === 'gradient')
                         <div class="mt-4 grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <x-input-label for="wallpaper_gradient_from" :value="__('Farbe oben')" />
-                                <input type="color" wire:model.live="wallpaper_gradient_from" id="wallpaper_gradient_from" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                                <input type="color" wire:model.live.debounce.150ms="wallpaper_gradient_from" id="wallpaper_gradient_from" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                             </div>
                             <div>
                                 <x-input-label for="wallpaper_gradient_to" :value="__('Farbe unten')" />
-                                <input type="color" wire:model.live="wallpaper_gradient_to" id="wallpaper_gradient_to" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                                <input type="color" wire:model.live.debounce.150ms="wallpaper_gradient_to" id="wallpaper_gradient_to" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                             </div>
                             <div class="sm:col-span-2">
                                 <x-input-label for="wallpaper_gradient_angle" :value="__('Winkel (:deg°)', ['deg' => $wallpaper_gradient_angle])" />
@@ -174,11 +178,11 @@
                         <div class="flex flex-wrap gap-6">
                             <div>
                                 <x-input-label for="font_title_color" :value="__('Titelfarbe')" />
-                                <input type="color" wire:model.live="font_title_color" id="font_title_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                                <input type="color" wire:model.live.debounce.150ms="font_title_color" id="font_title_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                             </div>
                             <div>
                                 <x-input-label for="font_text_color" :value="__('Textfarbe')" />
-                                <input type="color" wire:model.live="font_text_color" id="font_text_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                                <input type="color" wire:model.live.debounce.150ms="font_text_color" id="font_text_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                             </div>
                         </div>
                     </div>
@@ -220,11 +224,11 @@
                         <div class="flex flex-wrap gap-6">
                             <div>
                                 <x-input-label for="button_color" :value="__('Buttonfarbe')" />
-                                <input type="color" wire:model.live="button_color" id="button_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                                <input type="color" wire:model.live.debounce.150ms="button_color" id="button_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                             </div>
                             <div>
                                 <x-input-label for="button_text_color" :value="__('Buttontext')" />
-                                <input type="color" wire:model.live="button_text_color" id="button_text_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
+                                <input type="color" wire:model.live.debounce.150ms="button_text_color" id="button_text_color" class="mt-1 h-10 w-20 rounded border border-gray-300" />
                             </div>
                         </div>
                     </div>
@@ -238,46 +242,18 @@
                 </div>
             </div>
 
-            {{-- Vorschau --}}
-            <div class="xl:sticky xl:top-24 h-fit">
-                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2">{{ __('Vorschau') }}</p>
-                <div
-                    class="relative mx-auto w-full max-w-[280px] rounded-[2rem] border-8 border-gray-900 shadow-2xl overflow-hidden min-h-[480px]"
-                    style="
-                        {{ $previewTheme['body_style'] }}
-                        --clh-title: {{ $font_title_color }};
-                        --clh-text: {{ $font_text_color }};
-                        --clh-text-muted: color-mix(in srgb, {{ $font_text_color }} 70%, transparent);
-                        --clh-accent: {{ $button_text_color }};
-                        --clh-button-bg: {{ $button_color }};
-                        --clh-button-fg: {{ $button_text_color }};
-                        --clh-border: color-mix(in srgb, {{ $button_color }} 80%, {{ $font_text_color }});
-                        --clh-card: {{ $button_color }};
-                    "
-                >
-                    @if ($profile->wallpaper_image_path && $wallpaper_style === 'image')
-                        <div class="pointer-events-none absolute inset-0 bg-cover bg-center opacity-90" style="background-image: url('{{ \Illuminate\Support\Facades\Storage::url($profile->wallpaper_image_path) }}');"></div>
-                    @endif
-                    <div class="relative z-10 px-4 py-8">
-                        @if ($header_layout === 'banner' && $profile->banner_image_path)
-                            <div class="-mx-4 -mt-8 mb-4 h-24 bg-cover bg-center" style="background-image: url('{{ \Illuminate\Support\Facades\Storage::url($profile->banner_image_path) }}');"></div>
-                        @endif
-                        @if ($header_layout === 'hero')
-                            <div class="mb-4 flex justify-center">
-                                <div class="h-24 w-24 rounded-full border-4" style="{{ $previewTheme['avatar_style'] }}; background: color-mix(in srgb, var(--clh-accent) 20%, transparent);"></div>
-                            </div>
-                        @else
-                            <div class="mb-4 flex justify-center">
-                                <div class="h-16 w-16 rounded-full" style="{{ $previewTheme['placeholder_avatar_style'] }}">?</div>
-                            </div>
-                        @endif
-                        <p class="text-center text-lg font-bold" style="color: var(--clh-title);">{{ $profile->display_name }}</p>
-                        <div class="mt-6 space-y-2">
-                            <div class="{{ $previewTheme['link_class'] }} text-sm py-3" style="{{ $previewTheme['link_style'] }}">{{ __('Beispiel-Link') }}</div>
-                            <div class="{{ $previewTheme['link_class'] }} text-sm py-3 opacity-80" style="{{ $previewTheme['link_style'] }}">{{ __('Zweiter Link') }}</div>
-                        </div>
-                    </div>
-                </div>
+            {{-- Vorschau (live, gleiche Logik wie öffentliche Bio) --}}
+            <div
+                class="w-full max-w-[18.75rem] mx-auto xl:mx-0 xl:sticky xl:top-24 shrink-0"
+                wire:loading.class="opacity-70"
+                wire:target="theme_id, theme_filter, header_layout, wallpaper_style, wallpaper_color, wallpaper_gradient_from, wallpaper_gradient_to, wallpaper_gradient_angle, font_family, font_text_color, font_title_color, button_style, button_shape, button_shadow, button_color, button_text_color"
+            >
+                <p class="text-xs font-semibold uppercase tracking-wide text-gray-500 mb-2 text-center xl:text-left">{{ __('Live-Vorschau') }}</p>
+                @include('livewire.partials.design-preview', [
+                    'previewProfile' => $previewProfile,
+                    'presentation' => $previewPresentation,
+                    'previewKey' => $previewKey,
+                ])
             </div>
         </form>
     </div>

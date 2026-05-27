@@ -3,6 +3,7 @@
 use App\Livewire\DesignEditor;
 use App\Models\Link;
 use App\Models\Profile;
+use App\Models\Theme;
 use App\Models\User;
 use Illuminate\Support\Facades\Cache;
 use Livewire\Livewire;
@@ -14,6 +15,24 @@ test('authenticated user can access design editor', function () {
         ->get(route('design.edit'))
         ->assertOk()
         ->assertSee(__('Design'), false);
+});
+
+test('selecting a theme applies its colors to the form and preview', function () {
+    $user = User::factory()->create();
+    $theme = Theme::query()->where('slug', 'midnight-blue')->first();
+    expect($theme)->not->toBeNull();
+
+    $vars = is_array($theme->variables) ? $theme->variables : [];
+
+    Livewire::actingAs($user)
+        ->test(DesignEditor::class)
+        ->set('theme_id', $theme->id)
+        ->assertSet('wallpaper_color', $vars['bg'])
+        ->assertSet('font_text_color', $vars['text'])
+        ->assertSet('button_color', $vars['card'])
+        ->assertSet('button_text_color', $vars['accent'])
+        ->assertSet('wallpaper_style', 'gradient')
+        ->assertSet('button_style', 'solid');
 });
 
 test('design editor save persists settings in profile and theme variables', function () {

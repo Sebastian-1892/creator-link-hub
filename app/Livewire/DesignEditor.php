@@ -92,9 +92,7 @@ class DesignEditor extends Component
     public function updatedThemeId(mixed $value): void
     {
         $this->theme_id = ($value === '' || $value === null) ? null : (int) $value;
-        $this->profile->refresh()->load('theme');
-        $settings = ProfileDesignSettings::fromProfile($this->profile->fresh());
-        $this->syncFromSettings($settings);
+        $this->applyThemeDefaultsToForm();
     }
 
     public function save(): void
@@ -164,10 +162,42 @@ class DesignEditor extends Component
             $query->where('template_group', $this->theme_filter);
         }
 
-        $previewProfile = clone $this->profile;
-        $previewProfile->setRelation('theme', $this->theme_id ? Theme::query()->find($this->theme_id) : null);
-        $previewProfile->header_layout = $this->header_layout;
-        $previewProfile->theme_variables = (new ProfileDesignSettings(
+        $previewProfile = $this->buildPreviewProfile();
+
+        return view('livewire.design-editor', [
+            'themes' => $query->get(),
+            'previewProfile' => $previewProfile,
+            'previewPresentation' => clh_public_presentation($previewProfile),
+            'previewKey' => md5(json_encode([
+                $this->theme_id,
+                $this->header_layout,
+                $this->wallpaper_style,
+                $this->wallpaper_color,
+                $this->wallpaper_gradient_from,
+                $this->wallpaper_gradient_to,
+                $this->wallpaper_gradient_angle,
+                $this->font_family,
+                $this->font_text_color,
+                $this->font_title_color,
+                $this->button_style,
+                $this->button_shape,
+                $this->button_shadow,
+                $this->button_color,
+                $this->button_text_color,
+            ])),
+            'publicUrl' => $this->profile->is_published
+                ? route('public.profile', $this->profile->slug)
+                : null,
+        ]);
+    }
+
+    protected function buildPreviewProfile(): Profile
+    {
+        $preview = clone $this->profile;
+        $preview->theme_id = $this->theme_id;
+        $preview->setRelation('theme', $this->theme_id ? Theme::query()->find($this->theme_id) : null);
+        $preview->header_layout = $this->header_layout;
+        $preview->theme_variables = (new ProfileDesignSettings(
             themeId: $this->theme_id,
             headerLayout: $this->header_layout,
             wallpaperStyle: $this->wallpaper_style,
@@ -185,13 +215,21 @@ class DesignEditor extends Component
             buttonTextColor: $this->button_text_color,
         ))->toThemeVariables();
 
-        return view('livewire.design-editor', [
-            'themes' => $query->get(),
-            'previewTheme' => clh_public_theme($previewProfile),
-            'publicUrl' => $this->profile->is_published
-                ? route('public.profile', $this->profile->slug)
-                : null,
-        ]);
+        return $preview;
+    }
+
+    protected function applyThemeDefaultsToForm(): void
+    {
+        if ($this->theme_id) {
+            $theme = Theme::query()->find($this->theme_id);
+            if ($theme) {
+                $this->syncFromSettings(ProfileDesignSettings::fromTheme($theme, $this->profile));
+
+                return;
+            }
+        }
+
+        $this->syncFromSettings(ProfileDesignSettings::fromProfile($this->profile->fresh()->load('theme')));
     }
 
     protected function syncFromSettings(ProfileDesignSettings $settings): void
