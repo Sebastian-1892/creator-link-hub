@@ -30,6 +30,7 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         'password',
         'is_admin',
         'filament_locale',
+        'hub_locale',
         'onboarding_completed_at',
     ];
 
@@ -63,6 +64,18 @@ class User extends Authenticatable implements FilamentUser, HasLocalePreference,
         }
 
         return config('app.locale');
+    }
+
+    public function hubLocale(): string
+    {
+        $allowed = array_keys(config('creator.hub_locales', ['de' => [], 'en' => []]));
+        $locale = $this->hub_locale;
+
+        if (is_string($locale) && in_array($locale, $allowed, true)) {
+            return $locale;
+        }
+
+        return (string) config('app.locale', 'de');
     }
 
     /**

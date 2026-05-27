@@ -1,0 +1,48 @@
+<?php
+
+/**
+ * English-origin __() keys => German for lang/de.json.
+ *
+ * @return array<string, string>
+ */
+return [
+    'Email' => 'E-Mail',
+    'Password' => 'Passwort',
+    'Confirm Password' => 'Passwort bestätigen',
+    'Remember me' => 'Angemeldet bleiben',
+    'Forgot your password?' => 'Passwort vergessen?',
+    'Log in' => 'Anmelden',
+    'Log Out' => 'Abmelden',
+    'Name' => 'Name',
+    'Already registered?' => 'Bereits registriert?',
+    'Register' => 'Registrieren',
+    'Reset Password' => 'Passwort zurücksetzen',
+    'Email Password Reset Link' => 'Link zum Zurücksetzen senden',
+    'Confirm' => 'Bestätigen',
+    'Save' => 'Speichern',
+    'Saved.' => 'Gespeichert.',
+    'Cancel' => 'Abbrechen',
+    'Delete Account' => 'Konto löschen',
+    'Profile Information' => 'Profilinformationen',
+    "Update your account's profile information and email address." => 'Aktualisiere Profil und E-Mail-Adresse deines Kontos.',
+    'Your email address is unverified.' => 'Deine E-Mail-Adresse ist nicht verifiziert.',
+    'Click here to re-send the verification email.' => 'Hier klicken, um die Verifizierungs-E-Mail erneut zu senden.',
+    'A new verification link has been sent to your email address.' => 'Ein neuer Verifizierungslink wurde an deine E-Mail-Adresse gesendet.',
+    'Update Password' => 'Passwort aktualisieren',
+    'Current Password' => 'Aktuelles Passwort',
+    'New Password' => 'Neues Passwort',
+    'Ensure your account is using a long, random password to stay secure.' => 'Verwende ein langes, zufälliges Passwort für mehr Sicherheit.',
+    'Are you sure you want to delete your account?' => 'Möchtest du dein Konto wirklich löschen?',
+    'Once your account is deleted, all of its resources and data will be permanently deleted. Before deleting your account, please download any data or information that you wish to retain.' => 'Wenn dein Konto gelöscht wird, werden alle zugehörigen Daten dauerhaft entfernt. Sichere vorher alles, was du behalten möchtest.',
+    'Once your account is deleted, all of its resources and data will be permanently deleted. Please enter your password to confirm you would like to permanently delete your account.' => 'Wenn dein Konto gelöscht wird, werden alle Daten dauerhaft entfernt. Gib dein Passwort ein, um die Löschung zu bestätigen.',
+    'This is a secure area of the application. Please confirm your password before continuing.' => 'Dies ist ein geschützter Bereich. Bitte bestätige dein Passwort, bevor du fortfährst.',
+    'Forgot your password? No problem. Just let us know your email address and we will email you a password reset link that will allow you to choose a new one.' => 'Passwort vergessen? Kein Problem. Gib deine E-Mail-Adresse an — wir senden dir einen Link zum Zurücksetzen.',
+    'Thanks for signing up! Before getting started, could you verify your email address by clicking on the link we just emailed to you? If you didn\'t receive the email, we will gladly send you another.' => 'Danke für deine Registrierung! Bitte bestätige deine E-Mail-Adresse über den Link in unserer E-Mail. Falls du keine E-Mail erhalten hast, senden wir dir gerne einen neuen Link.',
+    'A new verification link has been sent to the email address you provided during registration.' => 'Ein neuer Verifizierungslink wurde an die bei der Registrierung angegebene E-Mail-Adresse gesendet.',
+    'Resend Verification Email' => 'Verifizierungs-E-Mail erneut senden',
+    'Profile' => 'Profil',
+    'Dashboard' => 'Dashboard',
+    'Analytics' => 'Analytics',
+    'Design' => 'Design',
+    'Links' => 'Links',
+];

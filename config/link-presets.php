@@ -2,7 +2,6 @@
 
 return [
     'instagram' => [
-        'label' => 'Instagram',
         'icon' => 'instagram',
         'color' => '#E4405F',
         'type' => 'username',
@@ -11,7 +10,6 @@ return [
         'url_template' => 'https://instagram.com/{value}',
     ],
     'tiktok' => [
-        'label' => 'TikTok',
         'icon' => 'tiktok',
         'color' => '#000000',
         'type' => 'username',
@@ -20,7 +18,6 @@ return [
         'url_template' => 'https://www.tiktok.com/@{value}',
     ],
     'youtube' => [
-        'label' => 'YouTube',
         'icon' => 'youtube',
         'color' => '#FF0000',
         'type' => 'username',
@@ -29,7 +26,6 @@ return [
         'url_template' => 'https://www.youtube.com/@{value}',
     ],
     'x' => [
-        'label' => 'X',
         'icon' => 'x',
         'color' => '#000000',
         'type' => 'username',
@@ -38,7 +34,6 @@ return [
         'url_template' => 'https://x.com/{value}',
     ],
     'spotify' => [
-        'label' => 'Spotify',
         'icon' => 'spotify',
         'color' => '#1DB954',
         'type' => 'url',
@@ -46,7 +41,6 @@ return [
         'url_template' => '{value}',
     ],
     'github' => [
-        'label' => 'GitHub',
         'icon' => 'github',
         'color' => '#181717',
         'type' => 'username',
@@ -55,7 +49,6 @@ return [
         'url_template' => 'https://github.com/{value}',
     ],
     'linkedin' => [
-        'label' => 'LinkedIn',
         'icon' => 'linkedin',
         'color' => '#0A66C2',
         'type' => 'username',
@@ -63,7 +56,6 @@ return [
         'url_template' => 'https://www.linkedin.com/in/{value}',
     ],
     'facebook' => [
-        'label' => 'Facebook',
         'icon' => 'facebook',
         'color' => '#1877F2',
         'type' => 'username',
@@ -71,7 +63,6 @@ return [
         'url_template' => 'https://facebook.com/{value}',
     ],
     'threads' => [
-        'label' => 'Threads',
         'icon' => 'threads',
         'color' => '#000000',
         'type' => 'username',
@@ -80,7 +71,6 @@ return [
         'url_template' => 'https://www.threads.net/@{value}',
     ],
     'email' => [
-        'label' => 'E-Mail',
         'icon' => 'email',
         'color' => '#6366f1',
         'type' => 'email',
@@ -88,7 +78,6 @@ return [
         'url_template' => 'mailto:{value}',
     ],
     'whatsapp' => [
-        'label' => 'WhatsApp',
         'icon' => 'whatsapp',
         'color' => '#25D366',
         'type' => 'phone',
@@ -97,7 +86,6 @@ return [
         'url_template' => 'https://wa.me/{value}',
     ],
     'custom' => [
-        'label' => 'Eigener Link',
         'icon' => 'link',
         'color' => '#6366f1',
         'type' => 'custom',

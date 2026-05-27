@@ -359,7 +359,7 @@ class LinkManager extends Component
         $template = $preset['url_template'] ?? '{value}';
         $url = str_replace('{value}', $value, $template);
 
-        $defaultLabel = $preset['label'] ?? __('Link');
+        $defaultLabel = __('presets.'.($preset['key'] ?? 'custom'));
         $title = trim($this->newTitle) !== '' ? trim($this->newTitle) : $defaultLabel;
 
         return [$title, $url];

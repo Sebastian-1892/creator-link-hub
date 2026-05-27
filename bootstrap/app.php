@@ -1,6 +1,8 @@
 <?php
 
 use App\Http\Middleware\EnsureOnboardingCompleted;
+use App\Http\Middleware\NormalizeRequestPath;
+use App\Http\Middleware\SetHubLocale;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -12,7 +14,10 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware) {
-        $middleware->prepend(\App\Http\Middleware\NormalizeRequestPath::class);
+        $middleware->prepend(NormalizeRequestPath::class);
+        $middleware->web(append: [
+            SetHubLocale::class,
+        ]);
 
         $middleware->alias([
             'onboarding' => EnsureOnboardingCompleted::class,

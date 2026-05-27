@@ -51,8 +51,25 @@ new class extends Component
                 </div>
             </div>
 
-            <!-- Settings Dropdown -->
-            <div class="hidden sm:flex sm:items-center sm:ms-6">
+            <!-- Language + Settings -->
+            <div class="hidden sm:flex sm:items-center sm:ms-6 gap-3">
+                @php
+                    $hubLocales = config('creator.hub_locales', []);
+                    $currentHubLocale = app()->getLocale();
+                @endphp
+                <div class="flex items-center gap-1 rounded-lg border border-gray-200 bg-gray-50 p-0.5 text-xs font-medium" role="group" aria-label="{{ __('Sprache') }}">
+                    @foreach ($hubLocales as $code => $meta)
+                        <a
+                            href="{{ route('hub.locale', ['locale' => $code]) }}"
+                            @class([
+                                'rounded-md px-2.5 py-1.5 transition',
+                                'bg-white text-indigo-700 shadow-sm ring-1 ring-indigo-100' => $currentHubLocale === $code,
+                                'text-gray-600 hover:text-gray-900' => $currentHubLocale !== $code,
+                            ])
+                            aria-current="{{ $currentHubLocale === $code ? 'true' : 'false' }}"
+                        >{{ strtoupper($code) }}</a>
+                    @endforeach
+                </div>
                 <x-dropdown align="right" width="48">
                     <x-slot name="trigger">
                         <button class="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-gray-500 bg-white hover:text-gray-700 focus:outline-none transition ease-in-out duration-150">
@@ -121,6 +138,19 @@ new class extends Component
             <div class="px-4">
                 <div class="font-medium text-base text-gray-800" x-data="{{ json_encode(['name' => auth()->user()->name]) }}" x-text="name" x-on:profile-updated.window="name = $event.detail.name"></div>
                 <div class="font-medium text-sm text-gray-500">{{ auth()->user()->email }}</div>
+            </div>
+
+            <div class="mt-3 px-4 flex flex-wrap gap-2" role="group" aria-label="{{ __('Sprache') }}">
+                @foreach (config('creator.hub_locales', []) as $code => $meta)
+                    <a
+                        href="{{ route('hub.locale', ['locale' => $code]) }}"
+                        @class([
+                            'rounded-md px-3 py-1.5 text-sm font-medium border',
+                            'border-indigo-600 bg-indigo-50 text-indigo-800' => app()->getLocale() === $code,
+                            'border-gray-200 text-gray-700' => app()->getLocale() !== $code,
+                        ])
+                    >{{ $meta['native'] ?? strtoupper($code) }}</a>
+                @endforeach
             </div>
 
             <div class="mt-3 space-y-1">

@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\FilamentLocaleController;
+use App\Http\Controllers\HubLocaleController;
 use App\Http\Controllers\LinkRedirectController;
 use App\Http\Controllers\MarketingController;
 use App\Http\Controllers\ProfileAvatarController;
@@ -55,6 +56,10 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
 });
 
 require __DIR__.'/auth.php';
+
+Route::get('set-hub-locale/{locale}', HubLocaleController::class)
+    ->whereIn('locale', ['de', 'en'])
+    ->name('hub.locale');
 
 Route::middleware(['auth', 'verified'])->group(function (): void {
     Route::get('set-filament-locale/{locale}', FilamentLocaleController::class)

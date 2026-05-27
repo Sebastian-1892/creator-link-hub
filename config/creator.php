@@ -19,6 +19,14 @@ return [
     ],
 
     /**
+     * Creator-Hub (/hub/*, Auth, öffentliche Bio): verfügbare Oberflächensprachen.
+     */
+    'hub_locales' => [
+        'de' => ['native' => 'Deutsch', 'flag' => '🇩🇪'],
+        'en' => ['native' => 'English', 'flag' => '🇬🇧'],
+    ],
+
+    /**
      * Profilbild: großzügiger Upload, Speicherung als verkleinertes WebP/JPEG.
      */
     'avatar' => [

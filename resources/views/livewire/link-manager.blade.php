@@ -215,7 +215,7 @@
                             class="flex flex-col items-center gap-2 rounded-xl border border-gray-200 bg-white p-4 text-center transition hover:border-indigo-400 hover:bg-indigo-50 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2"
                         >
                             <x-brand-icon :name="$preset['icon'] ?? $key" class="h-8 w-8 text-gray-700" />
-                            <span class="text-sm font-medium text-gray-900">{{ $preset['label'] }}</span>
+                            <span class="text-sm font-medium text-gray-900">{{ __('presets.'.$key) }}</span>
                         </button>
                     @endforeach
                 </div>
@@ -234,7 +234,7 @@
 
                     <div class="mt-3 flex items-center gap-3">
                         <x-brand-icon :name="$preset['icon'] ?? $presetKey" class="h-8 w-8 text-gray-700 shrink-0" />
-                        <h2 class="text-lg font-semibold text-gray-900">{{ $preset['label'] }}</h2>
+                        <h2 class="text-lg font-semibold text-gray-900">{{ __('presets.'.$presetKey) }}</h2>
                     </div>
 
                     <form wire:submit="addPresetLink" class="mt-5 space-y-4">
@@ -256,9 +256,9 @@
                                     wire:model="newTitle"
                                     id="modal-display-title"
                                     class="block mt-1 w-full"
-                                    placeholder="{{ $preset['label'] }}"
+                                    placeholder="{{ __('presets.'.$presetKey) }}"
                                 />
-                                <p class="mt-1 text-xs text-gray-500">{{ __('Leer lassen für „:label“', ['label' => $preset['label']]) }}</p>
+                                <p class="mt-1 text-xs text-gray-500">{{ __('Leer lassen für „:label“', ['label' => __('presets.'.$presetKey)]) }}</p>
                             </div>
                             <div>
                                 <x-input-label for="preset-value" :value="__('Eingabe')" />
