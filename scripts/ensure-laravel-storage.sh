@@ -33,6 +33,7 @@ mkdir -p \
   "$ROOT/storage/framework/views" \
   "$ROOT/storage/logs" \
   "$ROOT/storage/app/public" \
+  "$ROOT/storage/app/public/avatars" \
   "$ROOT/storage/app/private/livewire-tmp"
 
 WEB_USER="www-data"

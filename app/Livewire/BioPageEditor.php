@@ -7,14 +7,18 @@ use App\Models\Theme;
 use App\Services\SlugService;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
+use Livewire\Features\SupportFileUploads\FileUploadConfiguration;
 use Livewire\WithFileUploads;
 
 #[Layout('layouts.app')]
 class BioPageEditor extends Component
 {
-    use WithFileUploads;
+    use WithFileUploads {
+        _uploadErrored as protected traitUploadErrored;
+    }
 
     public Profile $profile;
 
@@ -33,6 +37,10 @@ class BioPageEditor extends Component
 
     public $avatar;
 
+    public ?string $saveNotice = null;
+
+    public bool $avatarUploadStorageReady = true;
+
     public function mount(): void
     {
         $workspace = auth()->user()?->currentWorkspace();
@@ -46,11 +54,39 @@ class BioPageEditor extends Component
         $this->bio = (string) $this->profile->bio;
         $this->theme_id = $this->profile->theme_id;
         $this->is_published = $this->profile->is_published;
+
+        $this->avatarUploadStorageReady = $this->livewireTempDirectoryIsWritable();
     }
 
     public function updatedThemeId(mixed $value): void
     {
         $this->theme_id = ($value === '' || $value === null) ? null : (int) $value;
+    }
+
+    public function updatedAvatar(): void
+    {
+        $this->resetErrorBag('avatar');
+
+        if (! $this->avatar) {
+            return;
+        }
+
+        $this->validateOnly('avatar', $this->avatarRules(), $this->avatarMessages());
+    }
+
+    public function _uploadErrored($name, $errorsInJson, $isMultiple): void
+    {
+        if ($name === 'avatar') {
+            $this->avatar = null;
+
+            throw ValidationException::withMessages(
+                $errorsInJson === null
+                    ? ['avatar' => $this->avatarUploadFailureMessage()]
+                    : $this->avatarMessagesFromLivewireJson($errorsInJson)
+            );
+        }
+
+        $this->traitUploadErrored($name, $errorsInJson, $isMultiple);
     }
 
     public function save(SlugService $slugService): void
@@ -72,11 +108,20 @@ class BioPageEditor extends Component
             'bio' => ['nullable', 'string', 'max:2000'],
             'theme_id' => ['nullable', 'exists:themes,id'],
             'is_published' => ['boolean'],
-            'avatar' => ['nullable', 'image', 'max:2048'],
-        ]);
+            'avatar' => $this->avatarRules(),
+        ], $this->avatarMessages());
 
         if ($this->avatar) {
-            $path = $this->avatar->store('avatars', 'public');
+            try {
+                $path = $this->avatar->store('avatars', 'public');
+            } catch (\Throwable $e) {
+                report($e);
+
+                throw ValidationException::withMessages([
+                    'avatar' => __('Das Profilbild konnte nicht gespeichert werden. Bitte erneut versuchen oder den Support kontaktieren, wenn das Problem bleibt.'),
+                ]);
+            }
+
             if ($this->profile->avatar_path) {
                 Storage::disk('public')->delete($this->profile->avatar_path);
             }
@@ -99,7 +144,14 @@ class BioPageEditor extends Component
         $this->avatar = null;
         $this->profile->refresh();
 
-        session()->flash('status', __('Gespeichert.'));
+        $this->saveNotice = __('Gespeichert — deine Bio-Seite wurde aktualisiert.');
+
+        $this->js('window.scrollTo({ top: 0, behavior: "smooth" })');
+    }
+
+    public function dismissSaveNotice(): void
+    {
+        $this->saveNotice = null;
     }
 
     public function render()
@@ -113,5 +165,94 @@ class BioPageEditor extends Component
         return view('livewire.bio-page-editor', [
             'themes' => $query->get(),
         ]);
+    }
+
+    /**
+     * @return list<string|array<int, string>>
+     */
+    protected function avatarRules(): array
+    {
+        return ['nullable', 'image', 'mimes:jpg,jpeg,png,gif,webp', 'max:2048'];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function avatarMessages(): array
+    {
+        return [
+            'avatar.image' => __('Bitte eine Bilddatei wählen (JPG, PNG, GIF oder WebP). iPhone-Fotos im HEIC-Format werden nicht unterstützt — speichere das Bild zuerst als JPG.'),
+            'avatar.mimes' => __('Erlaubte Formate: JPG, PNG, GIF oder WebP.'),
+            'avatar.max' => __('Das Profilbild darf höchstens 2 MB groß sein.'),
+            'avatar.uploaded' => __('Das Profilbild konnte nicht hochgeladen werden. Bitte Dateigröße und Format prüfen.'),
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    protected function avatarMessagesFromLivewireJson(string $errorsInJson): array
+    {
+        $messages = $this->avatarMessages();
+        $errors = json_decode($errorsInJson, true)['errors'] ?? [];
+        $combined = strtolower(implode(' ', array_map(
+            fn ($msgs) => implode(' ', (array) $msgs),
+            is_array($errors) ? $errors : []
+        )));
+
+        if (str_contains($combined, 'max')) {
+            return ['avatar' => $messages['avatar.max']];
+        }
+
+        if (str_contains($combined, 'mimes') || str_contains($combined, 'image')) {
+            return ['avatar' => $messages['avatar.image']];
+        }
+
+        return ['avatar' => $this->avatarUploadFailureMessage()];
+    }
+
+    protected function avatarUploadFailureMessage(): string
+    {
+        $hints = [];
+
+        if (! $this->avatarUploadStorageReady) {
+            $hints[] = __('Der Upload-Speicher auf dem Server ist nicht beschreibbar. Bitte den Support kontaktieren.');
+        }
+
+        if (! $this->appUrlMatchesCurrentRequest()) {
+            $hints[] = __('Die Seiten-Adresse passt nicht zur Server-Konfiguration — lade die Seite neu (F5). Bleibt der Fehler, melde dich beim Support.');
+        }
+
+        if ($hints !== []) {
+            return implode(' ', $hints);
+        }
+
+        return __('Das Profilbild konnte nicht hochgeladen werden. Erlaubt sind JPG, PNG, GIF oder WebP, maximal 2 MB. Große iPhone-Fotos (HEIC) bitte vorher als JPG exportieren. Bei sehr großen Dateien kann auch die maximale Upload-Größe des Servers greifen — dann ein kleineres Bild verwenden.');
+    }
+
+    protected function livewireTempDirectoryIsWritable(): bool
+    {
+        try {
+            $disk = Storage::disk(FileUploadConfiguration::disk());
+            $probe = FileUploadConfiguration::path('.clh-write-test');
+            $disk->put($probe, '1');
+            $disk->delete($probe);
+
+            return true;
+        } catch (\Throwable) {
+            return false;
+        }
+    }
+
+    protected function appUrlMatchesCurrentRequest(): bool
+    {
+        if (! app()->runningInConsole() && request()->hasHeader('Host')) {
+            $configured = rtrim((string) config('app.url'), '/');
+            $actual = request()->getSchemeAndHttpHost();
+
+            return strcasecmp($configured, $actual) === 0;
+        }
+
+        return true;
     }
 }

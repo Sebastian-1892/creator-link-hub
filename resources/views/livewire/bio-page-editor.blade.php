@@ -1,15 +1,63 @@
 <div class="py-10">
+    @if ($saveNotice)
+        {{-- Deutlicher Erfolgs-Hinweis (fixed, sichtbar auch wenn man unten auf Speichern klickt) --}}
+        <div
+            class="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+            role="status"
+            aria-live="polite"
+        >
+            <div class="pointer-events-auto flex max-w-lg items-center gap-3 rounded-xl border border-green-600 bg-green-600 px-5 py-4 text-white shadow-xl ring-2 ring-green-200">
+                <svg class="h-6 w-6 shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                </svg>
+                <p class="text-base font-semibold">{{ $saveNotice }}</p>
+                <button type="button" wire:click="dismissSaveNotice" class="ml-1 rounded-md p-1 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-white" aria-label="{{ __('Schließen') }}">
+                    <span aria-hidden="true">×</span>
+                </button>
+            </div>
+        </div>
+    @endif
+
     <div class="max-w-4xl mx-auto sm:px-6 lg:px-8 space-y-6">
         <h1 class="text-2xl font-semibold text-gray-900">{{ __('Bio-Seite bearbeiten') }}</h1>
 
-        @if (session('status'))
-            <div class="rounded-md bg-green-50 p-4 text-sm text-green-800">{{ session('status') }}</div>
+        @if ($saveNotice)
+            <div
+                id="bio-save-notice"
+                class="rounded-xl border-2 border-green-500 bg-green-50 px-5 py-4 text-green-900 shadow-sm flex items-start justify-between gap-4"
+                role="status"
+            >
+                <div class="flex items-start gap-3">
+                    <svg class="h-6 w-6 shrink-0 text-green-600 mt-0.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5" aria-hidden="true">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <p class="text-base font-semibold">{{ $saveNotice }}</p>
+                </div>
+                <button type="button" wire:click="dismissSaveNotice" class="text-green-800 hover:text-green-950 text-xl leading-none px-1" aria-label="{{ __('Schließen') }}">×</button>
+            </div>
         @endif
 
         <form wire:submit="save" class="bg-white shadow sm:rounded-lg p-6 space-y-6">
             <div>
                 <x-input-label for="avatar" :value="__('Profilbild')" />
-                <input wire:model="avatar" id="avatar" type="file" accept="image/*" class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100" />
+                <input
+                    wire:model="avatar"
+                    id="avatar"
+                    type="file"
+                    accept=".jpg,.jpeg,.png,.gif,.webp,image/jpeg,image/png,image/gif,image/webp"
+                    class="mt-1 block w-full text-sm text-gray-500 file:mr-4 file:rounded-md file:border-0 file:bg-indigo-50 file:px-4 file:py-2 file:text-sm file:font-semibold file:text-indigo-700 hover:file:bg-indigo-100"
+                />
+                <p class="mt-1 text-xs text-gray-500">
+                    {{ __('JPG, PNG, GIF oder WebP, maximal 2 MB. iPhone-HEIC bitte zuerst als JPG speichern.') }}
+                </p>
+                <div wire:loading wire:target="avatar" class="mt-2 text-sm text-indigo-600">
+                    {{ __('Bild wird hochgeladen …') }}
+                </div>
+                @unless ($avatarUploadStorageReady)
+                    <p class="mt-2 text-sm text-amber-800 bg-amber-50 border border-amber-200 rounded-md px-3 py-2" role="alert">
+                        {{ __('Upload derzeit nicht möglich (Server-Speicher). Bitte den Support kontaktieren.') }}
+                    </p>
+                @endunless
                 <x-input-error :messages="$errors->get('avatar')" class="mt-2" />
                 @if ($profile->avatar_path)
                     <p class="mt-2 text-xs text-gray-500">{{ __('Aktuell hochgeladen') }}</p>
@@ -121,8 +169,12 @@
                 <x-input-label for="is_published" :value="__('Öffentlich veröffentlichen')" />
             </div>
 
-            <div class="flex justify-end">
-                <x-primary-button type="submit">{{ __('Speichern') }}</x-primary-button>
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-end gap-3">
+                <p wire:loading wire:target="save" class="text-sm text-indigo-600 font-medium">{{ __('Wird gespeichert…') }}</p>
+                <x-primary-button type="submit" wire:loading.attr="disabled" wire:target="save">
+                    <span wire:loading.remove wire:target="save">{{ __('Speichern') }}</span>
+                    <span wire:loading wire:target="save">{{ __('Speichern…') }}</span>
+                </x-primary-button>
             </div>
         </form>
 
