@@ -23,6 +23,16 @@ class LinkManager extends Component
 
     public string $newUrl = '';
 
+    public string $collectionTitle = '';
+
+    public ?int $productCollectionId = null;
+
+    public string $productTitle = '';
+
+    public string $productUrl = '';
+
+    public string $productImageUrl = '';
+
     /** @var array<int, string> */
     public array $linkTitles = [];
 
@@ -34,7 +44,7 @@ class LinkManager extends Component
         $workspace = auth()->user()?->currentWorkspace();
         abort_if(! $workspace || ! $workspace->profile, 404);
 
-        $this->profile = $workspace->profile->load('links');
+        $this->profile = $workspace->profile->load(['links' => fn ($q) => $q->orderBy('position')]);
         $this->authorize('update', $this->profile);
         $this->syncLinkFormState();
     }
@@ -59,6 +69,112 @@ class LinkManager extends Component
     {
         $this->clearPreset();
         $this->dispatch('close-modal', 'add-link');
+    }
+
+    public function openCollectionModal(): void
+    {
+        $this->reset('collectionTitle');
+        $this->resetErrorBag();
+        $this->dispatch('open-modal', 'add-collection');
+    }
+
+    public function createCollection(PlanService $plans): void
+    {
+        $this->validate([
+            'collectionTitle' => ['required', 'string', 'max:120'],
+        ]);
+
+        $workspace = $this->profile->workspace;
+        if (! $plans->canAddLink($workspace, $this->profile)) {
+            session()->flash('error', __('Im Free-Plan sind maximal :n Links möglich.', ['n' => config('creator.free_link_limit')]));
+            $this->dispatch('close-modal', 'add-collection');
+
+            return;
+        }
+
+        $maxPos = (int) $this->profile->links()->whereNull('parent_link_id')->max('position');
+
+        Link::query()->create([
+            'profile_id' => $this->profile->id,
+            'link_type' => 'collection',
+            'parent_link_id' => null,
+            'title' => $this->collectionTitle,
+            'url' => '#',
+            'image_url' => null,
+            'preset_key' => 'custom',
+            'show_icon' => false,
+            'position' => $maxPos + 1,
+            'is_active' => true,
+            'opens_in_new_tab' => false,
+            'tracking_enabled' => false,
+        ]);
+
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
+        $this->syncLinkFormState();
+        $this->dispatch('close-modal', 'add-collection');
+    }
+
+    public function openProductModal(int $collectionId): void
+    {
+        $collection = Link::query()
+            ->where('profile_id', $this->profile->id)
+            ->where('link_type', 'collection')
+            ->findOrFail($collectionId);
+
+        $this->authorize('update', $collection);
+
+        $this->productCollectionId = $collection->id;
+        $this->reset('productTitle', 'productUrl', 'productImageUrl');
+        $this->resetErrorBag();
+        $this->dispatch('open-modal', 'add-product');
+    }
+
+    public function createProduct(PlanService $plans): void
+    {
+        $this->validate([
+            'productCollectionId' => ['required', 'integer'],
+            'productTitle' => ['required', 'string', 'max:120'],
+            'productUrl' => ['required', 'string', 'max:2048', 'url'],
+            'productImageUrl' => ['nullable', 'string', 'max:2048', 'url'],
+        ]);
+
+        $collection = Link::query()
+            ->where('profile_id', $this->profile->id)
+            ->where('link_type', 'collection')
+            ->findOrFail($this->productCollectionId);
+
+        $this->authorize('update', $collection);
+
+        $workspace = $this->profile->workspace;
+        if (! $plans->canAddLink($workspace, $this->profile)) {
+            session()->flash('error', __('Im Free-Plan sind maximal :n Links möglich.', ['n' => config('creator.free_link_limit')]));
+            $this->dispatch('close-modal', 'add-product');
+
+            return;
+        }
+
+        $maxPos = (int) $this->profile->links()
+            ->where('parent_link_id', $collection->id)
+            ->max('position');
+
+        Link::query()->create([
+            'profile_id' => $this->profile->id,
+            'link_type' => 'product',
+            'parent_link_id' => $collection->id,
+            'title' => $this->productTitle,
+            'url' => $this->productUrl,
+            'image_url' => $this->productImageUrl !== '' ? $this->productImageUrl : null,
+            'preset_key' => 'custom',
+            'show_icon' => false,
+            'position' => $maxPos + 1,
+            'is_active' => true,
+            'opens_in_new_tab' => true,
+            'tracking_enabled' => true,
+        ]);
+
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
+        $this->syncLinkFormState();
+        $this->dispatch('close-modal', 'add-product');
     }
 
     public function addPresetLink(PlanService $plans): void
@@ -134,13 +250,18 @@ class LinkManager extends Component
         $link = Link::query()->where('profile_id', $this->profile->id)->findOrFail($linkId);
         $this->authorize('delete', $link);
         $link->delete();
-        $this->profile->refresh()->load('links');
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
         $this->syncLinkFormState();
     }
 
     public function move(int $linkId, string $direction): void
     {
-        $links = $this->profile->links()->orderBy('position')->get()->values();
+        $current = $this->profile->links()->findOrFail($linkId);
+        $links = $this->profile->links()
+            ->where('parent_link_id', $current->parent_link_id)
+            ->orderBy('position')
+            ->get()
+            ->values();
         $index = $links->search(fn ($l) => $l->id === $linkId);
 
         if ($index === false) {
@@ -162,13 +283,18 @@ class LinkManager extends Component
         $a->save();
         $b->save();
 
-        $this->profile->refresh()->load('links');
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
     }
 
     public function render()
     {
+        $links = $this->profile->links()->orderBy('position')->get();
+
         return view('livewire.link-manager', [
-            'links' => $this->profile->links()->orderBy('position')->get(),
+            'links' => $links->whereNull('parent_link_id')->values(),
+            'productsByCollection' => $links
+                ->whereNotNull('parent_link_id')
+                ->groupBy('parent_link_id'),
             'linkPresets' => LinkPresetHelper::presets(),
         ]);
     }
@@ -178,7 +304,7 @@ class LinkManager extends Component
         $this->linkTitles = [];
         $this->linkShowIcons = [];
 
-        foreach ($this->profile->links as $link) {
+        foreach ($this->profile->links()->orderBy('position')->get() as $link) {
             $this->linkTitles[$link->id] = $link->title;
             $this->linkShowIcons[$link->id] = $link->show_icon;
         }
@@ -255,12 +381,15 @@ class LinkManager extends Component
 
         $resolvedPreset = $presetKey ?? LinkPresetHelper::detectFromUrl($url);
 
-        $maxPos = (int) $this->profile->links()->max('position');
+        $maxPos = (int) $this->profile->links()->whereNull('parent_link_id')->max('position');
 
         Link::query()->create([
             'profile_id' => $this->profile->id,
+            'link_type' => 'link',
+            'parent_link_id' => null,
             'title' => $title,
             'url' => $url,
+            'image_url' => null,
             'preset_key' => $resolvedPreset,
             'show_icon' => $showIcon,
             'position' => $maxPos + 1,
@@ -269,7 +398,7 @@ class LinkManager extends Component
             'tracking_enabled' => true,
         ]);
 
-        $this->profile->refresh()->load('links');
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
         $this->syncLinkFormState();
     }
 

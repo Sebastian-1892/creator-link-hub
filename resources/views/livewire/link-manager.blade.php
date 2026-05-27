@@ -8,14 +8,19 @@
                 <h1 class="text-2xl font-semibold text-gray-900">{{ __('Links verwalten') }}</h1>
                 <p class="mt-1 text-gray-600">{{ __('Ziehe Besucher zu deinen wichtigsten Zielen — Messung erfolgt über „Intelligente Links“.') }}</p>
             </div>
-            <x-primary-button
-                type="button"
-                x-data=""
-                x-on:click="$dispatch('open-modal', 'add-link')"
-                class="shrink-0"
-            >
-                {{ __('+ Link hinzufügen') }}
-            </x-primary-button>
+            <div class="flex gap-2">
+                <x-secondary-button type="button" wire:click="openCollectionModal" class="shrink-0">
+                    {{ __('+ Collection') }}
+                </x-secondary-button>
+                <x-primary-button
+                    type="button"
+                    x-data=""
+                    x-on:click="$dispatch('open-modal', 'add-link')"
+                    class="shrink-0"
+                >
+                    {{ __('+ Link hinzufügen') }}
+                </x-primary-button>
+            </div>
         </div>
 
         @if (session('error'))
@@ -26,6 +31,8 @@
             @forelse ($links as $link)
                 @php
                     $brandColor = $link->brandColor();
+                    $isCollection = $link->isCollection();
+                    $products = $productsByCollection[$link->id] ?? collect();
                 @endphp
                 <div class="p-4 space-y-3" wire:key="link-row-{{ $link->id }}">
                     <div class="flex flex-col gap-4 sm:flex-row sm:items-start">
@@ -46,28 +53,62 @@
                                 />
                                 <x-input-error :messages="$errors->get('linkTitles.'.$link->id)" class="mt-1" />
                             </div>
-                            <p class="text-sm text-gray-500 truncate" title="{{ $link->url }}">{{ $link->url }}</p>
+                            @if ($isCollection)
+                                <p class="text-sm text-gray-500">{{ __('Collection mit :count Produkten', ['count' => $products->count()]) }}</p>
+                            @else
+                                <p class="text-sm text-gray-500 truncate" title="{{ $link->url }}">{{ $link->url }}</p>
+                            @endif
                         </div>
 
                         <div class="flex flex-wrap items-center gap-2 sm:shrink-0 sm:pt-6">
-                            <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    wire:model.live="linkShowIcons.{{ $link->id }}"
-                                    class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                />
-                                {{ __('Icon anzeigen') }}
-                            </label>
+                            @if (! $isCollection)
+                                <label class="inline-flex items-center gap-2 text-sm text-gray-700 cursor-pointer">
+                                    <input
+                                        type="checkbox"
+                                        wire:model.live="linkShowIcons.{{ $link->id }}"
+                                        class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                                    />
+                                    {{ __('Icon anzeigen') }}
+                                </label>
+                            @endif
+                            @if ($isCollection)
+                                <x-secondary-button type="button" wire:click="openProductModal({{ $link->id }})">{{ __('+ Produkt') }}</x-secondary-button>
+                            @endif
                             <x-secondary-button type="button" wire:click="move({{ $link->id }}, 'up')" title="{{ __('Nach oben') }}">{{ __('↑') }}</x-secondary-button>
                             <x-secondary-button type="button" wire:click="move({{ $link->id }}, 'down')" title="{{ __('Nach unten') }}">{{ __('↓') }}</x-secondary-button>
                             <x-danger-button type="button" wire:click="deleteLink({{ $link->id }})">{{ __('Löschen') }}</x-danger-button>
                         </div>
                     </div>
 
-                    <p class="text-xs text-gray-400 pl-0 sm:pl-[3.75rem]">
-                        {{ __('Tracking-URL') }}:
-                        <a class="underline break-all" href="{{ route('links.redirect', $link) }}" target="_blank" rel="noopener noreferrer">{{ route('links.redirect', $link) }}</a>
-                    </p>
+                    @if (! $isCollection)
+                        <p class="text-xs text-gray-400 pl-0 sm:pl-[3.75rem]">
+                            {{ __('Tracking-URL') }}:
+                            <a class="underline break-all" href="{{ route('links.redirect', $link) }}" target="_blank" rel="noopener noreferrer">{{ route('links.redirect', $link) }}</a>
+                        </p>
+                    @endif
+
+                    @if ($isCollection && $products->isNotEmpty())
+                        <div class="pl-0 sm:pl-[3.75rem] space-y-2">
+                            @foreach ($products as $product)
+                                <div class="rounded-lg border border-gray-200 p-3 flex items-center gap-3" wire:key="product-{{ $product->id }}">
+                                    <div class="h-10 w-10 rounded-md overflow-hidden bg-gray-100 shrink-0">
+                                        @if ($product->image_url)
+                                            <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-cover" loading="lazy" />
+                                        @endif
+                                    </div>
+                                    <div class="min-w-0 flex-1">
+                                        <p class="text-sm font-medium text-gray-900 truncate">{{ $product->title }}</p>
+                                        <p class="text-xs text-gray-500 truncate">{{ $product->url }}</p>
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <x-secondary-button type="button" wire:click="move({{ $product->id }}, 'up')">{{ __('↑') }}</x-secondary-button>
+                                        <x-secondary-button type="button" wire:click="move({{ $product->id }}, 'down')">{{ __('↓') }}</x-secondary-button>
+                                        <x-danger-button type="button" wire:click="deleteLink({{ $product->id }})">{{ __('Löschen') }}</x-danger-button>
+                                    </div>
+                                </div>
+                            @endforeach
+                        </div>
+                    @endif
                 </div>
             @empty
                 <div class="p-10 text-center">
@@ -189,6 +230,51 @@
                     </form>
                 @endif
             @endif
+        </div>
+    </x-modal>
+
+    <x-modal name="add-collection" maxWidth="md" focusable>
+        <div class="p-6">
+            <h2 class="text-lg font-semibold text-gray-900">{{ __('Collection anlegen') }}</h2>
+            <p class="mt-1 text-sm text-gray-500">{{ __('Beispiel: Merch, Kurse, Empfehlungen') }}</p>
+            <form wire:submit="createCollection" class="mt-4 space-y-4">
+                <div>
+                    <x-input-label for="collection-title" :value="__('Collection-Name')" />
+                    <x-text-input wire:model="collectionTitle" id="collection-title" class="block mt-1 w-full" />
+                    <x-input-error :messages="$errors->get('collectionTitle')" class="mt-2" />
+                </div>
+                <div class="flex justify-end gap-3">
+                    <x-secondary-button type="button" x-data="" x-on:click="$dispatch('close-modal', 'add-collection')">{{ __('Abbrechen') }}</x-secondary-button>
+                    <x-primary-button type="submit">{{ __('Anlegen') }}</x-primary-button>
+                </div>
+            </form>
+        </div>
+    </x-modal>
+
+    <x-modal name="add-product" maxWidth="lg" focusable>
+        <div class="p-6">
+            <h2 class="text-lg font-semibold text-gray-900">{{ __('Produkt hinzufügen') }}</h2>
+            <form wire:submit="createProduct" class="mt-4 space-y-4">
+                <div>
+                    <x-input-label for="product-title" :value="__('Produktname')" />
+                    <x-text-input wire:model="productTitle" id="product-title" class="block mt-1 w-full" />
+                    <x-input-error :messages="$errors->get('productTitle')" class="mt-2" />
+                </div>
+                <div>
+                    <x-input-label for="product-url" :value="__('Produkt-Link')" />
+                    <x-text-input wire:model="productUrl" id="product-url" type="url" class="block mt-1 w-full" placeholder="https://..." />
+                    <x-input-error :messages="$errors->get('productUrl')" class="mt-2" />
+                </div>
+                <div>
+                    <x-input-label for="product-image-url" :value="__('Bild-URL (optional)')" />
+                    <x-text-input wire:model="productImageUrl" id="product-image-url" type="url" class="block mt-1 w-full" placeholder="https://..." />
+                    <x-input-error :messages="$errors->get('productImageUrl')" class="mt-2" />
+                </div>
+                <div class="flex justify-end gap-3">
+                    <x-secondary-button type="button" x-data="" x-on:click="$dispatch('close-modal', 'add-product')">{{ __('Abbrechen') }}</x-secondary-button>
+                    <x-primary-button type="submit">{{ __('Produkt hinzufügen') }}</x-primary-button>
+                </div>
+            </form>
         </div>
     </x-modal>
 </div>

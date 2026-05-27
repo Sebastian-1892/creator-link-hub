@@ -20,6 +20,21 @@ class WorkspaceResource extends Resource
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
 
+    public static function getNavigationLabel(): string
+    {
+        return __('admin_settings.workspace.nav_label');
+    }
+
+    public static function getModelLabel(): string
+    {
+        return __('admin_settings.workspace.model_label');
+    }
+
+    public static function getPluralModelLabel(): string
+    {
+        return __('admin_settings.workspace.nav_label');
+    }
+
     public static function form(Schema $schema): Schema
     {
         return WorkspaceForm::configure($schema);

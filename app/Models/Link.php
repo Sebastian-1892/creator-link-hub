@@ -11,8 +11,11 @@ class Link extends Model
 {
     protected $fillable = [
         'profile_id',
+        'link_type',
+        'parent_link_id',
         'title',
         'url',
+        'image_url',
         'preset_key',
         'show_icon',
         'position',
@@ -24,11 +27,17 @@ class Link extends Model
     protected function casts(): array
     {
         return [
+            'parent_link_id' => 'integer',
             'show_icon' => 'boolean',
             'is_active' => 'boolean',
             'opens_in_new_tab' => 'boolean',
             'tracking_enabled' => 'boolean',
         ];
+    }
+
+    public function isCollection(): bool
+    {
+        return $this->link_type === 'collection';
     }
 
     public function iconName(): string
@@ -47,6 +56,22 @@ class Link extends Model
     public function profile(): BelongsTo
     {
         return $this->belongsTo(Profile::class);
+    }
+
+    /**
+     * @return BelongsTo<Link, $this>
+     */
+    public function parent(): BelongsTo
+    {
+        return $this->belongsTo(Link::class, 'parent_link_id');
+    }
+
+    /**
+     * @return HasMany<Link, $this>
+     */
+    public function children(): HasMany
+    {
+        return $this->hasMany(Link::class, 'parent_link_id')->orderBy('position');
     }
 
     /**

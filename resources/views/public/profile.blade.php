@@ -27,32 +27,78 @@
             @endif
         </header>
 
+        @php
+            $topLevelLinks = $profile->links->whereNull('parent_link_id')->values();
+            $productsByCollection = $profile->links->whereNotNull('parent_link_id')->groupBy('parent_link_id');
+        @endphp
+
         <div class="mt-12 space-y-3">
-            @foreach ($profile->links as $link)
+            @foreach ($topLevelLinks as $link)
                 @php
                     $href = $link->tracking_enabled ? route('links.redirect', $link) : $link->url;
                     $target = $link->opens_in_new_tab ? '_blank' : '_self';
                     $rel = $link->opens_in_new_tab ? 'noopener noreferrer' : null;
                     $brandColor = $link->brandColor();
+                    $isCollection = $link->isCollection();
+                    $products = $productsByCollection[$link->id] ?? collect();
                 @endphp
-                <a
-                    href="{{ $href }}"
-                    target="{{ $target }}"
-                    @if ($rel) rel="{{ $rel }}" @endif
-                    class="{{ $clh['link_class'] }} shadow-md hover:shadow-xl {{ $link->show_icon ? 'pl-4 pr-12' : '' }}"
-                    style="{{ $clh['link_style'] }}"
-                >
-                    @if ($link->show_icon)
-                        <span
-                            class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
-                            style="background-color: {{ $brandColor }}22; color: {{ $brandColor }};"
+                @if ($isCollection)
+                    <div x-data="{ open: false }" class="space-y-2">
+                        <button
+                            type="button"
+                            @click="open = !open"
+                            class="{{ $clh['link_class'] }} w-full text-left shadow-md hover:shadow-xl pl-4 pr-6"
+                            style="{{ $clh['link_style'] }}"
+                            :aria-expanded="open ? 'true' : 'false'"
                         >
-                            <x-brand-icon :name="$link->iconName()" class="h-5 w-5" />
-                        </span>
-                    @endif
-                    <span class="flex-1 text-center">{{ $link->title }}</span>
-                    <span class="absolute right-4 text-lg opacity-0 transition group-hover:opacity-100" style="color: var(--clh-accent);" aria-hidden="true">→</span>
-                </a>
+                            <span class="flex-1 text-center">{{ $link->title }}</span>
+                            <span class="text-lg transition" :class="open ? 'rotate-90' : ''" style="color: var(--clh-accent);" aria-hidden="true">›</span>
+                        </button>
+
+                        <div x-show="open" x-transition class="pl-2 space-y-2">
+                            @foreach ($products as $product)
+                                @php
+                                    $productHref = $product->tracking_enabled ? route('links.redirect', $product) : $product->url;
+                                    $productTarget = $product->opens_in_new_tab ? '_blank' : '_self';
+                                    $productRel = $product->opens_in_new_tab ? 'noopener noreferrer' : null;
+                                @endphp
+                                <a
+                                    href="{{ $productHref }}"
+                                    target="{{ $productTarget }}"
+                                    @if ($productRel) rel="{{ $productRel }}" @endif
+                                    class="group flex items-center gap-3 rounded-2xl border border-white/40 bg-white/70 px-3 py-2 shadow-sm backdrop-blur-sm"
+                                >
+                                    <div class="h-12 w-12 rounded-lg overflow-hidden bg-white/40 shrink-0">
+                                        @if ($product->image_url)
+                                            <img src="{{ $product->image_url }}" alt="" class="h-full w-full object-cover" loading="lazy" />
+                                        @endif
+                                    </div>
+                                    <span class="flex-1 text-sm font-medium">{{ $product->title }}</span>
+                                    <span class="text-base opacity-60 group-hover:opacity-100">→</span>
+                                </a>
+                            @endforeach
+                        </div>
+                    </div>
+                @else
+                    <a
+                        href="{{ $href }}"
+                        target="{{ $target }}"
+                        @if ($rel) rel="{{ $rel }}" @endif
+                        class="{{ $clh['link_class'] }} shadow-md hover:shadow-xl {{ $link->show_icon ? 'pl-4 pr-12' : '' }}"
+                        style="{{ $clh['link_style'] }}"
+                    >
+                        @if ($link->show_icon)
+                            <span
+                                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
+                                style="background-color: {{ $brandColor }}22; color: {{ $brandColor }};"
+                            >
+                                <x-brand-icon :name="$link->iconName()" class="h-5 w-5" />
+                            </span>
+                        @endif
+                        <span class="flex-1 text-center">{{ $link->title }}</span>
+                        <span class="absolute right-4 text-lg opacity-0 transition group-hover:opacity-100" style="color: var(--clh-accent);" aria-hidden="true">→</span>
+                    </a>
+                @endif
             @endforeach
         </div>
 
