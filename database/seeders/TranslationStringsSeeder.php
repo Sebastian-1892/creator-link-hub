@@ -7,6 +7,7 @@ use App\Services\BrandingService;
 use App\Services\SettingsService;
 use App\Services\TranslationService;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\App;
 use Illuminate\Support\Facades\Lang;
 
 class TranslationStringsSeeder extends Seeder
@@ -17,9 +18,17 @@ class TranslationStringsSeeder extends Seeder
         $locales = TranslationService::platformLocales();
 
         foreach ($locales as $locale) {
-            $flat = TranslationService::flattenBrandingArray(
-                Lang::get('branding', [], $locale) ?: []
-            );
+            $previousLocale = App::getLocale();
+            App::setLocale($locale);
+
+            $branding = Lang::get('branding');
+            App::setLocale($previousLocale);
+
+            if (! is_array($branding)) {
+                $branding = Lang::get('branding', [], $locale);
+            }
+
+            $flat = TranslationService::flattenBrandingArray(is_array($branding) ? $branding : []);
 
             foreach ($flat as $key => $value) {
                 if ($value === '') {

@@ -3,6 +3,19 @@
 use App\Http\Middleware\SetMarketingLocale;
 use App\Services\BrandingService;
 
+test('marketing locale route sets cookie and applies french branding', function () {
+    app(BrandingService::class)->flushPayloadCache();
+    app(\App\Services\TranslationService::class)->flushAll();
+
+    $this->get(route('marketing.locale', ['locale' => 'fr']))
+        ->assertRedirect();
+
+    $this->withCookie(SetMarketingLocale::COOKIE_NAME, 'fr')
+        ->get(route('home'))
+        ->assertOk()
+        ->assertSee('Un lien. Tous les canaux', false);
+});
+
 test('marketing locale route sets cookie and applies english', function () {
     app(BrandingService::class)->flushPayloadCache();
 

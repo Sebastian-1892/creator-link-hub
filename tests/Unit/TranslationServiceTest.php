@@ -42,6 +42,25 @@ test('tenant default locale reads stored translation strings', function () {
     expect(app(TranslationService::class)->text('marketing.eyebrow', 'de'))->toBe('Nur Deutsch');
 });
 
+test('non-default locale does not inherit german translation_strings row', function () {
+    Cache::flush();
+
+    TranslationString::query()->create([
+        'locale' => 'de',
+        'key' => 'marketing.headline',
+        'value' => 'Nur auf Deutsch in der DB',
+        'format' => 'text',
+        'updated_at' => now(),
+    ]);
+
+    app(TranslationService::class)->flushAll();
+
+    expect(app(TranslationService::class)->text('marketing.headline', 'en'))
+        ->toBe('One link. Every channel. More reach.');
+    expect(app(TranslationService::class)->text('marketing.headline', 'fr'))
+        ->toBe('Un lien. Tous les canaux. Plus de portée.');
+});
+
 test('english locale uses lang file not german legacy settings', function () {
     Cache::flush();
     app(\App\Services\SettingsService::class)->flushCache();

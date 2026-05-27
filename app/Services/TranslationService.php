@@ -50,11 +50,6 @@ class TranslationService
 
         $tenantDefault = self::tenantDefaultLocale();
         if ($locale !== $tenantDefault) {
-            $fallback = $this->storedValue($tenantDefault, $key);
-            if ($fallback !== null && $fallback !== '') {
-                return $fallback;
-            }
-
             $langDefault = $this->langBrandingValue($key, $tenantDefault);
             if ($langDefault !== null && $langDefault !== '') {
                 return $langDefault;
@@ -84,7 +79,13 @@ class TranslationService
                 return array_values(array_filter($fallback, 'is_array'));
             }
 
-            $raw = $this->storedValue(self::tenantDefaultLocale(), $key);
+            if ($locale !== self::tenantDefaultLocale()) {
+                $fallback = Lang::get('branding.'.$key, [], self::tenantDefaultLocale());
+                if (is_array($fallback)) {
+                    /** @var list<array<string, mixed>> $fallback */
+                    return array_values(array_filter($fallback, 'is_array'));
+                }
+            }
         }
 
         if (is_string($raw) && $raw !== '') {
