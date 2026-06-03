@@ -238,7 +238,12 @@
                     </div>
                 @endif
 
-                <div class="mt-8 flex justify-end border-t border-gray-100 pt-6">
+                <div class="mt-8 flex flex-col items-end gap-3 border-t border-gray-100 pt-6">
+                    @if ($errors->any())
+                        <div class="w-full rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-900" role="alert">
+                            {{ __('Speichern fehlgeschlagen — bitte prüfe die markierten Felder in allen Design-Bereichen.') }}
+                        </div>
+                    @endif
                     <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="save">{{ __('Design speichern') }}</span>
                         <span wire:loading wire:target="save">{{ __('Speichern…') }}</span>

@@ -118,6 +118,107 @@ test('design editor preview reflects button shape and style in inline css', func
         ->assertSee('box-shadow: none', false);
 });
 
+test('design editor save auto-corrects wallpaper image style without file and persists buttons', function () {
+    $user = User::factory()->create();
+    $profile = $user->currentWorkspace()?->profile;
+    expect($profile)->not->toBeNull();
+
+    $profile->update([
+        'theme_variables' => [
+            'wallpaper' => ['style' => 'image', 'color' => '#ffffff'],
+            'button' => [
+                'style' => 'solid',
+                'shape' => 'pill',
+                'shadow' => 'soft',
+                'color' => '#ffffff',
+                'text_color' => '#000000',
+            ],
+        ],
+        'wallpaper_image_path' => null,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(DesignEditor::class)
+        ->set('activeSection', 'buttons')
+        ->set('button_style', 'outline')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $profile->refresh();
+    expect($profile->theme_variables['button']['style'])->toBe('outline')
+        ->and($profile->theme_variables['wallpaper']['style'])->toBe('solid');
+});
+
+test('design editor save persists button settings when wallpaper image style is auto-corrected', function () {
+    $user = User::factory()->create();
+    $profile = $user->currentWorkspace()?->profile;
+    expect($profile)->not->toBeNull();
+
+    $profile->update([
+        'theme_variables' => [
+            'wallpaper' => ['style' => 'image', 'color' => '#ffffff'],
+            'button' => [
+                'style' => 'solid',
+                'shape' => 'pill',
+                'shadow' => 'soft',
+                'color' => '#ffffff',
+                'text_color' => '#000000',
+            ],
+        ],
+        'wallpaper_image_path' => null,
+    ]);
+
+    Livewire::actingAs($user)
+        ->test(DesignEditor::class)
+        ->set('activeSection', 'buttons')
+        ->set('button_style', 'outline')
+        ->set('button_shape', 'square')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $profile->refresh();
+    expect($profile->theme_variables['button']['style'])->toBe('outline')
+        ->and($profile->theme_variables['button']['shape'])->toBe('square')
+        ->and($profile->theme_variables['wallpaper']['style'])->toBe('solid');
+});
+
+test('public profile reflects saved button style without manual cache flush', function () {
+    $user = User::factory()->create();
+    $profile = $user->currentWorkspace()?->profile;
+    expect($profile)->not->toBeNull();
+
+    $slug = 'bio-buttons-'.uniqid();
+    $profile->forceFill([
+        'slug' => $slug,
+        'is_published' => true,
+    ])->save();
+
+    Link::query()->create([
+        'profile_id' => $profile->id,
+        'title' => 'Example',
+        'url' => 'https://example.com',
+        'position' => 0,
+        'is_active' => true,
+        'opens_in_new_tab' => false,
+        'tracking_enabled' => false,
+    ]);
+
+    $this->actingAs($user)->get(route('public.profile', $slug))->assertOk();
+
+    Livewire::actingAs($user)
+        ->test(DesignEditor::class)
+        ->set('wallpaper_style', 'solid')
+        ->set('button_style', 'outline')
+        ->set('button_shape', 'square')
+        ->call('save')
+        ->assertHasNoErrors();
+
+    $this->get(route('public.profile', $slug))
+        ->assertOk()
+        ->assertSee('background: transparent', false)
+        ->assertSee('border-radius: 6px', false);
+});
+
 test('public profile reflects saved outline button style', function () {
     Cache::flush();
 

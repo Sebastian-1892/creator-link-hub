@@ -86,6 +86,19 @@ class ProfileDesignSettings
         };
     }
 
+    public static function resolveWallpaperStyle(string $storedStyle, ?string $wallpaperImagePath): string
+    {
+        if ($wallpaperImagePath !== null && $wallpaperImagePath !== '') {
+            return 'image';
+        }
+
+        if ($storedStyle === 'image') {
+            return 'solid';
+        }
+
+        return in_array($storedStyle, self::WALLPAPER_STYLES, true) ? $storedStyle : 'solid';
+    }
+
     public static function fromProfile(Profile $profile): self
     {
         $vars = is_array($profile->theme_variables) ? $profile->theme_variables : [];
@@ -101,10 +114,10 @@ class ProfileDesignSettings
         $font = is_array($vars['font'] ?? null) ? $vars['font'] : [];
         $button = is_array($vars['button'] ?? null) ? $vars['button'] : [];
 
-        $wallpaperStyle = (string) ($wallpaper['style'] ?? 'solid');
-        if ($profile->wallpaper_image_path && $wallpaperStyle !== 'image') {
-            $wallpaperStyle = 'image';
-        }
+        $wallpaperStyle = self::resolveWallpaperStyle(
+            (string) ($wallpaper['style'] ?? 'solid'),
+            $profile->wallpaper_image_path
+        );
 
         return new self(
             themeId: $profile->theme_id,
@@ -128,11 +141,11 @@ class ProfileDesignSettings
     /**
      * @return array<string, mixed>
      */
-    public function toThemeVariables(): array
+    public function toThemeVariables(?array $existing = null): array
     {
-        $existing = [];
+        $base = is_array($existing) ? $existing : [];
 
-        return array_merge($existing, [
+        return array_merge($base, [
             'wallpaper' => [
                 'style' => $this->wallpaperStyle,
                 'color' => $this->wallpaperColor,
@@ -162,7 +175,9 @@ class ProfileDesignSettings
     {
         $profile->theme_id = $this->themeId;
         $profile->header_layout = $this->headerLayout;
-        $profile->theme_variables = $this->toThemeVariables();
+        $profile->theme_variables = $this->toThemeVariables(
+            is_array($profile->theme_variables) ? $profile->theme_variables : null
+        );
     }
 
     public static function mapThemeButtonStyle(string $value): string

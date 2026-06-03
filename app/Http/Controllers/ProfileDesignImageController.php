@@ -49,7 +49,15 @@ class ProfileDesignImageController extends Controller
             Storage::disk('public')->delete($profile->wallpaper_image_path);
         }
 
-        $profile->update(['wallpaper_image_path' => null]);
+        $vars = is_array($profile->theme_variables) ? $profile->theme_variables : [];
+        $wallpaper = is_array($vars['wallpaper'] ?? null) ? $vars['wallpaper'] : [];
+        $wallpaper['style'] = 'solid';
+        $vars['wallpaper'] = $wallpaper;
+
+        $profile->update([
+            'wallpaper_image_path' => null,
+            'theme_variables' => $vars,
+        ]);
 
         return redirect()
             ->route('design.edit', ['section' => 'wallpaper'])

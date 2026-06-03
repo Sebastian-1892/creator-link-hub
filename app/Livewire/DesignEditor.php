@@ -97,6 +97,11 @@ class DesignEditor extends Component
 
     public function save(): void
     {
+        $this->wallpaper_style = ProfileDesignSettings::resolveWallpaperStyle(
+            $this->wallpaper_style,
+            $this->profile->wallpaper_image_path
+        );
+
         $hex = ['required', 'string', 'regex:/^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/'];
 
         $this->validate([
@@ -118,9 +123,7 @@ class DesignEditor extends Component
         ]);
 
         if ($this->wallpaper_style === 'image' && ! $this->profile->wallpaper_image_path) {
-            $this->addError('wallpaper_style', __('Bitte lade ein Hintergrundbild hoch oder wähle eine andere Wallpaper-Art.'));
-
-            return;
+            $this->wallpaper_style = 'solid';
         }
 
         $settings = new ProfileDesignSettings(
@@ -142,7 +145,14 @@ class DesignEditor extends Component
         );
 
         $settings->applyToProfile($this->profile);
-        $this->profile->save();
+
+        $this->profile->update([
+            'theme_id' => $this->theme_id,
+            'header_layout' => $this->header_layout,
+            'theme_variables' => $this->profile->theme_variables,
+        ]);
+
+        Profile::forgetPublicProfileCacheForProfileId($this->profile->id);
         $this->profile->refresh()->load('theme');
 
         $this->saveNotice = __('Design gespeichert — deine Bio-Seite wurde aktualisiert.');
