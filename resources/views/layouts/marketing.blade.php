@@ -124,11 +124,12 @@
     </footer>
     @if ($clhInlineEditorAssets ?? false)
         @livewire('translation-inline')
+        @livewire('page-section-editor')
         @livewireScripts
     @endif
     @if ($clhInlineEditing ?? false)
         <div class="fixed bottom-4 left-4 z-[90] rounded-lg bg-indigo-600 px-3 py-2 text-xs font-medium text-white shadow-lg">
-            {{ __('Inline-Bearbeitung aktiv') }} — {{ __('Hover + ✎ auf markierte Texte') }}
+            {{ __('Inline-Bearbeitung aktiv') }} — {{ __('Klicke „Section bearbeiten“ an jedem Abschnitt') }}
         </div>
     @endif
 </body>

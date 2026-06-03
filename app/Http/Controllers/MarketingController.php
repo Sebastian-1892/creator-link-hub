@@ -3,11 +3,12 @@
 namespace App\Http\Controllers;
 
 use App\Models\Theme;
+use App\Services\PageSectionService;
 use Illuminate\View\View;
 
 class MarketingController extends Controller
 {
-    public function home(): View
+    public function home(PageSectionService $pageSections): View
     {
         $stripSlugs = ['heylink-classic', 'minimal-light', 'modern-glass'];
 
@@ -26,6 +27,7 @@ class MarketingController extends Controller
         }
 
         return view('marketing.home', [
+            'pageSections' => $pageSections->sectionsFor('home'),
             'stripThemes' => $stripThemes,
             'carouselThemes' => Theme::query()->orderBy('name')->take(6)->get(),
         ]);
