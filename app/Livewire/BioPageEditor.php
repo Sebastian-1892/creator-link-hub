@@ -36,7 +36,12 @@ class BioPageEditor extends Component
 
         $this->display_name = $this->profile->display_name;
         $this->slug = $this->profile->slug;
-        $this->bio = (string) $this->profile->bio;
+        $maxBio = Profile::bioMaxLength();
+        $bio = (string) $this->profile->bio;
+        if (mb_strlen($bio) > $maxBio) {
+            $bio = mb_substr($bio, 0, $maxBio);
+        }
+        $this->bio = $bio;
         $this->is_published = $this->profile->is_published;
         $this->show_platform_branding = $this->profile->show_platform_branding;
     }
@@ -62,7 +67,7 @@ class BioPageEditor extends Component
                     }
                 },
             ],
-            'bio' => ['nullable', 'string', 'max:2000'],
+            'bio' => ['nullable', 'string', 'max:'.Profile::bioMaxLength()],
             'is_published' => ['boolean'],
             'show_platform_branding' => ['boolean'],
         ]);
@@ -98,6 +103,7 @@ class BioPageEditor extends Component
 
         return view('livewire.bio-page-editor', [
             'canControlPlatformBranding' => $workspace ? $plans->canControlPlatformBranding($workspace) : false,
+            'bioMaxLength' => Profile::bioMaxLength(),
         ]);
     }
 }

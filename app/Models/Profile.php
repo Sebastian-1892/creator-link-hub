@@ -67,6 +67,11 @@ class Profile extends Model
         return $this->hasMany(ClickEvent::class);
     }
 
+    public static function bioMaxLength(): int
+    {
+        return max(1, (int) config('creator.profile.bio_max_length', 300));
+    }
+
     public function cacheTag(): string
     {
         return 'profile:'.$this->slug;

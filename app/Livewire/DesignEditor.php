@@ -85,12 +85,28 @@ class DesignEditor extends Component
     public function setSection(string $section): void
     {
         if (in_array($section, ['theme', 'header', 'wallpaper', 'text', 'buttons'], true)) {
+            $this->dismissSaveNotice();
             $this->activeSection = $section;
         }
     }
 
+    public function updatedActiveSection(): void
+    {
+        $this->dismissSaveNotice();
+    }
+
+    public function updated($property): void
+    {
+        if (in_array($property, ['saveNotice', 'profile'], true)) {
+            return;
+        }
+
+        $this->dismissSaveNotice();
+    }
+
     public function updatedThemeId(mixed $value): void
     {
+        $this->dismissSaveNotice();
         $this->theme_id = ($value === '' || $value === null) ? null : (int) $value;
         $this->applyThemeDefaultsToForm();
     }
@@ -157,6 +173,7 @@ class DesignEditor extends Component
 
         $this->saveNotice = __('Design gespeichert — deine Bio-Seite wurde aktualisiert.');
         $this->js('window.scrollTo({ top: 0, behavior: "smooth" })');
+        $this->js('setTimeout(() => $wire.dismissSaveNotice(), 4000)');
     }
 
     public function dismissSaveNotice(): void

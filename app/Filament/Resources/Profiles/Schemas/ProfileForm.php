@@ -25,6 +25,7 @@ class ProfileForm
                 TextInput::make('display_name')
                     ->required(),
                 Textarea::make('bio')
+                    ->maxLength(\App\Models\Profile::bioMaxLength())
                     ->columnSpanFull(),
                 TextInput::make('avatar_path'),
                 Textarea::make('theme_variables')

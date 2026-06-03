@@ -49,6 +49,13 @@ return [
     ],
 
     /**
+     * Profil-Stammdaten (Hub Bio-Editor).
+     */
+    'profile' => [
+        'bio_max_length' => (int) env('PROFILE_BIO_MAX_LENGTH', 300),
+    ],
+
+    /**
      * Profilbild: großzügiger Upload, Speicherung als verkleinertes WebP/JPEG.
      */
     'avatar' => [

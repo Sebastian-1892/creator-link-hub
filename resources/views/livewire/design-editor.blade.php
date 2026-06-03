@@ -1,6 +1,12 @@
 <div class="py-10">
     @if ($saveNotice)
-        <div class="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none" role="status">
+        <div
+            class="fixed top-20 left-0 right-0 z-50 flex justify-center px-4 pointer-events-none"
+            role="status"
+            wire:key="design-save-notice"
+            x-data
+            x-init="window.clearTimeout($el._clhSaveNoticeTimer); $el._clhSaveNoticeTimer = window.setTimeout(() => $wire.dismissSaveNotice(), 4000)"
+        >
             <div class="pointer-events-auto flex max-w-lg items-center gap-3 rounded-xl border border-green-600 bg-green-600 px-5 py-4 text-white shadow-xl">
                 <p class="text-base font-semibold">{{ $saveNotice }}</p>
                 <button type="button" wire:click="dismissSaveNotice" class="rounded-md p-1 hover:bg-green-700" aria-label="{{ __('Schließen') }}">×</button>

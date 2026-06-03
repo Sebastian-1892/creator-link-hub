@@ -219,6 +219,32 @@ test('public profile reflects saved button style without manual cache flush', fu
         ->assertSee('border-radius: 6px', false);
 });
 
+test('design editor dismisses save notice when switching section or editing a field', function () {
+    $user = User::factory()->create();
+
+    $component = Livewire::actingAs($user)
+        ->test(DesignEditor::class)
+        ->set('wallpaper_style', 'solid')
+        ->call('save')
+        ->assertSet('saveNotice', fn ($notice) => is_string($notice) && $notice !== '');
+
+    foreach (['header', 'wallpaper', 'text', 'buttons', 'theme'] as $section) {
+        $component
+            ->call('save')
+            ->assertSet('saveNotice', fn ($notice) => is_string($notice) && $notice !== '')
+            ->call('setSection', $section)
+            ->assertSet('saveNotice', null);
+    }
+
+    $component
+        ->call('save')
+        ->set('activeSection', 'wallpaper')
+        ->assertSet('saveNotice', null)
+        ->call('save')
+        ->set('theme_filter', 'dark')
+        ->assertSet('saveNotice', null);
+});
+
 test('public profile reflects saved outline button style', function () {
     Cache::flush();
 

@@ -107,8 +107,25 @@
                         </div>
 
                         <div>
-                            <x-input-label for="bio" :value="__('Bio')" />
-                            <textarea wire:model="bio" id="bio" rows="3" class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500"></textarea>
+                            <div class="flex items-baseline justify-between gap-2">
+                                <x-input-label for="bio" :value="__('Bio')" />
+                                <p
+                                    class="text-xs tabular-nums @if(\Illuminate\Support\Str::length($bio) >= $bioMaxLength) text-red-600 font-semibold @else text-gray-500 @endif"
+                                    aria-live="polite"
+                                >
+                                    {{ \Illuminate\Support\Str::length($bio) }} / {{ $bioMaxLength }}
+                                </p>
+                            </div>
+                            <textarea
+                                wire:model.live="bio"
+                                id="bio"
+                                rows="3"
+                                maxlength="{{ $bioMaxLength }}"
+                                class="block mt-1 w-full border-gray-300 rounded-md shadow-sm focus:border-indigo-500 focus:ring-indigo-500 @if(\Illuminate\Support\Str::length($bio) >= $bioMaxLength) border-red-300 focus:border-red-500 focus:ring-red-500 @endif"
+                            ></textarea>
+                            <p class="mt-1 text-xs text-gray-500">
+                                {{ __('Maximal :max Zeichen — kurze Bios wirken auf der Profilseite am besten.', ['max' => $bioMaxLength]) }}
+                            </p>
                             <x-input-error :messages="$errors->get('bio')" class="mt-2" />
                         </div>
                     </div>
