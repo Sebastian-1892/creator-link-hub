@@ -22,14 +22,12 @@ use Filament\Schemas\Components\Component;
 use Filament\Schemas\Components\EmbeddedSchema;
 use Filament\Schemas\Components\Fieldset;
 use Filament\Schemas\Components\Form;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Tabs;
 use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Schemas\Components\View as SchemaView;
 use Filament\Schemas\Schema;
 use Filament\Support\Enums\Alignment;
+use Filament\Support\Enums\Width;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 use Livewire\Features\SupportFileUploads\TemporaryUploadedFile;
@@ -50,9 +48,7 @@ class BrandingSettingsPage extends Page
      */
     public ?array $data = [];
 
-    public string $previewPage = 'home';
-
-    public int $previewVersion = 0;
+    protected Width|string|null $maxContentWidth = Width::FiveExtraLarge;
 
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
@@ -193,16 +189,13 @@ class BrandingSettingsPage extends Page
                             ->live()
                             ->afterStateUpdated(function (): void {
                                 $this->fillForm();
-                                $this->previewVersion++;
                             }),
                     ])
                     ->columns(1),
-                Grid::make(['default' => 1, 'lg' => 12])
-                    ->schema([
-                        Group::make([
-                            Tabs::make('brandingTabs')
-                            ->tabs([
-                                Tab::make(__('admin_settings.branding.tab_brand'))
+                Tabs::make('brandingTabs')
+                    ->persistTabInQueryString()
+                    ->tabs([
+                        Tab::make(__('admin_settings.branding.tab_brand'))
                                     ->schema([
                                         TextInput::make('brand_name')
                                             ->label(__('admin_settings.branding.field_brand_name'))
@@ -215,12 +208,13 @@ class BrandingSettingsPage extends Page
                                             ->directory('branding')
                                             ->image()
                                             ->maxSize(2048)
-                                            ->helperText(__('admin_settings.branding.helper_logo')),
+                                            ->helperText(__('admin_settings.branding.helper_logo'))
+                                            ->columnSpanFull(),
                                     ])
                                     ->columns(1),
                                 Tab::make(__('admin_settings.branding.tab_colors'))
                                     ->schema($colorPickers)
-                                    ->columns(2),
+                                    ->columns(['default' => 1, 'sm' => 2, 'lg' => 3, 'xl' => 4]),
                                 Tab::make(__('admin_settings.branding.tab_pricing'))
                                     ->schema(array_merge([
                                         TextInput::make('pricing_title')
@@ -233,7 +227,7 @@ class BrandingSettingsPage extends Page
                                             ->live()
                                             ->columnSpanFull(),
                                     ], $pricingFieldsets))
-                                    ->columns(1),
+                                    ->columns(['default' => 1, 'lg' => 2]),
                                 Tab::make(__('admin_settings.branding.tab_faq'))
                                     ->schema([
                                         TextInput::make('faq_title')
@@ -257,7 +251,8 @@ class BrandingSettingsPage extends Page
                                             ->columns(1)
                                             ->collapsible()
                                             ->itemLabel(fn (array $state): ?string => $state['question'] ?? null),
-                                    ]),
+                                    ])
+                                    ->columns(1),
                                 Tab::make(__('admin_settings.branding.tab_help'))
                                     ->schema([
                                         TextInput::make('help_title')
@@ -286,7 +281,8 @@ class BrandingSettingsPage extends Page
                                             ->columns(1)
                                             ->collapsible()
                                             ->itemLabel(fn (array $state): ?string => $state['heading'] ?? null),
-                                    ]),
+                                    ])
+                                    ->columns(1),
                                 Tab::make(__('admin_settings.branding.tab_legal'))
                                     ->schema([
                                         RichEditor::make('legal_impressum_html')
@@ -301,7 +297,8 @@ class BrandingSettingsPage extends Page
                                             ->label(__('admin_settings.branding.legal_agb'))
                                             ->helperText(__('admin_settings.branding.legal_helper'))
                                             ->columnSpanFull(),
-                                    ]),
+                                    ])
+                                    ->columns(1),
                                 Tab::make(__('admin_settings.branding.tab_footer'))
                                     ->schema([
                                         Textarea::make('marketing_footer_tagline')
@@ -322,7 +319,7 @@ class BrandingSettingsPage extends Page
                                             ->maxLength(120)
                                             ->live(),
                                     ])
-                                    ->columns(1),
+                                    ->columns(['default' => 1, 'sm' => 2, 'lg' => 3]),
                                 Tab::make(__('admin_settings.branding.tab_bio'))
                                     ->schema([
                                         TextInput::make('bio_cta_label_default')
@@ -343,26 +340,7 @@ class BrandingSettingsPage extends Page
                                             ->maxLength(64)
                                             ->live(),
                                     ])
-                                    ->columns(1),
-                            ]),
-                        ])
-                            ->columnSpan(['default' => 12, 'lg' => 5]),
-                        Group::make([
-                            Section::make(__('admin_settings.branding.preview'))
-                                ->schema([
-                                    SchemaView::make('filament.schemas.components.branding-page-preview')
-                                        ->viewData(fn (): array => [
-                                            'previewUrl' => $this->previewUrl(),
-                                            'previewPages' => $this->previewPageOptions(),
-                                            'previewVersion' => $this->previewVersion,
-                                            'previewPage' => $this->previewPage,
-                                        ]),
-                                ]),
-                        ])
-                            ->columnSpan(['default' => 12, 'lg' => 7])
-                            ->extraAttributes([
-                                'class' => 'lg:sticky lg:top-4 lg:self-start',
-                            ]),
+                                    ->columns(['default' => 1, 'md' => 2]),
                     ]),
             ]);
     }
@@ -496,7 +474,6 @@ class BrandingSettingsPage extends Page
         app(BrandingService::class)->flushPayloadCache();
 
         $this->fillForm();
-        $this->previewVersion++;
 
         Notification::make()
             ->title(__('admin_settings.branding.notify_saved'))
@@ -535,41 +512,6 @@ class BrandingSettingsPage extends Page
         $lang = __('branding.'.$key, [], $locale);
 
         return is_string($lang) ? $lang : '';
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    protected function previewPageOptions(): array
-    {
-        return [
-            'home' => __('admin_settings.branding.preview_page_home'),
-            'pricing' => __('admin_settings.branding.preview_page_pricing'),
-            'faq' => __('admin_settings.branding.preview_page_faq'),
-            'help' => __('admin_settings.branding.preview_page_help'),
-            'impressum' => __('admin_settings.branding.preview_page_impressum'),
-        ];
-    }
-
-    protected function previewUrl(): string
-    {
-        $routes = [
-            'home' => route('home'),
-            'pricing' => route('pricing'),
-            'faq' => route('faq'),
-            'help' => route('help'),
-            'impressum' => route('legal.impressum'),
-        ];
-
-        $base = $routes[$this->previewPage] ?? route('home');
-        $locale = $this->formLocale();
-
-        return $base.'?locale='.urlencode($locale).'&_pv='.$this->previewVersion;
-    }
-
-    public function updatedPreviewPage(): void
-    {
-        $this->previewVersion++;
     }
 
     /**
