@@ -133,32 +133,26 @@ if (! function_exists('clh_public_theme')) {
             default => 'font-family: '.$fontFamily.'; color: var(--clh-text); background-color: '.$settings->wallpaperColor.';',
         };
 
-        $radius = match ($settings->buttonShape) {
-            'square' => '6px',
-            'rounded' => '16px',
-            default => '9999px',
+        $styleClass = match ($settings->buttonStyle) {
+            'outline' => 'clh-link--style-outline',
+            'glass' => 'clh-link--style-glass',
+            default => 'clh-link--style-solid',
         };
 
-        $shadowCss = match ($settings->buttonShadow) {
-            'soft' => 'box-shadow: 0 8px 24px rgba(0,0,0,0.12);',
-            'strong' => 'box-shadow: 0 14px 40px rgba(0,0,0,0.28);',
-            'hard' => 'box-shadow: 4px 4px 0 rgba(0,0,0,0.35);',
-            default => '',
+        $shapeClass = match ($settings->buttonShape) {
+            'square' => 'clh-link--shape-square',
+            'rounded' => 'clh-link--shape-rounded',
+            default => 'clh-link--shape-pill',
         };
 
-        $linkStyle = match ($settings->buttonStyle) {
-            'outline' => 'background: transparent; color: var(--clh-button-fg); border: 2px solid color-mix(in srgb, var(--clh-button-bg) 85%, transparent); border-radius: '.$radius.';',
-            'glass' => 'background: color-mix(in srgb, var(--clh-button-bg) 45%, transparent); color: var(--clh-button-fg); border: 1px solid color-mix(in srgb, var(--clh-border) 70%, transparent); border-radius: '.$radius.'; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);',
-            default => 'background: var(--clh-button-bg); color: var(--clh-button-fg); border: 1px solid var(--clh-border); border-radius: '.$radius.';',
+        $shadowClass = match ($settings->buttonShadow) {
+            'none' => 'clh-link--shadow-none',
+            'strong' => 'clh-link--shadow-strong',
+            'hard' => 'clh-link--shadow-hard',
+            default => 'clh-link--shadow-soft',
         };
 
-        if ($shadowCss !== '') {
-            $linkStyle .= ' '.$shadowCss;
-        }
-
-        if ($cardStyle === 'bordered') {
-            $linkStyle .= ' border-width: 2px; border-color: var(--clh-accent);';
-        }
+        $linkClasses = trim('clh-link '.$styleClass.' '.$shapeClass.' '.$shadowClass.($cardStyle === 'bordered' ? ' clh-link--card-bordered' : ''));
 
         $avatarRadius = $settings->buttonShape === 'square' ? '12px' : '9999px';
         $avatarSize = $headerLayout === 'hero' ? '9rem' : '7rem';
@@ -168,8 +162,8 @@ if (! function_exists('clh_public_theme')) {
             'font_family' => $fontFamily,
             'body_style' => $bodyStyle,
             'pattern_overlay' => '',
-            'link_class' => 'group relative flex w-full items-center gap-3 px-5 py-4 font-semibold transition duration-200 hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2',
-            'link_style' => $linkStyle,
+            'link_class' => $linkClasses,
+            'link_style' => '',
             'avatar_class' => 'mx-auto object-cover shadow-xl',
             'avatar_style' => 'height: '.$avatarSize.'; width: '.$avatarSize.'; border-radius: '.$avatarRadius.'; box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 38%, transparent); border: 3px solid color-mix(in srgb, var(--clh-accent) 60%, transparent);',
             'placeholder_avatar_class' => 'mx-auto flex items-center justify-center font-bold shadow-xl',

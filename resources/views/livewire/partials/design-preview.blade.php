@@ -32,10 +32,10 @@
             </div>
 
             <div class="mt-6 space-y-2">
-                <div class="{{ $clh['link_class'] }} text-sm py-3 shadow-md" style="{{ $clh['link_style'] }}">
+                <div class="{{ $clh['link_class'] }} clh-link--compact">
                     <span class="flex-1 text-center">{{ __('Beispiel-Link') }}</span>
                 </div>
-                <div class="{{ $clh['link_class'] }} text-sm py-3 shadow-md" style="{{ $clh['link_style'] }}">
+                <div class="{{ $clh['link_class'] }} clh-link--compact">
                     <span class="flex-1 text-center">{{ __('Zweiter Link') }}</span>
                 </div>
             </div>

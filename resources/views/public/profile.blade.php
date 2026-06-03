@@ -33,8 +33,8 @@
                 @if ($isCollection)
                     <details name="clh-shop" class="clh-shop-accordion group">
                         <summary
-                            class="{{ $clh['link_class'] }} w-full cursor-pointer list-none shadow-md hover:shadow-xl px-4 [&::-webkit-details-marker]:hidden"
-                            style="{{ $clh['link_style'] }}"
+                            class="{{ $clh['link_class'] }} w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden"
+                            @if ($clh['link_style'] !== '') style="{{ $clh['link_style'] }}" @endif
                         >
                             <span
                                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
@@ -94,8 +94,8 @@
                         href="{{ $href }}"
                         target="{{ $target }}"
                         @if ($rel) rel="{{ $rel }}" @endif
-                        class="{{ $clh['link_class'] }} shadow-md hover:shadow-xl {{ $link->show_icon ? 'pl-4 pr-12' : '' }}"
-                        style="{{ $clh['link_style'] }}"
+                        class="{{ $clh['link_class'] }}{{ $link->show_icon ? ' pl-4 pr-12' : '' }}"
+                        @if ($clh['link_style'] !== '') style="{{ $clh['link_style'] }}" @endif
                     >
                         @if ($link->show_icon)
                             <span
@@ -106,7 +106,7 @@
                             </span>
                         @endif
                         <span class="flex-1 text-center">{{ $link->title }}</span>
-                        <span class="absolute right-4 text-lg opacity-0 transition group-hover:opacity-100" style="color: var(--clh-accent);" aria-hidden="true">→</span>
+                        <span class="clh-link-arrow" aria-hidden="true">→</span>
                     </a>
                 @endif
             @endforeach
