@@ -17,6 +17,13 @@ class Link extends Model
         'url',
         'image_url',
         'preset_key',
+        'provider',
+        'provider_id',
+        'provider_resource_type',
+        'is_dynamic',
+        'cached_title',
+        'cached_artist',
+        'cached_image',
         'show_icon',
         'position',
         'is_active',
@@ -28,11 +35,52 @@ class Link extends Model
     {
         return [
             'parent_link_id' => 'integer',
+            'is_dynamic' => 'boolean',
             'show_icon' => 'boolean',
             'is_active' => 'boolean',
             'opens_in_new_tab' => 'boolean',
             'tracking_enabled' => 'boolean',
         ];
+    }
+
+    public function isSpotifyEmbed(): bool
+    {
+        return $this->preset_key === 'spotify'
+            && $this->provider === 'spotify'
+            && is_string($this->provider_id)
+            && $this->provider_id !== '';
+    }
+
+    public function spotifyEmbedUrl(): ?string
+    {
+        if (! $this->isSpotifyEmbed() || ! is_string($this->provider_resource_type)) {
+            return null;
+        }
+
+        return 'https://open.spotify.com/embed/'.$this->provider_resource_type.'/'.$this->provider_id;
+    }
+
+    public function spotifyEmbedHeight(): int
+    {
+        return in_array($this->provider_resource_type, ['episode', 'show'], true) ? 232 : 152;
+    }
+
+    public function spotifyDisplayTitle(): string
+    {
+        if ($this->is_dynamic && is_string($this->cached_title) && $this->cached_title !== '') {
+            return $this->cached_title;
+        }
+
+        return $this->title;
+    }
+
+    public function spotifyDisplaySubtitle(): ?string
+    {
+        if ($this->is_dynamic && is_string($this->cached_artist) && $this->cached_artist !== '') {
+            return $this->cached_artist;
+        }
+
+        return null;
     }
 
     public function isCollection(): bool

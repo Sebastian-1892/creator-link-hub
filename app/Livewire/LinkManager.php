@@ -2,10 +2,13 @@
 
 namespace App\Livewire;
 
+use App\Jobs\SyncDynamicSpotifyLinksJob;
 use App\Models\Link;
 use App\Models\Profile;
+use App\Models\SpotifyAccount;
 use App\Services\PlanService;
 use App\Support\LinkPresetHelper;
+use App\Support\SpotifyUrlParser;
 use Illuminate\Validation\ValidationException;
 use Livewire\Attributes\Layout;
 use Livewire\Component;
@@ -23,6 +26,8 @@ class LinkManager extends Component
 
     public string $newUrl = '';
 
+    public bool $spotifyDynamic = false;
+
     public string $collectionTitle = '';
 
     public ?int $productCollectionId = null;
@@ -39,6 +44,9 @@ class LinkManager extends Component
     /** @var array<int, bool> */
     public array $linkShowIcons = [];
 
+    /** @var array{provider: string, resource_type: string, provider_id: string, canonical_url: string, embed_url: string}|null */
+    protected ?array $spotifyProviderMeta = null;
+
     public function mount(): void
     {
         $workspace = auth()->user()?->currentWorkspace();
@@ -54,14 +62,14 @@ class LinkManager extends Component
         abort_unless(array_key_exists($key, LinkPresetHelper::presets()), 404);
 
         $this->presetKey = $key;
-        $this->reset('presetValue', 'newTitle', 'newUrl');
+        $this->reset('presetValue', 'newTitle', 'newUrl', 'spotifyDynamic');
         $this->resetErrorBag();
     }
 
     public function clearPreset(): void
     {
         $this->presetKey = null;
-        $this->reset('presetValue', 'newTitle', 'newUrl');
+        $this->reset('presetValue', 'newTitle', 'newUrl', 'spotifyDynamic');
         $this->resetErrorBag();
     }
 
@@ -189,13 +197,24 @@ class LinkManager extends Component
             return;
         }
 
+        if ($this->presetKey === 'spotify' && $this->spotifyDynamic) {
+            $this->createDynamicSpotifyLink($plans);
+            $this->resetAfterAdd();
+
+            return;
+        }
+
         [$title, $url] = $this->resolvePresetTitleAndUrl($preset);
+        $providerMeta = $this->spotifyProviderMeta;
+        $this->spotifyProviderMeta = null;
 
         $this->createLinkFromInput(
             $title,
             $url,
             $plans,
             $this->presetKey === 'custom' ? null : $this->presetKey,
+            showIcon: $this->presetKey !== 'spotify',
+            providerMeta: $providerMeta,
         );
         $this->resetAfterAdd();
     }
@@ -289,6 +308,14 @@ class LinkManager extends Component
     public function render()
     {
         $links = $this->profile->links()->orderBy('position')->get();
+        $workspace = auth()->user()?->currentWorkspace();
+        $spotifyAccount = $workspace
+            ? SpotifyAccount::query()->where('workspace_id', $workspace->id)->first()
+            : null;
+
+        $spotifyPreview = $this->presetKey === 'spotify' && trim($this->presetValue) !== ''
+            ? SpotifyUrlParser::tryParse(trim($this->presetValue))
+            : null;
 
         return view('livewire.link-manager', [
             'links' => $links->whereNull('parent_link_id')->values(),
@@ -298,6 +325,9 @@ class LinkManager extends Component
                 ->filter(fn (Link $product): bool => $links->contains('id', $product->parent_link_id))
                 ->groupBy('parent_link_id'),
             'linkPresets' => LinkPresetHelper::presets(),
+            'spotifyAccount' => $spotifyAccount,
+            'spotifyPreview' => $spotifyPreview,
+            'spotifyConfigured' => is_string(config('services.spotify.client_id')) && config('services.spotify.client_id') !== '',
         ]);
     }
 
@@ -327,6 +357,29 @@ class LinkManager extends Component
             ]);
 
             return [$this->newTitle, $this->newUrl];
+        }
+
+        if ($type === 'spotify') {
+            $this->validate([
+                'presetValue' => ['required', 'string', 'max:2048'],
+            ], [
+                'presetValue.required' => __('Bitte eine Spotify-URL oder URI eingeben.'),
+            ]);
+
+            try {
+                $parsed = SpotifyUrlParser::parse(trim($this->presetValue));
+            } catch (\InvalidArgumentException) {
+                throw ValidationException::withMessages([
+                    'presetValue' => __('Bitte eine gültige Spotify-URL oder URI eingeben (Track, Episode, Show, Playlist, Album oder Artist).'),
+                ]);
+            }
+
+            $this->spotifyProviderMeta = $parsed;
+
+            $defaultLabel = __('presets.spotify');
+            $title = trim($this->newTitle) !== '' ? trim($this->newTitle) : $defaultLabel;
+
+            return [$title, $parsed['canonical_url']];
         }
 
         $rules = match ($type) {
@@ -365,12 +418,70 @@ class LinkManager extends Component
         return [$title, $url];
     }
 
+    protected function createDynamicSpotifyLink(PlanService $plans): void
+    {
+        $workspace = $this->profile->workspace;
+
+        if (! $plans->canAddLink($workspace, $this->profile)) {
+            session()->flash('error', __('Im Free-Plan sind maximal :n Links möglich.', ['n' => config('creator.free_link_limit')]));
+            $this->dispatch('close-modal', 'add-link');
+
+            return;
+        }
+
+        $account = SpotifyAccount::query()
+            ->where('workspace_id', $workspace->id)
+            ->where('connection_status', 'connected')
+            ->first();
+
+        if ($account === null) {
+            throw ValidationException::withMessages([
+                'spotifyDynamic' => __('Bitte verbinde zuerst dein Spotify-Konto.'),
+            ]);
+        }
+
+        $defaultLabel = __('Gerade auf Spotify');
+        $title = trim($this->newTitle) !== '' ? trim($this->newTitle) : $defaultLabel;
+
+        $maxPos = (int) $this->profile->links()->whereNull('parent_link_id')->max('position');
+
+        Link::query()->create([
+            'profile_id' => $this->profile->id,
+            'link_type' => 'link',
+            'parent_link_id' => null,
+            'title' => $title,
+            'url' => 'https://open.spotify.com',
+            'image_url' => null,
+            'preset_key' => 'spotify',
+            'provider' => 'spotify',
+            'provider_id' => null,
+            'provider_resource_type' => null,
+            'is_dynamic' => true,
+            'show_icon' => false,
+            'position' => $maxPos + 1,
+            'is_active' => true,
+            'opens_in_new_tab' => false,
+            'tracking_enabled' => false,
+        ]);
+
+        Profile::forgetPublicProfileCacheForProfileId($this->profile->id);
+
+        SyncDynamicSpotifyLinksJob::dispatch();
+
+        $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
+        $this->syncLinkFormState();
+    }
+
+    /**
+     * @param  array{provider: string, resource_type: string, provider_id: string, canonical_url: string, embed_url: string}|null  $providerMeta
+     */
     protected function createLinkFromInput(
         string $title,
         string $url,
         PlanService $plans,
         ?string $presetKey = null,
         bool $showIcon = true,
+        ?array $providerMeta = null,
     ): void {
         $workspace = $this->profile->workspace;
 
@@ -382,6 +493,7 @@ class LinkManager extends Component
         }
 
         $resolvedPreset = $presetKey ?? LinkPresetHelper::detectFromUrl($url);
+        $isSpotify = $resolvedPreset === 'spotify' && $providerMeta !== null;
 
         $maxPos = (int) $this->profile->links()->whereNull('parent_link_id')->max('position');
 
@@ -393,12 +505,18 @@ class LinkManager extends Component
             'url' => $url,
             'image_url' => null,
             'preset_key' => $resolvedPreset,
+            'provider' => $providerMeta['provider'] ?? null,
+            'provider_id' => $providerMeta['provider_id'] ?? null,
+            'provider_resource_type' => $providerMeta['resource_type'] ?? null,
+            'is_dynamic' => false,
             'show_icon' => $showIcon,
             'position' => $maxPos + 1,
             'is_active' => true,
-            'opens_in_new_tab' => true,
-            'tracking_enabled' => true,
+            'opens_in_new_tab' => $isSpotify ? false : true,
+            'tracking_enabled' => $isSpotify ? false : true,
         ]);
+
+        Profile::forgetPublicProfileCacheForProfileId($this->profile->id);
 
         $this->profile->refresh()->load(['links' => fn ($q) => $q->orderBy('position')]);
         $this->syncLinkFormState();

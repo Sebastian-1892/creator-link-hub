@@ -90,6 +90,9 @@
                         </div>
                     </details>
                 @else
+                    @if ($link->preset_key === 'spotify')
+                        @include('public.partials.spotify-link', ['link' => $link, 'clh' => $clh])
+                    @else
                     <a
                         href="{{ $href }}"
                         target="{{ $target }}"
@@ -108,6 +111,7 @@
                         <span class="flex-1 text-center">{{ $link->title }}</span>
                         <span class="clh-link-arrow" aria-hidden="true">→</span>
                     </a>
+                    @endif
                 @endif
             @endforeach
         </div>

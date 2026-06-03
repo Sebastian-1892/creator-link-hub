@@ -36,9 +36,8 @@ return [
     'spotify' => [
         'icon' => 'spotify',
         'color' => '#1DB954',
-        'type' => 'url',
-        'placeholder' => 'https://open.spotify.com/artist/…',
-        'url_template' => '{value}',
+        'type' => 'spotify',
+        'placeholder' => 'https://open.spotify.com/track/… oder spotify:track:…',
     ],
     'github' => [
         'icon' => 'github',

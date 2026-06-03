@@ -46,4 +46,12 @@ class Workspace extends Model
     {
         return $this->hasMany(EventLog::class);
     }
+
+    /**
+     * @return HasOne<SpotifyAccount, $this>
+     */
+    public function spotifyAccount(): HasOne
+    {
+        return $this->hasOne(SpotifyAccount::class);
+    }
 }

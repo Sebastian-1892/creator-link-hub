@@ -9,6 +9,7 @@ use App\Http\Controllers\ProfileAvatarController;
 use App\Http\Controllers\ProfileDesignImageController;
 use App\Http\Controllers\PublicProfileController;
 use App\Http\Controllers\SitemapController;
+use App\Http\Controllers\SpotifyAuthController;
 use App\Livewire\AnalyticsDashboard;
 use App\Livewire\BillingPortal;
 use App\Livewire\BioPageEditor;
@@ -53,6 +54,9 @@ Route::middleware(['auth', 'verified', 'onboarding'])->group(function () {
     Route::delete('hub/design/banner', [ProfileDesignImageController::class, 'destroyBanner'])->name('design.banner.destroy');
     Route::get('hub/analytics', AnalyticsDashboard::class)->name('analytics');
     Route::get('hub/billing', BillingPortal::class)->name('billing');
+    Route::get('hub/spotify/connect', [SpotifyAuthController::class, 'connect'])->name('spotify.connect');
+    Route::get('hub/spotify/callback', [SpotifyAuthController::class, 'callback'])->name('spotify.callback');
+    Route::post('hub/spotify/disconnect', [SpotifyAuthController::class, 'disconnect'])->name('spotify.disconnect');
     Route::view('profile', 'profile')->name('profile');
 });
 
