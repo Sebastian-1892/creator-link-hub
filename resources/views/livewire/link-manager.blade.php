@@ -287,68 +287,19 @@
                             </div>
 
                             @if ($spotifyPreview)
-                                <div class="rounded-lg border border-green-200 bg-green-50 p-3 text-sm text-green-900">
-                                    <p class="font-medium">{{ __('Vorschau erkannt') }}</p>
-                                    <p class="mt-1 capitalize">{{ $spotifyPreview['resource_type'] }} · {{ $spotifyPreview['provider_id'] }}</p>
-                                    <p class="mt-1 text-xs break-all opacity-80">{{ $spotifyPreview['canonical_url'] }}</p>
+                                <div>
+                                    <p class="mb-2 text-xs font-medium text-gray-500">{{ __('Vorschau') }}</p>
+                                    <x-spotify-embed
+                                        :embed-url="$spotifyPreview['embed_url']"
+                                        :resource-type="$spotifyPreview['resource_type']"
+                                        :title="__('Spotify-Vorschau')"
+                                    />
                                 </div>
                             @elseif (trim($presetValue) !== '')
                                 <div class="rounded-lg border border-amber-200 bg-amber-50 p-3 text-sm text-amber-900">
                                     {{ __('Noch keine gültige Spotify-URL erkannt.') }}
                                 </div>
                             @endif
-
-                            <div class="rounded-lg border border-gray-200 bg-gray-50 p-4 space-y-3">
-                                <div class="flex items-start gap-3">
-                                    <input
-                                        type="checkbox"
-                                        wire:model.live="spotifyDynamic"
-                                        id="spotify-dynamic"
-                                        class="mt-1 rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                                    />
-                                    <div>
-                                        <label for="spotify-dynamic" class="text-sm font-medium text-gray-900 cursor-pointer">
-                                            {{ __('Automatisch aktuellen/zuletzt gespielten Titel anzeigen') }}
-                                        </label>
-                                        <p class="mt-1 text-xs text-gray-500">
-                                            {{ __('Erfordert Spotify-Verbindung. Es werden nur die Scopes „Aktuell gespielt“ und „Zuletzt gespielt“ abgefragt.') }}
-                                        </p>
-                                    </div>
-                                </div>
-                                <x-input-error :messages="$errors->get('spotifyDynamic')" class="mt-1" />
-
-                                @if ($spotifyDynamic)
-                                    @if ($spotifyAccount?->isConnected())
-                                        <div class="flex flex-wrap items-center gap-3">
-                                            <span class="text-sm text-green-700">{{ __('Spotify verbunden') }}</span>
-                                            <form method="POST" action="{{ route('spotify.disconnect') }}">
-                                                @csrf
-                                                <x-secondary-button type="submit">{{ __('Trennen') }}</x-secondary-button>
-                                            </form>
-                                        </div>
-                                    @elseif ($spotifyConfigured)
-                                        <a href="{{ route('spotify.connect') }}">
-                                            <x-primary-button type="button">{{ __('Mit Spotify verbinden') }}</x-primary-button>
-                                        </a>
-                                    @else
-                                        <p class="text-sm text-amber-700">{{ __('Spotify OAuth ist noch nicht konfiguriert (SPOTIFY_CLIENT_ID).') }}</p>
-                                    @endif
-
-                                    @if ($spotifyAccount && ! $spotifyAccount->isConnected())
-                                        <p class="text-sm text-amber-700">{{ __('Spotify-Verbindung abgelaufen — bitte erneut verbinden.') }}</p>
-                                        @if ($spotifyConfigured)
-                                            <a href="{{ route('spotify.connect') }}">
-                                                <x-primary-button type="button">{{ __('Erneut verbinden') }}</x-primary-button>
-                                            </a>
-                                        @endif
-                                    @endif
-
-                                    <p class="text-xs text-gray-500">
-                                        {{ __('Datenschutzhinweis: Wir speichern OAuth-Tokens verschlüsselt und lesen nur deinen aktuellen/zuletzt gespielten Titel.') }}
-                                        <a href="{{ route('legal.datenschutz') }}" class="underline" target="_blank" rel="noopener noreferrer">{{ __('Datenschutz') }}</a>
-                                    </p>
-                                @endif
-                            </div>
                         @else
                             <div>
                                 <x-input-label for="modal-display-title" :value="__('Anzeigename auf der Bio-Seite')" />

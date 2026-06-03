@@ -103,5 +103,5 @@ test('static spotify link renders embed on public profile', function () {
     $this->get(route('public.profile', $profile->slug))
         ->assertOk()
         ->assertSee('open.spotify.com/embed/track/6rqhFgbbKwnb9MLmUQDhG6', false)
-        ->assertSee('Auf Spotify abspielen', false);
+        ->assertDontSee('Auf Spotify abspielen', false);
 });
