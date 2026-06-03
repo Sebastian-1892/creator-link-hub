@@ -50,6 +50,10 @@ class BrandingSettingsPage extends Page
      */
     public ?array $data = [];
 
+    public string $previewPage = 'home';
+
+    public int $previewVersion = 0;
+
     public static function getNavigationGroup(): string|\UnitEnum|null
     {
         return __('admin_settings.nav.group');
@@ -102,30 +106,6 @@ class BrandingSettingsPage extends Page
             $fill[$field] = $this->translationFillValue($suffix, $locale);
         }
 
-        foreach ([1, 2, 3] as $i) {
-            foreach (['title', 'text'] as $part) {
-                $suffix = "marketing.steps.{$i}.{$part}";
-                $field = "marketing_step_{$i}_{$part}";
-                $fill[$field] = $this->translationFillValue($suffix, $locale);
-            }
-        }
-
-        foreach ([1, 2, 3] as $i) {
-            foreach (['title', 'text'] as $part) {
-                $suffix = "marketing.features.{$i}.{$part}";
-                $field = "marketing_feature_{$i}_{$part}";
-                $fill[$field] = $this->translationFillValue($suffix, $locale);
-            }
-        }
-
-        foreach ([1, 2, 3] as $i) {
-            foreach (['title', 'text', 'icon'] as $part) {
-                $suffix = "marketing.cards.{$i}.{$part}";
-                $field = "marketing_card_{$i}_{$part}";
-                $fill[$field] = $this->translationFillValue($suffix, $locale);
-            }
-        }
-
         foreach (['impressum_html', 'datenschutz_html', 'agb_html'] as $key) {
             $suffix = 'legal.'.$key;
             $field = 'legal_'.$key;
@@ -163,49 +143,6 @@ class BrandingSettingsPage extends Page
         foreach ($this->colorFieldDefinitions() as $suffix => $labelKey) {
             $colorPickers[] = ColorPicker::make('color_'.$suffix)
                 ->label(__($labelKey))
-                ->live();
-        }
-
-        $stepFields = [];
-        foreach ([1, 2, 3] as $i) {
-            $stepFields[] = TextInput::make("marketing_step_{$i}_title")
-                ->label(__('admin_settings.branding.step_title', ['n' => $i]))
-                ->maxLength(255)
-                ->live();
-            $stepFields[] = Textarea::make("marketing_step_{$i}_text")
-                ->label(__('admin_settings.branding.step_text', ['n' => $i]))
-                ->rows(2)
-                ->live()
-                ->columnSpanFull();
-        }
-
-        $featureFields = [];
-        foreach ([1, 2, 3] as $i) {
-            $featureFields[] = TextInput::make("marketing_feature_{$i}_title")
-                ->label(__('admin_settings.branding.feature_title', ['n' => $i]))
-                ->maxLength(255)
-                ->live();
-            $featureFields[] = Textarea::make("marketing_feature_{$i}_text")
-                ->label(__('admin_settings.branding.feature_text', ['n' => $i]))
-                ->rows(2)
-                ->live()
-                ->columnSpanFull();
-        }
-
-        $cardFields = [];
-        foreach ([1, 2, 3] as $i) {
-            $cardFields[] = TextInput::make("marketing_card_{$i}_title")
-                ->label(__('admin_settings.branding.card_title', ['n' => $i]))
-                ->maxLength(255)
-                ->live();
-            $cardFields[] = Textarea::make("marketing_card_{$i}_text")
-                ->label(__('admin_settings.branding.card_text', ['n' => $i]))
-                ->rows(2)
-                ->live()
-                ->columnSpanFull();
-            $cardFields[] = TextInput::make("marketing_card_{$i}_icon")
-                ->label(__('admin_settings.branding.card_icon', ['n' => $i]))
-                ->maxLength(32)
                 ->live();
         }
 
@@ -256,12 +193,14 @@ class BrandingSettingsPage extends Page
                             ->live()
                             ->afterStateUpdated(function (): void {
                                 $this->fillForm();
+                                $this->previewVersion++;
                             }),
                     ])
                     ->columns(1),
-                Grid::make(['default' => 1, 'xl' => 2])
+                Grid::make(['default' => 1, 'lg' => 12])
                     ->schema([
-                        Tabs::make('brandingTabs')
+                        Group::make([
+                            Tabs::make('brandingTabs')
                             ->tabs([
                                 Tab::make(__('admin_settings.branding.tab_brand'))
                                     ->schema([
@@ -281,91 +220,6 @@ class BrandingSettingsPage extends Page
                                     ->columns(1),
                                 Tab::make(__('admin_settings.branding.tab_colors'))
                                     ->schema($colorPickers)
-                                    ->columns(2),
-                                Tab::make(__('admin_settings.branding.tab_marketing'))
-                                    ->schema(array_merge([
-                                        TextInput::make('marketing_eyebrow')
-                                            ->label(__('admin_settings.branding.marketing_eyebrow'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        Textarea::make('marketing_headline')
-                                            ->label(__('admin_settings.branding.marketing_headline'))
-                                            ->rows(3)
-                                            ->live()
-                                            ->columnSpanFull(),
-                                        Textarea::make('marketing_subline')
-                                            ->label(__('admin_settings.branding.marketing_subline'))
-                                            ->rows(3)
-                                            ->live()
-                                            ->columnSpanFull(),
-                                        TextInput::make('marketing_cta_primary')
-                                            ->label(__('admin_settings.branding.marketing_cta_primary'))
-                                            ->maxLength(120)
-                                            ->live(),
-                                        TextInput::make('marketing_cta_secondary')
-                                            ->label(__('admin_settings.branding.marketing_cta_secondary'))
-                                            ->maxLength(120)
-                                            ->live(),
-                                        Textarea::make('marketing_footer_tagline')
-                                            ->label(__('admin_settings.branding.marketing_footer_tagline'))
-                                            ->rows(2)
-                                            ->live()
-                                            ->columnSpanFull(),
-                                        TextInput::make('marketing_trust_strip')
-                                            ->label(__('admin_settings.branding.marketing_trust_strip'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        TextInput::make('marketing_trust_count')
-                                            ->label(__('admin_settings.branding.marketing_trust_count'))
-                                            ->maxLength(64)
-                                            ->live(),
-                                        TextInput::make('marketing_trust_count_label')
-                                            ->label(__('admin_settings.branding.marketing_trust_count_label'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        TextInput::make('marketing_home_templates_title')
-                                            ->label(__('admin_settings.branding.marketing_home_templates_title'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        Textarea::make('marketing_home_templates_subline')
-                                            ->label(__('admin_settings.branding.marketing_home_templates_subline'))
-                                            ->rows(2)
-                                            ->live()
-                                            ->columnSpanFull(),
-                                        TextInput::make('marketing_features_heading')
-                                            ->label(__('admin_settings.branding.marketing_features_heading'))
-                                            ->helperText(__('admin_settings.branding.marketing_features_heading_hint'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        TextInput::make('marketing_all_templates_link')
-                                            ->label(__('admin_settings.branding.marketing_all_templates_link'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        TextInput::make('marketing_final_cta_title')
-                                            ->label(__('admin_settings.branding.marketing_final_cta_title'))
-                                            ->maxLength(255)
-                                            ->live(),
-                                        Textarea::make('marketing_final_cta_subline')
-                                            ->label(__('admin_settings.branding.marketing_final_cta_subline'))
-                                            ->rows(2)
-                                            ->live()
-                                            ->columnSpanFull(),
-                                        TextInput::make('marketing_final_cta_button')
-                                            ->label(__('admin_settings.branding.marketing_final_cta_button'))
-                                            ->maxLength(120)
-                                            ->live(),
-                                        Section::make(__('admin_settings.branding.section_marketing_cards'))
-                                            ->schema($cardFields)
-                                            ->columns(2),
-                                        Section::make(__('admin_settings.branding.section_steps'))
-                                            ->schema($stepFields)
-                                            ->columns(2)
-                                            ->collapsed(),
-                                        Section::make(__('admin_settings.branding.section_features'))
-                                            ->schema($featureFields)
-                                            ->columns(2)
-                                            ->collapsed(),
-                                    ]))
                                     ->columns(2),
                                 Tab::make(__('admin_settings.branding.tab_pricing'))
                                     ->schema(array_merge([
@@ -450,6 +304,11 @@ class BrandingSettingsPage extends Page
                                     ]),
                                 Tab::make(__('admin_settings.branding.tab_footer'))
                                     ->schema([
+                                        Textarea::make('marketing_footer_tagline')
+                                            ->label(__('admin_settings.branding.marketing_footer_tagline'))
+                                            ->rows(2)
+                                            ->live()
+                                            ->columnSpanFull(),
                                         TextInput::make('footer_brand_label')
                                             ->label(__('admin_settings.branding.footer_brand_label'))
                                             ->maxLength(120)
@@ -485,18 +344,25 @@ class BrandingSettingsPage extends Page
                                             ->live(),
                                     ])
                                     ->columns(1),
-                            ])
-                            ->columnSpan(['default' => 1, 'xl' => 1]),
+                            ]),
+                        ])
+                            ->columnSpan(['default' => 12, 'lg' => 5]),
                         Group::make([
                             Section::make(__('admin_settings.branding.preview'))
                                 ->schema([
-                                    SchemaView::make('filament.schemas.components.branding-preview')
+                                    SchemaView::make('filament.schemas.components.branding-page-preview')
                                         ->viewData(fn (): array => [
-                                            'p' => $this->data ?? [],
+                                            'previewUrl' => $this->previewUrl(),
+                                            'previewPages' => $this->previewPageOptions(),
+                                            'previewVersion' => $this->previewVersion,
+                                            'previewPage' => $this->previewPage,
                                         ]),
                                 ]),
                         ])
-                            ->columnSpan(['default' => 1, 'xl' => 1]),
+                            ->columnSpan(['default' => 12, 'lg' => 7])
+                            ->extraAttributes([
+                                'class' => 'lg:sticky lg:top-4 lg:self-start',
+                            ]),
                     ]),
             ]);
     }
@@ -507,22 +373,7 @@ class BrandingSettingsPage extends Page
     protected function simpleTextFieldMap(): array
     {
         return [
-            'marketing_eyebrow' => 'marketing.eyebrow',
-            'marketing_headline' => 'marketing.headline',
-            'marketing_subline' => 'marketing.subline',
-            'marketing_cta_primary' => 'marketing.cta_primary',
-            'marketing_cta_secondary' => 'marketing.cta_secondary',
             'marketing_footer_tagline' => 'marketing.footer_tagline',
-            'marketing_trust_strip' => 'marketing.trust_strip',
-            'marketing_trust_count' => 'marketing.trust_count',
-            'marketing_trust_count_label' => 'marketing.trust_count_label',
-            'marketing_home_templates_title' => 'marketing.home_templates_title',
-            'marketing_home_templates_subline' => 'marketing.home_templates_subline',
-            'marketing_features_heading' => 'marketing.features_heading',
-            'marketing_all_templates_link' => 'marketing.all_templates_link',
-            'marketing_final_cta_title' => 'marketing.final_cta_title',
-            'marketing_final_cta_subline' => 'marketing.final_cta_subline',
-            'marketing_final_cta_button' => 'marketing.final_cta_button',
             'pricing_title' => 'pricing.title',
             'pricing_subline' => 'pricing.subline',
             'faq_title' => 'faq.title',
@@ -601,30 +452,6 @@ class BrandingSettingsPage extends Page
             $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
         }
 
-        foreach ([1, 2, 3] as $i) {
-            foreach (['title', 'text'] as $part) {
-                $suffix = "marketing.steps.{$i}.{$part}";
-                $field = "marketing_step_{$i}_{$part}";
-                $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
-            }
-        }
-
-        foreach ([1, 2, 3] as $i) {
-            foreach (['title', 'text'] as $part) {
-                $suffix = "marketing.features.{$i}.{$part}";
-                $field = "marketing_feature_{$i}_{$part}";
-                $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
-            }
-        }
-
-        foreach ([1, 2, 3] as $i) {
-            foreach (['title', 'text', 'icon'] as $part) {
-                $suffix = "marketing.cards.{$i}.{$part}";
-                $field = "marketing_card_{$i}_{$part}";
-                $translations->set($locale, $suffix, $this->nullableString($data[$field] ?? null) ?? '');
-            }
-        }
-
         foreach (['impressum_html', 'datenschutz_html', 'agb_html'] as $key) {
             $field = 'legal_'.$key;
             $translations->set(
@@ -669,6 +496,7 @@ class BrandingSettingsPage extends Page
         app(BrandingService::class)->flushPayloadCache();
 
         $this->fillForm();
+        $this->previewVersion++;
 
         Notification::make()
             ->title(__('admin_settings.branding.notify_saved'))
@@ -710,6 +538,41 @@ class BrandingSettingsPage extends Page
     }
 
     /**
+     * @return array<string, string>
+     */
+    protected function previewPageOptions(): array
+    {
+        return [
+            'home' => __('admin_settings.branding.preview_page_home'),
+            'pricing' => __('admin_settings.branding.preview_page_pricing'),
+            'faq' => __('admin_settings.branding.preview_page_faq'),
+            'help' => __('admin_settings.branding.preview_page_help'),
+            'impressum' => __('admin_settings.branding.preview_page_impressum'),
+        ];
+    }
+
+    protected function previewUrl(): string
+    {
+        $routes = [
+            'home' => route('home'),
+            'pricing' => route('pricing'),
+            'faq' => route('faq'),
+            'help' => route('help'),
+            'impressum' => route('legal.impressum'),
+        ];
+
+        $base = $routes[$this->previewPage] ?? route('home');
+        $locale = $this->formLocale();
+
+        return $base.'?locale='.urlencode($locale).'&_pv='.$this->previewVersion;
+    }
+
+    public function updatedPreviewPage(): void
+    {
+        $this->previewVersion++;
+    }
+
+    /**
      * @return array<Action>
      */
     protected function getHeaderActions(): array
@@ -730,15 +593,6 @@ class BrandingSettingsPage extends Page
                         array_values($this->simpleTextFieldMap()),
                         ['brand_name', 'faq.items', 'help.sections', 'pricing.plans'],
                     );
-                    foreach ([1, 2, 3] as $i) {
-                        foreach (['title', 'text'] as $part) {
-                            $keys[] = "marketing.steps.{$i}.{$part}";
-                            $keys[] = "marketing.features.{$i}.{$part}";
-                        }
-                        foreach (['title', 'text', 'icon'] as $part) {
-                            $keys[] = "marketing.cards.{$i}.{$part}";
-                        }
-                    }
                     foreach (['impressum_html', 'datenschutz_html', 'agb_html'] as $k) {
                         $keys[] = 'legal.'.$k;
                     }

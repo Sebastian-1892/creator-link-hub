@@ -19,12 +19,12 @@ test('non-admin cannot access branding settings', function () {
         ->assertForbidden();
 });
 
-test('admin can save marketing headline', function () {
+test('admin can save pricing page title', function () {
     $admin = User::factory()->create(['is_admin' => true]);
 
     Livewire::actingAs($admin)
         ->test(BrandingSettingsPage::class)
-        ->set('data.marketing_headline', 'Unique Headline XYZ 123')
+        ->set('data.pricing_title', 'Unique Pricing Title XYZ 123')
         ->call('save')
         ->assertHasNoErrors();
 
@@ -34,9 +34,9 @@ test('admin can save marketing headline', function () {
 
     expect(TranslationString::query()
         ->where('locale', 'de')
-        ->where('key', 'marketing.headline')
-        ->value('value'))->toBe('Unique Headline XYZ 123');
-    expect(brand('marketing.headline'))->toBe('Unique Headline XYZ 123');
+        ->where('key', 'pricing.title')
+        ->value('value'))->toBe('Unique Pricing Title XYZ 123');
+    expect(brand('pricing.title'))->toBe('Unique Pricing Title XYZ 123');
 });
 
 test('logo upload stores path when Filament returns stored path string', function () {

@@ -23,13 +23,18 @@ class SetMarketingLocale
         $allowed = TranslationService::platformLocales();
         $locale = TranslationService::tenantDefaultLocale();
 
-        $sessionLocale = $request->session()->get(self::SESSION_KEY);
-        if (is_string($sessionLocale) && in_array($sessionLocale, $allowed, true)) {
-            $locale = $sessionLocale;
+        $queryLocale = $request->query('locale');
+        if (is_string($queryLocale) && in_array($queryLocale, $allowed, true)) {
+            $locale = $queryLocale;
         } else {
-            $cookie = $request->cookie(self::COOKIE_NAME);
-            if (is_string($cookie) && in_array($cookie, $allowed, true)) {
-                $locale = $cookie;
+            $sessionLocale = $request->session()->get(self::SESSION_KEY);
+            if (is_string($sessionLocale) && in_array($sessionLocale, $allowed, true)) {
+                $locale = $sessionLocale;
+            } else {
+                $cookie = $request->cookie(self::COOKIE_NAME);
+                if (is_string($cookie) && in_array($cookie, $allowed, true)) {
+                    $locale = $cookie;
+                }
             }
         }
 

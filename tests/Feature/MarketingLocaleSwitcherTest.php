@@ -11,13 +11,10 @@ test('marketing locale route sets cookie and applies french branding', function 
         ->assertRedirect();
 
     $this->withCookie(SetMarketingLocale::COOKIE_NAME, 'fr')
-        ->get(route('home'))
+        ->get(route('pricing'))
         ->assertOk()
-        ->assertSee('Un lien. Tous les canaux', false)
-        ->assertSee('Pourquoi Creator Link Hub', false)
-        ->assertSee('Tous les modèles dans le tableau de bord', false)
-        ->assertDontSee('Warum Creator Link Hub', false)
-        ->assertDontSee('Alle Vorlagen im Dashboard', false);
+        ->assertSee('Tarifs simples', false)
+        ->assertDontSee('Simple pricing', false);
 });
 
 test('marketing locale route sets cookie and applies english', function () {
@@ -27,11 +24,19 @@ test('marketing locale route sets cookie and applies english', function () {
         ->assertRedirect();
 
     $this->withCookie(SetMarketingLocale::COOKIE_NAME, 'en')
-        ->get(route('home'))
+        ->get(route('pricing'))
         ->assertOk()
-        ->assertSee('One link. Every channel', false);
+        ->assertSee('Simple pricing', false);
 });
 
 test('invalid marketing locale returns 404', function () {
     $this->get('/set-marketing-locale/xx')->assertNotFound();
+});
+
+test('marketing pages accept locale query parameter for admin preview', function () {
+    app(BrandingService::class)->flushPayloadCache();
+
+    $this->get(route('pricing', ['locale' => 'en']))
+        ->assertOk()
+        ->assertSee('Simple pricing', false);
 });
