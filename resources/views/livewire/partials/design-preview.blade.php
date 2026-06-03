@@ -32,10 +32,10 @@
             </div>
 
             <div class="mt-6 space-y-2">
-                <div class="{{ $clh['link_class'] }} clh-link--compact">
+                <div class="{{ $clh['link_class'] }}" style="{{ clh_link_button_style($settings, $clh['card_style'] ?? 'flat', true) }}">
                     <span class="flex-1 text-center">{{ __('Beispiel-Link') }}</span>
                 </div>
-                <div class="{{ $clh['link_class'] }} clh-link--compact">
+                <div class="{{ $clh['link_class'] }}" style="{{ clh_link_button_style($settings, $clh['card_style'] ?? 'flat', true) }}">
                     <span class="flex-1 text-center">{{ __('Zweiter Link') }}</span>
                 </div>
             </div>

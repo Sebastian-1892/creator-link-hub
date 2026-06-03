@@ -74,6 +74,45 @@ if (! function_exists('branding_payload')) {
     }
 }
 
+if (! function_exists('clh_link_button_style')) {
+    /**
+     * Inline-Styles für Bio-Links — unabhängig vom Vite/Tailwind-Build sofort wirksam.
+     */
+    function clh_link_button_style(ProfileDesignSettings $settings, string $cardStyle, bool $compact = false): string
+    {
+        $radius = match ($settings->buttonShape) {
+            'square' => '6px',
+            'rounded' => '16px',
+            default => '9999px',
+        };
+
+        $shadowCss = match ($settings->buttonShadow) {
+            'none' => 'box-shadow: none;',
+            'strong' => 'box-shadow: 0 14px 40px rgba(0,0,0,0.3);',
+            'hard' => 'box-shadow: 4px 4px 0 rgba(0,0,0,0.38);',
+            default => 'box-shadow: 0 8px 24px rgba(0,0,0,0.14);',
+        };
+
+        $variantCss = match ($settings->buttonStyle) {
+            'outline' => 'background: transparent; color: var(--clh-button-fg); border: 2px solid color-mix(in srgb, var(--clh-accent) 55%, var(--clh-button-bg)); border-radius: '.$radius.';',
+            'glass' => 'background: color-mix(in srgb, var(--clh-button-bg) 32%, transparent); color: var(--clh-button-fg); border: 1px solid color-mix(in srgb, var(--clh-border) 55%, transparent); border-radius: '.$radius.'; backdrop-filter: blur(14px); -webkit-backdrop-filter: blur(14px);',
+            default => 'background: var(--clh-button-bg); color: var(--clh-button-fg); border: 1px solid var(--clh-border); border-radius: '.$radius.';',
+        };
+
+        $padding = $compact ? '0.75rem 1rem' : '1rem 1.25rem';
+        $fontSize = $compact ? '0.875rem' : '1rem';
+
+        $style = 'display:flex;width:100%;align-items:center;gap:0.75rem;padding:'.$padding.';font-size:'.$fontSize.';font-weight:600;text-decoration:none;'
+            .$variantCss.' '.$shadowCss;
+
+        if ($cardStyle === 'bordered') {
+            $style .= ' border-width: 2px; border-color: var(--clh-accent);';
+        }
+
+        return trim($style);
+    }
+}
+
 if (! function_exists('clh_public_theme')) {
     /**
      * Theme-Layout für öffentliche Bio-Seite (Schriften, Hintergrund, Button-/Karten-Stile).
@@ -154,7 +193,11 @@ if (! function_exists('clh_public_theme')) {
 
         $linkClasses = trim('clh-link '.$styleClass.' '.$shapeClass.' '.$shadowClass.($cardStyle === 'bordered' ? ' clh-link--card-bordered' : ''));
 
-        $avatarRadius = $settings->buttonShape === 'square' ? '12px' : '9999px';
+        $avatarRadius = match ($settings->buttonShape) {
+            'square' => '12px',
+            'rounded' => '16px',
+            default => '9999px',
+        };
         $avatarSize = $headerLayout === 'hero' ? '9rem' : '7rem';
 
         return [
@@ -163,7 +206,7 @@ if (! function_exists('clh_public_theme')) {
             'body_style' => $bodyStyle,
             'pattern_overlay' => '',
             'link_class' => $linkClasses,
-            'link_style' => '',
+            'link_style' => clh_link_button_style($settings, $cardStyle),
             'avatar_class' => 'mx-auto object-cover shadow-xl',
             'avatar_style' => 'height: '.$avatarSize.'; width: '.$avatarSize.'; border-radius: '.$avatarRadius.'; box-shadow: 0 0 0 4px color-mix(in srgb, var(--clh-accent) 38%, transparent); border: 3px solid color-mix(in srgb, var(--clh-accent) 60%, transparent);',
             'placeholder_avatar_class' => 'mx-auto flex items-center justify-center font-bold shadow-xl',

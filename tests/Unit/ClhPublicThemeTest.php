@@ -25,7 +25,7 @@ test('clh public theme emits css modifier classes for button settings', function
         ->toContain('clh-link--style-outline')
         ->toContain('clh-link--shape-square')
         ->toContain('clh-link--shadow-none')
-        ->and($clh['link_style'])->toBe('');
+        ->and($clh['link_style'])->toContain('background: transparent');
 });
 
 test('clh public theme maps pill shape and glass style', function () {

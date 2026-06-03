@@ -104,18 +104,18 @@ test('design editor rejects unknown font family', function () {
         ->assertHasErrors(['font_family']);
 });
 
-test('design editor preview reflects button shape and style classes', function () {
+test('design editor preview reflects button shape and style in inline css', function () {
     $user = User::factory()->create();
 
     Livewire::actingAs($user)
         ->test(DesignEditor::class)
         ->set('activeSection', 'buttons')
-        ->set('button_style', 'glass')
+        ->set('button_style', 'outline')
         ->set('button_shape', 'square')
-        ->set('button_shadow', 'hard')
-        ->assertSee('clh-link--style-glass', false)
-        ->assertSee('clh-link--shape-square', false)
-        ->assertSee('clh-link--shadow-hard', false);
+        ->set('button_shadow', 'none')
+        ->assertSee('background: transparent', false)
+        ->assertSee('border-radius: 6px', false)
+        ->assertSee('box-shadow: none', false);
 });
 
 test('public profile reflects saved outline button style', function () {
@@ -151,5 +151,6 @@ test('public profile reflects saved outline button style', function () {
 
     $this->get(route('public.profile', $profile->slug))
         ->assertOk()
-        ->assertSee('clh-link--style-outline', false);
+        ->assertSee('clh-link--style-outline', false)
+        ->assertSee('background: transparent', false);
 });

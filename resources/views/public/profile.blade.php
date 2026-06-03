@@ -34,7 +34,7 @@
                     <details name="clh-shop" class="clh-shop-accordion group">
                         <summary
                             class="{{ $clh['link_class'] }} w-full cursor-pointer list-none [&::-webkit-details-marker]:hidden"
-                            @if ($clh['link_style'] !== '') style="{{ $clh['link_style'] }}" @endif
+                            style="{{ $clh['link_style'] }}"
                         >
                             <span
                                 class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full"
@@ -95,7 +95,7 @@
                         target="{{ $target }}"
                         @if ($rel) rel="{{ $rel }}" @endif
                         class="{{ $clh['link_class'] }}{{ $link->show_icon ? ' pl-4 pr-12' : '' }}"
-                        @if ($clh['link_style'] !== '') style="{{ $clh['link_style'] }}" @endif
+                        style="{{ $clh['link_style'] }}"
                     >
                         @if ($link->show_icon)
                             <span

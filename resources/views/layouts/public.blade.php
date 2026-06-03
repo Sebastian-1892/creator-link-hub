@@ -19,6 +19,7 @@
     <link rel="preconnect" href="https://fonts.bunny.net">
     <link href="{{ $clhHead['font_href'] }}" rel="stylesheet" />
     @vite(['resources/css/app.css', 'resources/js/app.js'])
+    <x-clh-profile-styles />
     <style>
         :root {
             @foreach ($presentation['css_vars'] as $name => $value)
