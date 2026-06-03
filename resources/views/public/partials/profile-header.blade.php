@@ -5,8 +5,8 @@
         ? 'mt-4 text-xl font-bold tracking-tight'
         : 'mt-6 text-3xl font-bold tracking-tight';
     $bioClass = $compact
-        ? 'mt-2 max-w-[220px] text-xs leading-relaxed whitespace-pre-line opacity-90'
-        : 'mt-3 max-w-sm text-base leading-relaxed whitespace-pre-line opacity-90';
+        ? 'mt-2 w-full max-w-[220px] text-xs leading-relaxed whitespace-pre-line text-center break-words [overflow-wrap:anywhere] opacity-90'
+        : 'mt-3 w-full text-base sm:text-[0.95rem] leading-relaxed whitespace-pre-line text-center break-words [overflow-wrap:anywhere] opacity-90 px-1';
     $bioLimit = $compact ? 120 : null;
     $bannerHeight = $compact ? 'h-20' : 'h-36 sm:h-44';
     $bannerRadius = $compact ? 'rounded-xl' : 'rounded-2xl';
@@ -35,7 +35,7 @@
                 @include('public.partials.profile-avatar', ['profile' => $profile, 'clh' => $clh])
                 <{{ $headingTag }} class="{{ $titleClass }}" style="color: var(--clh-title);">{{ $profile->display_name }}</{{ $headingTag }}>
                 @if ($profile->bio)
-                    <p class="{{ $bioClass }}" style="color: var(--clh-text-muted);">
+                    <p class="{{ $bioClass }} clh-profile-bio" style="color: var(--clh-text-muted);">
                         {{ $bioLimit ? \Illuminate\Support\Str::limit($profile->bio, $bioLimit) : $profile->bio }}
                     </p>
                 @endif
@@ -45,7 +45,7 @@
         @include('public.partials.profile-avatar', ['profile' => $profile, 'clh' => $clh])
         <{{ $headingTag }} class="{{ $titleClass }}" style="color: var(--clh-title);">{{ $profile->display_name }}</{{ $headingTag }}>
         @if ($profile->bio)
-            <p class="{{ $bioClass }}" style="color: var(--clh-text-muted);">
+            <p class="{{ $bioClass }} clh-profile-bio" style="color: var(--clh-text-muted);">
                 {{ $bioLimit ? \Illuminate\Support\Str::limit($profile->bio, $bioLimit) : $profile->bio }}
             </p>
         @endif
