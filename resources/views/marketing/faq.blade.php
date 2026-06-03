@@ -9,7 +9,13 @@
     <div class="max-w-3xl mx-auto px-4 py-16 lg:py-20">
         <div class="text-center mb-12">
             <p class="text-sm font-semibold uppercase tracking-wider" style="color: var(--brand-accent);">FAQ</p>
-            <h1 class="mt-3 text-3xl sm:text-4xl font-bold" style="color: var(--brand-text);">{{ $faq['title'] }}</h1>
+            <x-editable-translation
+                translation-key="faq.title"
+                :value="$faq['title']"
+                tag="h1"
+                class="mt-3 text-3xl sm:text-4xl font-bold block w-full"
+                style="color: var(--brand-text);"
+            />
         </div>
         <div class="space-y-4">
             @foreach ($faq['items'] as $item)

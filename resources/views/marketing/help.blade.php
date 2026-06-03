@@ -9,8 +9,20 @@
     <div class="max-w-3xl mx-auto px-4 py-16 lg:py-20">
         <div class="text-center mb-10">
             <p class="text-sm font-semibold uppercase tracking-wider" style="color: var(--brand-accent);">{{ __('Support') }}</p>
-            <h1 class="mt-3 text-3xl sm:text-4xl font-bold" style="color: var(--brand-text);">{{ $help['title'] }}</h1>
-            <p class="mt-4 text-base max-w-xl mx-auto" style="color: var(--brand-text-muted);">{{ $help['intro'] }}</p>
+            <x-editable-translation
+                translation-key="help.title"
+                :value="$help['title']"
+                tag="h1"
+                class="mt-3 text-3xl sm:text-4xl font-bold block w-full"
+                style="color: var(--brand-text);"
+            />
+            <x-editable-translation
+                translation-key="help.intro"
+                :value="$help['intro']"
+                tag="p"
+                class="mt-4 text-base max-w-xl mx-auto block w-full"
+                style="color: var(--brand-text-muted);"
+            />
         </div>
         <div class="space-y-6">
             @foreach ($help['sections'] as $section)

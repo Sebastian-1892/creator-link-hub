@@ -11,8 +11,20 @@
     <div class="max-w-5xl mx-auto px-4 py-16 lg:py-20">
         <div class="text-center max-w-2xl mx-auto">
             <p class="text-sm font-semibold uppercase tracking-wider" style="color: var(--brand-accent);">{{ __('Preise') }}</p>
-            <h1 class="mt-3 text-3xl sm:text-4xl font-bold" style="color: var(--brand-text);">{{ $p['title'] }}</h1>
-            <p class="mt-4 text-base" style="color: var(--brand-text-muted);">{{ $p['subline'] }}</p>
+            <x-editable-translation
+                translation-key="pricing.title"
+                :value="$p['title']"
+                tag="h1"
+                class="mt-3 text-3xl sm:text-4xl font-bold block w-full"
+                style="color: var(--brand-text);"
+            />
+            <x-editable-translation
+                translation-key="pricing.subline"
+                :value="$p['subline']"
+                tag="p"
+                class="mt-4 text-base block w-full"
+                style="color: var(--brand-text-muted);"
+            />
         </div>
         <div class="mt-14 grid gap-6 md:grid-cols-3">
             @foreach ($order as $key)

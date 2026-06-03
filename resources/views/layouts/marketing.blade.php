@@ -75,11 +75,28 @@
     <footer class="mt-20 border-t py-14 text-sm" style="border-color: var(--brand-border); background: var(--brand-bg-alt); color: var(--brand-text-muted);">
         <div class="max-w-6xl mx-auto px-4 grid gap-10 sm:grid-cols-3">
             <div>
-                <p class="font-semibold" style="color: var(--brand-text);">{{ $fBrand }}</p>
-                <p class="mt-3 leading-relaxed">{{ $branding['marketing']['footer_tagline'] }}</p>
+                <x-editable-translation
+                    translation-key="footer.brand_label"
+                    :value="$fBrand"
+                    tag="p"
+                    class="font-semibold block"
+                    style="color: var(--brand-text);"
+                />
+                <x-editable-translation
+                    translation-key="marketing.footer_tagline"
+                    :value="$branding['marketing']['footer_tagline']"
+                    tag="p"
+                    class="mt-3 leading-relaxed block"
+                />
             </div>
             <div>
-                <p class="font-semibold" style="color: var(--brand-text);">{{ $fNav }}</p>
+                <x-editable-translation
+                    translation-key="footer.nav_label"
+                    :value="$fNav"
+                    tag="p"
+                    class="font-semibold block"
+                    style="color: var(--brand-text);"
+                />
                 <ul class="mt-3 space-y-2">
                     <li><a href="{{ route('pricing') }}" class="underline-offset-4 hover:underline">{{ __('Preise') }}</a></li>
                     <li><a href="{{ route('faq') }}" class="underline-offset-4 hover:underline">FAQ</a></li>
@@ -87,7 +104,13 @@
                 </ul>
             </div>
             <div>
-                <p class="font-semibold" style="color: var(--brand-text);">{{ $fLegal }}</p>
+                <x-editable-translation
+                    translation-key="footer.legal_label"
+                    :value="$fLegal"
+                    tag="p"
+                    class="font-semibold block"
+                    style="color: var(--brand-text);"
+                />
                 <ul class="mt-3 space-y-2">
                     <li><a href="{{ route('legal.impressum') }}" class="underline-offset-4 hover:underline">{{ __('Impressum') }}</a></li>
                     <li><a href="{{ route('legal.datenschutz') }}" class="underline-offset-4 hover:underline">{{ __('Datenschutz') }}</a></li>

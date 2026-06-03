@@ -140,7 +140,7 @@
                                     <x-input-label for="show_platform_branding" :value="__('„Built with …“-Hinweis anzeigen')" class="!mb-0" />
                                     <p class="text-xs text-gray-500 mt-0.5">
                                         @if ($canControlPlatformBranding)
-                                            {{ __('Zeigt unten auf deiner Bio-Seite den Hinweis „Built with“ mit Link zur Startseite.') }}
+                                            {{ __('Zeigt unten auf deiner Bio-Seite „Erstellt mit“ mit Link zum Markennamen des Betreibers.') }}
                                         @else
                                             {{ __('Im Free-Plan ist dieser Hinweis vorgesehen und kann nicht ausgeblendet werden.') }}
                                         @endif

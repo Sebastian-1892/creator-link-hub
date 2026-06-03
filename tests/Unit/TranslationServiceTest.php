@@ -59,6 +59,10 @@ test('non-default locale does not inherit german translation_strings row', funct
         ->toBe('One link. Every channel. More reach.');
     expect(app(TranslationService::class)->text('marketing.headline', 'fr'))
         ->toBe('Un lien. Tous les canaux. Plus de portée.');
+    expect(app(TranslationService::class)->text('marketing.features_heading', 'fr'))
+        ->toBe('Pourquoi :name ?');
+    expect(app(TranslationService::class)->text('marketing.all_templates_link', 'fr'))
+        ->toBe('Tous les modèles dans le tableau de bord');
 });
 
 test('english locale uses lang file not german legacy settings', function () {

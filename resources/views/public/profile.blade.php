@@ -5,33 +5,8 @@
         $clh = clh_public_theme($profile);
     @endphp
     <div class="max-w-md mx-auto px-4 py-12 pb-28">
-        <header class="@if ($clh['header_layout'] === 'hero') relative mb-8 @else text-center @endif">
-            @if ($clh['header_layout'] === 'banner' && $profile->banner_image_path)
-                <div
-                    class="-mx-4 mb-6 h-36 sm:h-44 bg-cover bg-center rounded-2xl shadow-lg"
-                    style="background-image: url('{{ \Illuminate\Support\Facades\Storage::url($profile->banner_image_path) }}');"
-                    role="img"
-                    aria-label=""
-                ></div>
-            @endif
-
-            @if ($clh['header_layout'] === 'hero')
-                <div class="relative -mx-4 mb-8 overflow-hidden rounded-2xl py-10 px-4" style="background: linear-gradient(180deg, color-mix(in srgb, var(--clh-accent) 25%, transparent), transparent);">
-                    <div class="flex flex-col items-center text-center">
-                        @include('public.partials.profile-avatar', ['profile' => $profile, 'clh' => $clh])
-                        <h1 class="mt-6 text-3xl font-bold tracking-tight" style="color: var(--clh-title);">{{ $profile->display_name }}</h1>
-                        @if ($profile->bio)
-                            <p class="mt-3 max-w-sm text-base leading-relaxed whitespace-pre-line opacity-90" style="color: var(--clh-text-muted);">{{ $profile->bio }}</p>
-                        @endif
-                    </div>
-                </div>
-            @else
-                @include('public.partials.profile-avatar', ['profile' => $profile, 'clh' => $clh])
-                <h1 class="mt-6 text-3xl font-bold tracking-tight" style="color: var(--clh-title);">{{ $profile->display_name }}</h1>
-                @if ($profile->bio)
-                    <p class="mt-3 text-base leading-relaxed whitespace-pre-line opacity-90" style="color: var(--clh-text-muted);">{{ $profile->bio }}</p>
-                @endif
-            @endif
+        <header class="mb-8">
+            @include('public.partials.profile-header', ['profile' => $profile, 'clh' => $clh])
         </header>
 
         @php
@@ -140,7 +115,7 @@
         @if ($showPlatformBranding)
             <p class="mt-14 text-center text-xs opacity-55" style="color: var(--clh-text-muted);">
                 {{ $branding['bio']['platform_credit'] }}
-                <a href="{{ route('home') }}" class="underline decoration-dotted underline-offset-4 hover:opacity-100" style="color: var(--clh-accent);">{{ $branding['bio']['platform_url_label'] }}</a>
+                <a href="{{ route('home') }}" class="underline decoration-dotted underline-offset-4 hover:opacity-100" style="color: var(--clh-accent);">{{ $branding['brand_name'] }}</a>
             </p>
         @endif
     </div>

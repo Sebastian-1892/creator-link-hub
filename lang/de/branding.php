@@ -27,6 +27,8 @@ return [
         'trust_count_label' => 'Bio-Seiten live — von Podcast bis Brand',
         'home_templates_title' => 'Kostenlose Vorlagen',
         'home_templates_subline' => 'Wähle ein Layout und Farben — so sieht deine Seite sofort professionell aus.',
+        'features_heading' => 'Warum :name?',
+        'all_templates_link' => 'Alle Vorlagen im Dashboard',
         'final_cta_title' => 'Bereit für deinen Hey-Link-Moment?',
         'final_cta_subline' => 'Registriere dich, wähle ein Theme und teile eine URL — überall.',
         'final_cta_button' => 'Jetzt loslegen',

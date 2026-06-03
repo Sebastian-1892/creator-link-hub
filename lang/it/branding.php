@@ -27,6 +27,8 @@ return [
         'trust_count_label' => 'pagine bio online — dal podcast al brand',
         'home_templates_title' => 'Template gratuiti',
         'home_templates_subline' => 'Scegli layout e palette — la pagina ha subito un look professionale.',
+        'features_heading' => 'Perché :name?',
+        'all_templates_link' => 'Tutti i modelli nella dashboard',
         'final_cta_title' => 'Pronto per il tuo momento link-in-bio?',
         'final_cta_subline' => 'Registrati, scegli un tema, condividi un URL ovunque.',
         'final_cta_button' => 'Inizia',

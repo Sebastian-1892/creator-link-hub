@@ -35,6 +35,23 @@ test('selecting a theme applies its colors to the form and preview', function ()
         ->assertSet('button_style', 'solid');
 });
 
+test('design editor header section does not nest upload forms inside livewire form', function () {
+    $user = User::factory()->create();
+    $profile = $user->currentWorkspace()?->profile;
+    expect($profile)->not->toBeNull();
+    $profile->update(['header_layout' => 'banner']);
+
+    $html = $this->actingAs($user)
+        ->get(route('design.edit', ['section' => 'header']))
+        ->assertOk()
+        ->getContent();
+
+    preg_match('/<form[^>]*wire:submit="save"[^>]*>(.*?)<\/form>/is', $html, $matches);
+
+    expect($matches[1] ?? '')->not->toContain('<form');
+    expect(substr_count(strtolower($html), '<form'))->toBeGreaterThan(1);
+});
+
 test('design editor save persists settings in profile and theme variables', function () {
     $user = User::factory()->create();
     $profile = $user->currentWorkspace()?->profile;

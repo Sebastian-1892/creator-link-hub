@@ -332,6 +332,15 @@ class BrandingSettingsPage extends Page
                                             ->rows(2)
                                             ->live()
                                             ->columnSpanFull(),
+                                        TextInput::make('marketing_features_heading')
+                                            ->label(__('admin_settings.branding.marketing_features_heading'))
+                                            ->helperText(__('admin_settings.branding.marketing_features_heading_hint'))
+                                            ->maxLength(255)
+                                            ->live(),
+                                        TextInput::make('marketing_all_templates_link')
+                                            ->label(__('admin_settings.branding.marketing_all_templates_link'))
+                                            ->maxLength(255)
+                                            ->live(),
                                         TextInput::make('marketing_final_cta_title')
                                             ->label(__('admin_settings.branding.marketing_final_cta_title'))
                                             ->maxLength(255)
@@ -465,10 +474,6 @@ class BrandingSettingsPage extends Page
                                             ->label(__('admin_settings.branding.bio_platform_credit'))
                                             ->maxLength(255)
                                             ->live(),
-                                        TextInput::make('bio_platform_url_label')
-                                            ->label(__('admin_settings.branding.bio_platform_url_label'))
-                                            ->maxLength(120)
-                                            ->live(),
                                         Textarea::make('bio_cookie_text')
                                             ->label(__('admin_settings.branding.bio_cookie_text'))
                                             ->rows(3)
@@ -513,6 +518,8 @@ class BrandingSettingsPage extends Page
             'marketing_trust_count_label' => 'marketing.trust_count_label',
             'marketing_home_templates_title' => 'marketing.home_templates_title',
             'marketing_home_templates_subline' => 'marketing.home_templates_subline',
+            'marketing_features_heading' => 'marketing.features_heading',
+            'marketing_all_templates_link' => 'marketing.all_templates_link',
             'marketing_final_cta_title' => 'marketing.final_cta_title',
             'marketing_final_cta_subline' => 'marketing.final_cta_subline',
             'marketing_final_cta_button' => 'marketing.final_cta_button',
@@ -526,7 +533,6 @@ class BrandingSettingsPage extends Page
             'footer_brand_label' => 'footer.brand_label',
             'bio_cta_label_default' => 'bio.cta_label_default',
             'bio_platform_credit' => 'bio.platform_credit',
-            'bio_platform_url_label' => 'bio.platform_url_label',
             'bio_cookie_text' => 'bio.cookie_text',
             'bio_cookie_button' => 'bio.cookie_button',
         ];

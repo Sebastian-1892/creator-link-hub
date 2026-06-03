@@ -96,6 +96,8 @@ class BrandingService
             'marketing.trust_count_label' => 'marketing.trust_count_label',
             'marketing.home_templates_title' => 'marketing.home_templates_title',
             'marketing.home_templates_subline' => 'marketing.home_templates_subline',
+            'marketing.features_heading' => 'marketing.features_heading',
+            'marketing.all_templates_link' => 'marketing.all_templates_link',
             'marketing.final_cta_title' => 'marketing.final_cta_title',
             'marketing.final_cta_subline' => 'marketing.final_cta_subline',
             'marketing.final_cta_button' => 'marketing.final_cta_button',
@@ -109,7 +111,6 @@ class BrandingService
             'footer.brand_label' => 'footer.brand_label',
             'bio.cta_label_default' => 'bio.cta_label_default',
             'bio.platform_credit' => 'bio.platform_credit',
-            'bio.platform_url_label' => 'bio.platform_url_label',
             'bio.cookie_text' => 'bio.cookie_text',
             'bio.cookie_button' => 'bio.cookie_button',
         ];
@@ -383,6 +384,8 @@ class BrandingService
             'trust_count_label' => $this->text('marketing.trust_count_label'),
             'home_templates_title' => $this->text('marketing.home_templates_title'),
             'home_templates_subline' => $this->text('marketing.home_templates_subline'),
+            'features_heading' => $this->text('marketing.features_heading'),
+            'all_templates_link' => $this->text('marketing.all_templates_link'),
             'final_cta_title' => $this->text('marketing.final_cta_title'),
             'final_cta_subline' => $this->text('marketing.final_cta_subline'),
             'final_cta_button' => $this->text('marketing.final_cta_button'),
@@ -394,7 +397,7 @@ class BrandingService
         $bio = [
             'cta_label_default' => $this->text('bio.cta_label_default'),
             'platform_credit' => $this->text('bio.platform_credit'),
-            'platform_url_label' => $this->text('bio.platform_url_label'),
+            'platform_url_label' => $this->brandName(),
             'cookie_text' => $this->text('bio.cookie_text'),
             'cookie_button' => $this->text('bio.cookie_button'),
         ];

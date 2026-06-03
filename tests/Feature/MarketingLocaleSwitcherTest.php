@@ -13,7 +13,11 @@ test('marketing locale route sets cookie and applies french branding', function 
     $this->withCookie(SetMarketingLocale::COOKIE_NAME, 'fr')
         ->get(route('home'))
         ->assertOk()
-        ->assertSee('Un lien. Tous les canaux', false);
+        ->assertSee('Un lien. Tous les canaux', false)
+        ->assertSee('Pourquoi Creator Link Hub', false)
+        ->assertSee('Tous les modèles dans le tableau de bord', false)
+        ->assertDontSee('Warum Creator Link Hub', false)
+        ->assertDontSee('Alle Vorlagen im Dashboard', false);
 });
 
 test('marketing locale route sets cookie and applies english', function () {

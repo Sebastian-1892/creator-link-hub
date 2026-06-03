@@ -18,6 +18,8 @@ class EditableTranslation extends Component
 
     public function render(): View|Closure|string
     {
-        return view('components.editable-translation');
+        return view('components.editable-translation', [
+            'clhInlineEditing' => clh_inline_editing_enabled(),
+        ]);
     }
 }

@@ -52,7 +52,7 @@ class TranslationInline extends Component
         );
 
         $this->open = false;
-        $this->dispatch('translation-saved', key: $this->translationKey, value: $this->value);
+        $this->redirect(request()->fullUrl(), navigate: true);
     }
 
     public function revert(): void
@@ -68,7 +68,7 @@ class TranslationInline extends Component
 
         app(BrandingService::class)->flushPayloadCache();
         $this->open = false;
-        $this->dispatch('translation-saved', key: $this->translationKey, value: app(TranslationService::class)->text($this->translationKey, $this->locale));
+        $this->redirect(request()->fullUrl(), navigate: true);
     }
 
     public function close(): void

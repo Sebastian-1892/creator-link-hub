@@ -27,6 +27,8 @@ return [
         'trust_count_label' => 'pages bio en ligne — du podcast à la marque',
         'home_templates_title' => 'Modèles gratuits',
         'home_templates_subline' => 'Choisissez une mise en page et une palette — votre page a tout de suite un look pro.',
+        'features_heading' => 'Pourquoi :name ?',
+        'all_templates_link' => 'Tous les modèles dans le tableau de bord',
         'final_cta_title' => 'Prêt pour votre moment link-in-bio ?',
         'final_cta_subline' => 'Inscrivez-vous, choisissez un thème, partagez une URL partout.',
         'final_cta_button' => 'Commencer',

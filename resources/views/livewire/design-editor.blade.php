@@ -25,7 +25,7 @@
             <div class="mt-4 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-900">{{ session('design_notice') }}</div>
         @endif
 
-        <form wire:submit="save" class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[12rem_minmax(0,1fr)_18.75rem] xl:items-start">
+        <div class="mt-6 grid grid-cols-1 gap-6 xl:grid-cols-[12rem_minmax(0,1fr)_18.75rem] xl:items-start">
             {{-- Sektions-Navigation --}}
             <nav class="bg-white shadow sm:rounded-lg p-3 h-fit space-y-1" aria-label="{{ __('Design-Bereiche') }}">
                 @foreach ([
@@ -49,6 +49,7 @@
 
             {{-- Einstellungen --}}
             <div class="bg-white shadow sm:rounded-lg p-6 min-h-[28rem] min-w-0">
+                <form wire:submit="save" id="design-settings-form">
                 @if ($activeSection === 'theme')
                     <h2 class="text-lg font-semibold text-gray-900">{{ __('Profil-Vorlage') }}</h2>
                     <p class="mt-1 text-sm text-gray-500">{{ __('Wähle Layout und Farben — die Live-Vorschau rechts aktualisiert sich sofort.') }}</p>
@@ -88,26 +89,6 @@
                             </label>
                         @endforeach
                     </div>
-                    @if ($header_layout === 'banner')
-                        <div class="mt-6 border-t pt-6">
-                            <p class="text-sm font-medium text-gray-900">{{ __('Banner-Bild') }}</p>
-                            @if ($profile->banner_image_path)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($profile->banner_image_path) }}" alt="" class="mt-2 w-full max-h-40 object-cover rounded-lg" />
-                            @endif
-                            <form action="{{ route('design.banner.store') }}" method="post" enctype="multipart/form-data" class="mt-3 flex flex-wrap gap-2 items-end">
-                                @csrf
-                                <input type="file" name="banner" accept="image/*" required class="text-sm" />
-                                <x-primary-button type="submit">{{ __('Hochladen') }}</x-primary-button>
-                            </form>
-                            @if ($profile->banner_image_path)
-                                <form action="{{ route('design.banner.destroy') }}" method="post" class="mt-2">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-danger-button type="submit">{{ __('Banner entfernen') }}</x-danger-button>
-                                </form>
-                            @endif
-                        </div>
-                    @endif
                 @endif
 
                 @if ($activeSection === 'wallpaper')
@@ -140,26 +121,6 @@
                                 <x-input-label for="wallpaper_gradient_angle" :value="__('Winkel (:deg°)', ['deg' => $wallpaper_gradient_angle])" />
                                 <input type="range" wire:model.live="wallpaper_gradient_angle" id="wallpaper_gradient_angle" min="0" max="360" class="mt-1 w-full" />
                             </div>
-                        </div>
-                    @endif
-                    @if ($wallpaper_style === 'image')
-                        <div class="mt-4">
-                            @if ($profile->wallpaper_image_path)
-                                <img src="{{ \Illuminate\Support\Facades\Storage::url($profile->wallpaper_image_path) }}" alt="" class="w-full max-h-48 object-cover rounded-lg" />
-                            @endif
-                            <form action="{{ route('design.wallpaper.store') }}" method="post" enctype="multipart/form-data" class="mt-3 flex flex-wrap gap-2 items-end">
-                                @csrf
-                                <input type="file" name="wallpaper" accept="image/*" required class="text-sm" />
-                                <x-primary-button type="submit">{{ __('Hochladen') }}</x-primary-button>
-                            </form>
-                            @if ($profile->wallpaper_image_path)
-                                <form action="{{ route('design.wallpaper.destroy') }}" method="post" class="mt-2">
-                                    @csrf
-                                    @method('DELETE')
-                                    <x-danger-button type="submit">{{ __('Bild entfernen') }}</x-danger-button>
-                                </form>
-                            @endif
-                            <x-input-error :messages="$errors->get('wallpaper_style')" class="mt-2" />
                         </div>
                     @endif
                 @endif
@@ -233,9 +194,52 @@
                         </div>
                     </div>
                 @endif
+                </form>
+
+                @if ($activeSection === 'header' && $header_layout === 'banner')
+                    <div class="mt-6 border-t pt-6">
+                        <p class="text-sm font-medium text-gray-900">{{ __('Banner-Bild') }}</p>
+                        @if ($profile->banner_image_path)
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($profile->banner_image_path) }}" alt="" class="mt-2 w-full max-h-40 object-cover rounded-lg" />
+                        @endif
+                        <form action="{{ route('design.banner.store') }}" method="post" enctype="multipart/form-data" class="mt-3 flex flex-wrap gap-2 items-end">
+                            @csrf
+                            <input type="file" name="banner" accept="image/*" required class="text-sm" />
+                            <x-primary-button type="submit">{{ __('Hochladen') }}</x-primary-button>
+                        </form>
+                        @if ($profile->banner_image_path)
+                            <form action="{{ route('design.banner.destroy') }}" method="post" class="mt-2">
+                                @csrf
+                                @method('DELETE')
+                                <x-danger-button type="submit">{{ __('Banner entfernen') }}</x-danger-button>
+                            </form>
+                        @endif
+                    </div>
+                @endif
+
+                @if ($activeSection === 'wallpaper' && $wallpaper_style === 'image')
+                    <div class="mt-4 border-t pt-6">
+                        @if ($profile->wallpaper_image_path)
+                            <img src="{{ \Illuminate\Support\Facades\Storage::url($profile->wallpaper_image_path) }}" alt="" class="w-full max-h-48 object-cover rounded-lg" />
+                        @endif
+                        <form action="{{ route('design.wallpaper.store') }}" method="post" enctype="multipart/form-data" class="mt-3 flex flex-wrap gap-2 items-end">
+                            @csrf
+                            <input type="file" name="wallpaper" accept="image/*" required class="text-sm" />
+                            <x-primary-button type="submit">{{ __('Hochladen') }}</x-primary-button>
+                        </form>
+                        @if ($profile->wallpaper_image_path)
+                            <form action="{{ route('design.wallpaper.destroy') }}" method="post" class="mt-2">
+                                @csrf
+                                @method('DELETE')
+                                <x-danger-button type="submit">{{ __('Bild entfernen') }}</x-danger-button>
+                            </form>
+                        @endif
+                        <x-input-error :messages="$errors->get('wallpaper_style')" class="mt-2" />
+                    </div>
+                @endif
 
                 <div class="mt-8 flex justify-end border-t border-gray-100 pt-6">
-                    <x-primary-button type="submit" wire:loading.attr="disabled">
+                    <x-primary-button type="button" wire:click="save" wire:loading.attr="disabled">
                         <span wire:loading.remove wire:target="save">{{ __('Design speichern') }}</span>
                         <span wire:loading wire:target="save">{{ __('Speichern…') }}</span>
                     </x-primary-button>
@@ -255,6 +259,6 @@
                     'previewKey' => $previewKey,
                 ])
             </div>
-        </form>
+        </div>
     </div>
 </div>

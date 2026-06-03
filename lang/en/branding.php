@@ -27,6 +27,8 @@ return [
         'trust_count_label' => 'bio pages live — from podcasts to brands',
         'home_templates_title' => 'Free templates',
         'home_templates_subline' => 'Pick a layout and palette — your page looks polished instantly.',
+        'features_heading' => 'Why :name?',
+        'all_templates_link' => 'All templates in the dashboard',
         'final_cta_title' => 'Ready for your link-in-bio moment?',
         'final_cta_subline' => 'Sign up, pick a theme, share one URL everywhere.',
         'final_cta_button' => 'Get started',

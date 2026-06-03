@@ -24,9 +24,12 @@ test('public profile shows platform credit when enabled', function () {
 
     Cache::forget(Profile::publicProfileCacheKey($profile->slug));
 
+    $brandName = branding_payload()['brand_name'];
+
     $this->get(route('public.profile', $profile->slug))
         ->assertOk()
-        ->assertSee(__('branding.bio.platform_credit'), false);
+        ->assertSee(__('branding.bio.platform_credit'), false)
+        ->assertSee($brandName, false);
 });
 
 test('public profile hides platform credit when disabled', function () {
